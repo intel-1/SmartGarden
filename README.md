@@ -1,6 +1,6 @@
 # Универсальный контроллер автоматизации #
 
-![](https://github.com/intel-1/GreenBox/tree/master/TOP_0573_.jpg "")
+![](https://https://github.com/intel-1/SmartGarden/blob/main/TOP_0568_.jpg)
 
 ### Описание контроллера ###
 SmartGarden - это универсальный контроллер для теплиц или других объектов где необходима автоматизация управления по датчикам или таймерам. 
