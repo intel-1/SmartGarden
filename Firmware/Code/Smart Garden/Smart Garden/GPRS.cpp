@@ -15,7 +15,7 @@
 // ========================================================================================================
 void Answer_check_GET(String Text, bool LogView){
 	
-	StateGSM.ErrorSentGET = 255;					// default ошибка "255"
+	StateGSM.Code_Error_Sent_GET = 255;				// default ошибка "100"
 			
 	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL || ControllerSetup){
 		if(LogView){
@@ -32,16 +32,19 @@ void Answer_check_GET(String Text, bool LogView){
 			if(OUTPUT_LEVEL_UART_GSM){
 				switch(Pos){
 					case 0:
+						StateGSM.Code_Error_Sent_GET = 404;
 						if(LogView){
 							Serial.println(F("Page not found"));
 						}
 						break;
 					case 1:
+						StateGSM.Code_Error_Sent_GET = 200;
 						if(LogView){
 							Serial.println(F("OK"));
 						}
 						break;
 					case 2:
+						StateGSM.Code_Error_Sent_GET = 603;
 						if(LogView){
 							Serial.println(F("Server not available"));
 						}
@@ -52,7 +55,6 @@ void Answer_check_GET(String Text, bool LogView){
 						}
 					}
 			}
-			StateGSM.ErrorSentGET = Pos;
 		}
 	}
 }
@@ -175,31 +177,31 @@ bool ConnectionGPRS(){
 // =====================================================================================================
 void SendGETGPRS(String Text){
 	wdt_reset();
-	if(EEPROM.read(E_AllowGPRS) == ON){									// Если разрешена работа GPRS
+	if(EEPROM.read(E_AllowGPRS) == ON){								// Если разрешена работа GPRS
 		if(OUTPUT_LEVEL_UART_GSM){
 			Serial.print(F("Sending a GET request: "));
 		}
-		sendATCommand(F("AT+HTTPPARA=\"CID\",1"), true, false);			// Установка CID параметра для http сессии
-		String Answer = sendATCommand(Text, true, false);				// Шлем сам запрос
-		if(Answer.lastIndexOf(F("OK")) != -1){	
+		sendATCommand(F("AT+HTTPPARA=\"CID\",1"), true, false);		// Установка CID параметра для http сессии
+		String Answer = sendATCommand(Text, true, false);			// Шлем сам запрос
+		if(Answer.lastIndexOf(F("OK")) != -1){						// Если запрос успешно отправлен	
 			if(OUTPUT_LEVEL_UART_GSM){
 				Serial.println(F("OK"));
 			}
+			// ========================= Проверяем ответ от сервера ==========================================
+			String val = waitResponse(ON);					// Ждем ответ от Web сервера
+			if(OUTPUT_LEVEL_UART_GSM){
+				Serial.println(val);
+			}
+			if (val.indexOf(F("+HTTPACTION")) > -1) {		// Ответ на GET запрос
+				Answer_check_GET(val, ON);					// Проверяем ответ и выводим лог в Serial
+			}
 		}
 		else{
+			StateGSM.Error_Sent_GET = true;					// Поднимаем флаг, что GET не отправлен
 			if(OUTPUT_LEVEL_UART_GSM){
 				Serial.println(F("ERROR"));
 			}
 		}
-		sendATCommand(F("AT+HTTPACTION=0"), true, false);				// Закрытие http сессии
-	
-		// ========================= Проверяем ответ от сервера ==========================================
-		String val = waitResponse(ON);				// Ждем ответ от Web сервера
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.println(val);
-		}
-		if (val.indexOf(F("+HTTPACTION")) > -1) {	// Ответ на GET запрос
-			Answer_check_GET(val, ON);				// Проверяем ответ и выводим лог в Serial
-		}
+		sendATCommand(F("AT+HTTPACTION=0"), true, false);	// Закрытие http сессии		
 	}
 }

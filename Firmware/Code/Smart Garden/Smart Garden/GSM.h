@@ -12,7 +12,8 @@ extern struct StructGPRSConnection{
 	String IP_GPRS;
 	byte GPRS_Connect;
 	byte Code_Connect_GPRS;					// Номер ошибки подключения к GPRS
-	bool ErrorSentGET;						// Ошибка отправки GET запроса
+	int Code_Error_Sent_GET;				// Номер ответа отправки GET запроса
+	bool Error_Sent_GET;					// Ошибка отправки GET запроса. Повисает когда запрос не отправлен
 } StateGSM;
 
 
