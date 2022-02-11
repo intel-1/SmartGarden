@@ -15,7 +15,7 @@
 // ========================================================================================================
 void Answer_check_GET(String Text, bool LogView){
 	
-	StateGSM.Code_Error_Sent_GET = 255;				// default ошибка "100"
+	StateGSM.Code_Error_Sent_GET = 100;				// default ошибка "100"
 			
 	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL || ControllerSetup){
 		if(LogView){
@@ -27,8 +27,8 @@ void Answer_check_GET(String Text, bool LogView){
 							(F("200")),				// GET запрос успешно получен!!!
 							(F("603"))};			// Сервер не доступен
 	
-	for(byte Pos = 0; Pos < sizeof(Response) / sizeof(Response[0]); Pos ++){						// Ищем в списке возможных ответов
-		if(Text.lastIndexOf(Response[Pos]) != -1){				// И если нашли совпадение
+	for(byte Pos = 0; Pos < sizeof(Response) / sizeof(Response[0]); Pos ++){	// Ищем в списке возможных ответов
+		if(Text.lastIndexOf(Response[Pos]) != -1){								// И если нашли совпадение
 			if(OUTPUT_LEVEL_UART_GSM){
 				switch(Pos){
 					case 0:
@@ -53,7 +53,7 @@ void Answer_check_GET(String Text, bool LogView){
 						if(LogView){
 							Serial.println();
 						}
-					}
+				}
 			}
 		}
 	}
@@ -111,7 +111,6 @@ void InitializingGPRS(){
 			}
 			else{
 				Word = sendATCommand(GPRS_ATs[i], YES, NO);	// Повторно отправляем команду
-				//Serial.println("WAIT");
 				TimerCommand ++;
 			}
 		}
