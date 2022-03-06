@@ -72,6 +72,9 @@ void View_DataEEPROM();						// Вывод в Serial ошибок из EEPROM
 #define E_ResetTimeGSM 86						// Время перезагрузки GSM модуля
 #define E_RebutingFromGSM 87					// Флаг перезагрузки. Поднимается для отправки уведомления по СМС
 #define E_AllowGPRS 88							// Разрешение работы GPRS (0 - отключено, 1 - включено)
+#define E_Mode_OS_INT_LM75 89					// Режим работы встроенное выходного порта
+#define E_INT_LM75_TOS 90						// Значение бита Tos встроенного LM75
+#define E_INT_LM75_THYST 91						// Значение бита Thyst встроенного LM75
 
 
 // ================================================

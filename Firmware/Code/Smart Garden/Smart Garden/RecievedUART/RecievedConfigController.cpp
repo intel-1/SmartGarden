@@ -48,7 +48,7 @@ void RecievedConfigController(){
 			EEPROM.update(E_ReactToMinVCC, InputFromSerial0[15]);					// Реакция на понижение напряжения питания
 		}
 		if(0 <= InputFromSerial0[17] || InputFromSerial0[17] <= 254){				// Разрешенные значения 0-254
-			EEPROM.update(E_ResetTimeGSM, InputFromSerial0[17]);					// Время верезагрузки модуля
+			EEPROM.update(E_ResetTimeGSM, InputFromSerial0[17]);					// Время перезагрузки модуля
 		}
 		if(1 <= InputFromSerial0[18] || InputFromSerial0[18] <= 10){				// Разрешенные значения 1-10
 			EEPROM.update(E_MaximumTimeResponseGSM, InputFromSerial0[18]);			// Максимальное время ожидания ответа от модуля
@@ -63,15 +63,24 @@ void RecievedConfigController(){
 				gsm_vcc_on();
 			}
 			else gsm_vcc_off(); 
-			 
 		}
 		if(0 <= InputFromSerial0[21] || InputFromSerial0[21] <= 1){					// Разрешенное значение 0-1
 			EEPROM.write(E_AllowGPRS, InputFromSerial0[21]);						// Режим работы GPRS
 		}
-		for(byte i = 0; i <= 18; i ++){
-			EEPROM.write(E_NameController + i, InputFromSerial0[22 + i]);			// Имя контроллера
+		if(0 <= InputFromSerial0[22] || InputFromSerial0[22] <= 1){					// Разрешенное значение 0-1
+			EEPROM.update(E_Mode_OS_INT_LM75, InputFromSerial0[22]);				// Режим работы встроенное выходного порта
 		}
-		
+		if(0 <= InputFromSerial0[23] || InputFromSerial0[23] <= 254){				// Разрешенное значение 0-254
+			EEPROM.update(E_INT_LM75_TOS, InputFromSerial0[23]);					// Значение бита TOS встроенного LM75
+			LM75_Tos(ADRESS_INPUT_TEMP_SENSOR, InputFromSerial0[23]);				// Обновляем данные в датчике температуры
+		}
+		if(0 <= InputFromSerial0[24] || InputFromSerial0[24] <= 254){				// Разрешенное значение 0-254
+			EEPROM.update(E_INT_LM75_THYST, InputFromSerial0[24]);					// Значение бита Thyst встроенного LM75
+			LM75_Thyst(ADRESS_INPUT_TEMP_SENSOR, InputFromSerial0[24]);				// Обновляем данные в датчике температуры
+		}		
+		for(byte i = 0; i <= 18; i ++){
+			EEPROM.write(E_NameController + i, InputFromSerial0[25 + i]);			// Имя контроллера
+		}
 		Serial.println();
 		Serial.println(F("Конфигурация обновлена"/*"Data config in EEPROM is updated"*/));
 	}
@@ -200,13 +209,25 @@ void RecievedConfigController(){
 				}
 				// ============================================================================
 				Serial.println(F("Интервалы запуска ф-ций:"));			
-				Serial.print(F("\tВыключение подсветки экрана: "));							Serial.print(EEPROM_int_read(E_LoopLCDLightTime));			Serial.println(F(" сек"));
-				Serial.print(F("\tОпрос датчиков: "));										Serial.print(EEPROM_int_read(E_LoopSensorTime));			Serial.println(F(" сек"));
+					Serial.print(F("\tВыключение подсветки экрана: "));						Serial.print(EEPROM_int_read(E_LoopLCDLightTime));			Serial.println(F(" сек"));
+					Serial.print(F("\tОпрос датчиков: "));									Serial.print(EEPROM_int_read(E_LoopSensorTime));			Serial.println(F(" сек"));
 				if(EEPROM.read(E_ENABLE_LOGING_TO_SD) == ON){								// Если разрешена запись на SD карту
 					Serial.print(F("\tЦиклическая запись на SD показаний датчиков: "));		Serial.print(EEPROM_int_read(E_LoopWriteValueSensorOnSD));	Serial.println(F(" сек"));
-				}
-				//Serial.print(F("E_LoopChannelRun: "));					Serial.print(EEPROM_int_read(E_LoopChannelRun));				Serial.println(F(" sec"));				
-				
+				}				
+				Serial.println(F("Параметры встроенного датчика температуры:"));
+					Serial.print(F("\tРежим работы выходного порта: "));							
+					switch(EEPROM.read(E_Mode_OS_INT_LM75)){
+						case 0:
+							Serial.println(F("Comparator mode"));
+							break;
+						case 1:
+							Serial.println(F("Interrupt mode"));
+							break;
+						default:
+							Serial.println();
+					}
+					Serial.print(F("\tЗначение Tos: "));			Serial.print(EEPROM.read(E_INT_LM75_TOS));		Serial.println(F("*C"));
+					Serial.print(F("\tЗначение Thyst: "));			Serial.print(EEPROM.read(E_INT_LM75_THYST));	Serial.println(F("*C"));
 				Serial.println(F("========================================"));
 				break;
 			case 1:
@@ -232,6 +253,9 @@ void RecievedConfigController(){
 				Serial.print(EEPROM.read(E_IntervalCheckRegistrationGSM));		Serial.print(F(" "));		// Интервал проверки регистрации GSM
 				Serial.print(EEPROM.read(E_WorkSIM800));						Serial.print(F(" "));		// Режим питания SIM800
 				Serial.print(EEPROM.read(E_AllowGPRS));							Serial.print(F(" "));		// Разрешение работы GPRS
+				Serial.print(EEPROM.read(E_Mode_OS_INT_LM75));					Serial.print(F(" "));		// Режим работы встроенное выходного порта
+				Serial.print(EEPROM.read(E_INT_LM75_TOS));						Serial.print(F(" "));		// Значение бита TOS встроенного LM75
+				Serial.print(EEPROM.read(E_INT_LM75_THYST));					Serial.print(F(" "));		// Значение бита Thyst встроенного LM75
 				for (byte i = 0; i < 19; i++){
 					Serial.print(EEPROM.read(E_NameController + i));
 					Serial.print(F(" "));

@@ -11,9 +11,28 @@ extern struct StructGPRSConnection{
 	boolean GSM_Registered;
 	String IP_GPRS;
 	byte GPRS_Connect;
-	byte Code_Connect_GPRS;					// Номер ошибки подключения к GPRS
-	int Code_Error_Sent_GET;				// Номер ответа отправки GET запроса
-	bool Error_Sent_GET;					// Ошибка отправки GET запроса. Повисает когда запрос не отправлен
+	byte GSM_Signal_Level;				// Уровень сигнала GSM сети
+	byte Code_Connect_GPRS;				/* Номер ошибки подключения к GPRS:		
+																				0 - Соединение устанавливается
+																				1 - Соединение установлено
+																				2 - Соединение закрывается
+																				3 - Нет соединения */
+	byte Code_Connect_GSM;				/* Номер ошибки подключения к GSM:		
+																				0 - Не зарегистрирован в сети
+																				1 - Зарегистрирован в сети
+																				3 - Поиск сети
+																				4 - Регистрация отклонена
+																				5 - Неизвестно */
+	byte State_GSM_Module;				/* Состояние GSM модуля:				
+																				0	-	Нет sim карты
+																				1	-	Готов
+																				50	-	Неизвестно */
+	int Code_Error_Sent_GET;			/* Номер ответа отправки GET запроса:
+																				404 - Страница не найдена
+																				200 - GET запрос успешно получен!!!
+																				603 - Сервер не доступен */
+	bool Error_Sent_GET;				/* Состояние отправки GET запроса:		
+																				true - запрос не отправлен */
 } StateGSM;
 
 
@@ -50,19 +69,18 @@ static int8_t CountPhone = sizeof(AllowPhone) / sizeof(AllowPhone[0]);
 static int8_t CountAlarmPhone = sizeof(AlarmPhone) / sizeof(AlarmPhone[0]);
 extern uint8_t BalanceStringLen;		//Число символов от начала строки которые нужно переслать в смс сообщении при получении USSD ответа о балансе
 extern String RingPhone;
-extern boolean _Power_GSM;			// Флаг что GSM модуль включен
-//extern boolean GSMmoduleRegistered;		// Флаг что модуль зарегистрирован в сети
+extern boolean _Power_GSM;				// Флаг что GSM модуль включен
+//extern boolean GSMmoduleRegistered;	// Флаг что модуль зарегистрирован в сети
 //extern boolean GPRSinitializing;		// Флаг что GPRS проинициализирован
 //extern byte ErrorGSM;					// Ошибка регистрации GSM
 
 //extern byte QuantityInitializingGPRS;	// Количество потыток не удачных ошибок инициализации GPRS
 extern boolean ReadinessGSMmodule;		// Проверка готовности GSM модуля
 
-
 extern String Link_LogWebServer;
 extern String Link_LogDataWebServer;
 
-struct MessageQueueGSM{					// Структура для добавления СМС сообщения в очередь отправки
+static struct MessageQueueGSM{					// Структура для добавления СМС сообщения в очередь отправки
 	byte Arg_1_a;
 	byte Arg_1_b;
 	byte Arg_2_a;
@@ -72,8 +90,7 @@ struct MessageQueueGSM{					// Структура для добавления С
 	byte Arg_4_a;
 	byte Arg_4_b;
 	byte PhoneNumber;
-};
-static struct MessageQueueGSM MessageGSM;
+} MessageGSM;
 
 #define ExtentOfTurn 10					// Размер очереди сообщений
 #define QuantityParametersInMessage 10	// Максимальное кол-во параметров в сообщении
@@ -87,30 +104,36 @@ extern byte TurnOfMessagesGSM[ExtentOfTurn][QuantityParametersInMessage];	/* О�
 										|   10	|	|					|	|					|	|					|	|					|					|
 										|-------|---|-------------------|---|-------------------|---|-------------------|---|-------------------|-------------------|  */
 												
-static void(* resetFunc) (void) = 0;	// Reset MC function
+static void(* resetFunc) (void) = 0;		// Reset MC function
 
-String ReadGSM();						//функция чтения данных от GSM модуля
-
+String ReadGSM();							//функция чтения данных от GSM модуля
 void WriteToQueueGSM(struct MessageQueueGSM Par);
-
-void ReadFromQueueGSM(byte Paramm);
-
-void InitializingGSM();					// Инициализация GSM модуля
-
-void SendSMS(String Text, byte Level);	// Отправка СМС
-
+void ReadFromQueueGSM(byte _Paramm);
+void InitializingGSM();						// Инициализация GSM модуля
+void SendSMS(String _Text, byte _Level);	// Отправка СМС
 void balance();
-
 void serial3ISR(); 
+String sendATCommand(String _Command, bool _waiting, bool _logView);	// Параметры: Текст сообщения, ждать или нет ответа от модуля, выводить ли данные в консоль
+void Power_GSM(byte _State);				/* Включение\выключение GSM модуля:		ON	- Включение
+																				OFF - Выключение
+																				RESET - Перезагрузка */
+void InitializingGPRS();
+bool CheckConnectionGPRS();					// Проверка регистрации GPRS
+void SendGETrequest(String _Text);			// Отправка GET пакетов в БД по GPRS
 
-String sendATCommand(String cmd, bool waiting, bool logView);	// Параметры: Текст сообщения, ждать или нет ответа от модуля, выводить ли данные в консоль
 
-void Power_GSM(byte State);							// Включение\выключение GSM модуля
+void Answer_check_GET(String _Text, bool _LogView);	// Проверка ответа от Web сервера на GET запрос
 
-String waitResponse(bool logView);					// Ожидание ответа от GSM модуля 
-byte CheckRegistrationGSM(bool LogView);			// Проверка регистрации в сети			
-byte Check_Readiness_Module(bool LogView);			// Проверка готовности GSM модуля
-byte SignalLevel(bool LogView);						// Уровень сигнала GSM сети
+String waitResponse(bool _logView);					// Ожидание ответа от GSM модуля 
+bool CheckRegistrationGSM(bool _LogView);			/* Проверка регистрации в сети:		Ф-ция возвращает только true или false (зарегистрирован\не зарегистрирован). 
+																						Остальные состояния можно посмотреть в переменной StateGSM.Code_Connect_GSM:
+																								0 - Не зарегистрирован в сети
+																								1 - Зарегистрирован в сети
+																								2 - Поиск сети
+																								3 - Регистрация отклонена
+																								4 - Неизвестно */
+byte Check_Readiness_Module(bool _LogView);			// Проверка готовности GSM модуля
+byte SignalLevel(bool _LogView);					// Уровень сигнала GSM сети
 bool SIM_card_readiness_check();					// Проверка готовности SIM-карты
 
 

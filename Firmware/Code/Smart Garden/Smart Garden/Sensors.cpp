@@ -249,7 +249,7 @@ void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Опред�
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("LM75"));
 			}
-			CalculateLM75(NumberSensor);
+			//CalculateLM75(NumberSensor);
 			break;
 		case 12:								/* INA3221 */
 			if (OUTPUT_LEVEL_UART_SENSOR){

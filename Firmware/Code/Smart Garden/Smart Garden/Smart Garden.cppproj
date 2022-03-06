@@ -274,12 +274,6 @@
     <Compile Include="ExecModules.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="GPRS.cpp">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="GPRS.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="GSM.cpp">
       <SubType>compile</SubType>
     </Compile>

@@ -17,6 +17,49 @@ int StatusMenu = 0;                 // Текущее положение мен�
 boolean StatMenu;                   // Вывод\обновления меню экрана. Значения 1\0
 boolean LightLCDEnable = false;     // Включена ли подсветка экрана. Значения 1\0 (включена\выключена)
 
+
+byte Signal_OFF[8] = {				// 99 dBm
+	B11111,
+	B00000,
+	B01001,
+	B00110,
+	B01001,
+	B00000,
+	B10000 };
+byte Signal_Marginal[8] = {			// 31 dBm
+	B11111,
+	B00000,
+	B00000,
+	B00000,
+	B00000,
+	B01000,
+	B11000 };
+byte Signal_OK[8] = {				// 2-30 dBm
+	B11111,
+	B00000,
+	B00000,
+	B00000,
+	B00100,
+	B01100,
+	B11100 };
+byte Signal_Good[8] = {				// 1 
+	B11111,
+	B00000,
+	B00000,
+	B00010,
+	B00110,
+	B01110,
+	B11110 };
+byte Signal_Excellent[8] = {		// 0
+	B11111,
+	B00000,
+	B00001,
+	B00011,
+	B00111,
+	B01111,
+	B11111 };
+	
+
 byte TempChar[8] = {                // Значок градуса
 	B00111,
 	B00101,
@@ -81,6 +124,16 @@ byte BatteryChar100[8] = {                // Батарейка 100% заряд�
 	B01111 };
 */
 
+void InitializingLCDicons(){			// Инициализация значков для LCD экрана
+	lcd.createChar(1, TempChar);		// Инициализация значка температуры
+	lcd.createChar(2, Signal_OFF);
+	lcd.createChar(3, Signal_Marginal);
+	lcd.createChar(4, Signal_OK);
+	lcd.createChar(5, Signal_Good);
+	lcd.createChar(6, Signal_Excellent);
+}
+
+
 void UpdateMenu(){
 	switch (StatusMenu){
 		case 1:
@@ -97,6 +150,27 @@ void UpdateMenu(){
 			break;
 	}		
 }
+
+
+void ViewSignalLevel(byte _Level){
+	lcd.setCursor(19,0);
+	if(_Level == 0){
+		lcd.print(char(6));			// 	lcd.createChar(6, Signal_Excellent);
+	}
+	else if(_Level == 1){
+		lcd.print(char(5));			// 	lcd.createChar(5, Signal_Good);
+	}
+	else if(2 <= _Level <= 30){
+		lcd.print(char(4));			// 	lcd.createChar(4, Signal_OK);
+	}
+	else if(_Level == 31){
+		lcd.print(char(3));			// 	lcd.createChar(3, Signal_Marginal);
+	}
+	else if(_Level == 99){
+		lcd.print(char(2));			// 	lcd.createChar(2, Signal_OFF);
+	}
+}
+
 
 
 void WindowMenu(byte NumberMenu, byte Update){   

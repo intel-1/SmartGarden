@@ -6,9 +6,9 @@
 #include <Arduino.h>
 
 
+
+
 extern LiquidCrystal_I2C lcd;
-
-
 
 extern char buffer[16];
 extern byte EnableKey;
@@ -16,18 +16,12 @@ extern boolean EncoderRead;
 extern int StatusMenu;          // Текущее положение меню
 extern boolean StatMenu;        // Вывод\обновления меню экрана. Значения 1\0 
 extern boolean LightLCDEnable;  // Включена ли подсветка экрана. Значения 1\0 (включена\выключена)
-//extern int ch;
-extern byte TempChar[8];
-// extern byte BatteryChar0[8];
-// extern byte BatteryChar20[8];
-// extern byte BatteryChar40[8];
-// extern byte BatteryChar60[8];
-// extern byte BatteryChar80[8];
-// extern byte BatteryChar100[8];
 
+void InitializingLCDicons();					// Инициализация значков для LCD экрана
 void UpdateMenu();
 
 void WriteToLCD(String Text, byte line);
+void ViewSignalLevel(byte Level);
 
 void WindowMenu(byte NumberMenu, byte Update); 
 

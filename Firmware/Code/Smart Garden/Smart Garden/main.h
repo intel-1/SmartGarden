@@ -22,13 +22,17 @@ extern boolean RegistrationGSM;						// Флаг что отправлена к�
 extern int QuantityPacketGPRS;						// Счетчик количества отправок по GPRS
 extern int QuantityPacketGPRSundoError;				// Счетчик количества отправок по GPRS до зависания
 
+extern unsigned int LoopCheckRegistrationGSM;		// Интервал проверки регистрации GSM
+
+extern unsigned int LoopReadInternalTemp;			// Интервал измерения встроеный LM75
+
 void TimeIntervals();
 void ManagementVCC();
 void MainFunc();
-void TermostatFunc(byte NumberChannel);
-void TimerFunc(byte NumberChannel);
+void TermostatFunc(byte _NumberChannel);
+void TimerFunc(/*byte _NumberChannel*/);
 void EncoderKeyInt();
 void CleanTimeIntervals();
-boolean ArchiveRestoreSaveWordData(byte Type);
+boolean ArchiveRestoreSaveWordData(byte _Type);
 
 #endif
