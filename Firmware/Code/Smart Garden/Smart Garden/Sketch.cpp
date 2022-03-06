@@ -513,7 +513,7 @@ void loop() {
 									нет денег на счете???? */
 				SignalLevel(ON);								// Проверяем уровень сигнала сети
 			}
-		}
+		} //
 		else{													// если не подключен GPRS
 			if(CheckRegistrationGSM(ON)){						// Проверяем регистрацию GSM и если зарегистрирован	
 				switch(StateGSM.Code_Connect_GPRS){				// Разбираемся с ошибками GPRS
