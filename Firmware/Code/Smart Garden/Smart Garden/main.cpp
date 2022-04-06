@@ -1,7 +1,6 @@
 ﻿#include <avr/wdt.h>
 #include <Arduino.h>
 
-#include "DataToSerial.h"
 #include "LCDdisplay.h"
 //#include "SDcard.h"
 #include "Sensors.h"
@@ -182,9 +181,9 @@ void TimeIntervals(){
 			CalculateSensors();											// Измеряем значения датчиков
 			if(OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println();
-				Serial.println(F("==============================================="));
-				Serial.println(F("===== Измеренные показания всех датчиков ======"));
-				Serial.println(F("==============================================="));
+				Serial.println(F("========================================================="));
+				Serial.println(F("========== Измеренные показания всех датчиков ==========="));
+				Serial.println(F("========================================================="));
 				wdt_reset();
 				ViewValueAllSensors();									// Выводим измеренные показания всех датчиков
 			}
@@ -204,34 +203,43 @@ void TimeIntervals(){
 			Serial.print(F("Напряжение питания: ")); Serial.println(VCC);
 			Serial.print(F("Температура контроллера: ")); Serial.println(Ti);
 		}
+		
+		
+		//sendATCommand("AT+CNTPCID=1", true, true);
+		
+		//sendATCommand("AT+CNTP=\"pool.ntp.org\",7", true, true);
+		
+		//sendATCommand("AT+CNTP", true, true);
+		
+		//sendATCommand("AT+CCLK?", true, true);
+		
+		
 	} 
 	// ===============================================================================================================
-	if(EEPROM.read(E_WorkSIM800) == ON){						// Если GSM модуль настроен на постоянную работу
+	if(EEPROM.read(E_WorkSIM800) == ON){							// Если GSM модуль настроен на постоянную работу
 		if(T_second > (LoopOutputGPRS + 60)){
-			//if(ConnectionGPRS()){								// Проверяем подключение по GPRS	
-				LoopOutputGPRS = T_second;
-				SendGETrequest(String	("AT+HTTPPARA=\"URL\",\"") + Link_LogDataWebServer + 
-									(F("&Ti="))	  + Ti									 + 
-									(F("&S_1="))  + RealValueSensors[SENSOR_1][VALUE_1]	 + 
-									(F("&S_2="))  + RealValueSensors[SENSOR_2][VALUE_1]  + 
-									(F("&S_3="))  + RealValueSensors[SENSOR_3][VALUE_1]  + 
-									(F("&S_4="))  + RealValueSensors[SENSOR_4][VALUE_1]  + 
-									(F("&S_5="))  + RealValueSensors[SENSOR_5][VALUE_1]  + 
-									(F("&S_6="))  + RealValueSensors[SENSOR_6][VALUE_1]  + 
-									(F("&S_7="))  + RealValueSensors[SENSOR_7][VALUE_1]  + 
-									(F("&S_8="))  + RealValueSensors[SENSOR_8][VALUE_1]  + 
-									(F("&S_9="))  + RealValueSensors[SENSOR_9][VALUE_2]  + 
-									(F("&S_10=")) + RealValueSensors[SENSOR_10][VALUE_1] +
-									(F("&S_11=")) + RealValueSensors[SENSOR_11][VALUE_1] + 
-									(F("&S_12=")) + RealValueSensors[SENSOR_12][VALUE_1] +
-									(F("&S_13=")) + RealValueSensors[SENSOR_13][VALUE_1] +
-									(F("&S_14=")) + RealValueSensors[SENSOR_14][VALUE_1] + 
-									(F("&S_15=")) + RealValueSensors[SENSOR_15][VALUE_1] +
-									(F("&S_16=")) + RealValueSensors[SENSOR_16][VALUE_1] +
-									(F("&VCC="))  + VCC									 +
+			LoopOutputGPRS = T_second;
+			SendGETrequest(String	(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogDataWebServer + 
+									(F("&Ti="))	  + Ti									  + 
+									(F("&S_1="))  + RealValueSensors[SENSOR_1] [VALUE_1]  + 
+									(F("&S_2="))  + RealValueSensors[SENSOR_2] [VALUE_1]  + 
+									(F("&S_3="))  + RealValueSensors[SENSOR_3] [VALUE_1]  + 
+									(F("&S_4="))  + RealValueSensors[SENSOR_4] [VALUE_1]  + 
+									(F("&S_5="))  + RealValueSensors[SENSOR_5] [VALUE_1]  + 
+									(F("&S_6="))  + RealValueSensors[SENSOR_6] [VALUE_2]  + 
+									(F("&S_7="))  + RealValueSensors[SENSOR_7] [VALUE_1]  + 
+									(F("&S_8="))  + RealValueSensors[SENSOR_8] [VALUE_1]  + 
+									(F("&S_9="))  + RealValueSensors[SENSOR_9] [VALUE_2]  + 
+									(F("&S_10=")) + RealValueSensors[SENSOR_10][VALUE_1]  +
+									(F("&S_11=")) + RealValueSensors[SENSOR_11][VALUE_1]  + 
+									(F("&S_12=")) + RealValueSensors[SENSOR_12][VALUE_1]  +
+									(F("&S_13=")) + RealValueSensors[SENSOR_13][VALUE_1]  +
+									(F("&S_14=")) + RealValueSensors[SENSOR_14][VALUE_1]  + 
+									(F("&S_15=")) + RealValueSensors[SENSOR_15][VALUE_1]  +
+									(F("&S_16=")) + RealValueSensors[SENSOR_16][VALUE_1]  +
+									(F("&VCC="))  + VCC									  +
 									(F("\"")));
-			}
-		//}
+		}
 	}
 }
 
@@ -474,7 +482,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 	boolean _ViewStateMode_3 = false;
 	boolean _ViewStateMode_4 = false;
 	boolean _ModuleFound = false;
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+	if(OUTPUT_LEVEL_UART_CHANNEL){
 		//Serial.print(F("\t\t\tManagement of channel is started in Termostat mode (")); Serial.print(Mode); Serial.println(F(")"));
 		switch(_Mode){
 			case 1:
@@ -485,7 +493,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		}
 	}
 	if(!WorkValueSensor.Error){												// Если не висит ошибка показаний датчика 
-		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+		if(OUTPUT_LEVEL_UART_CHANNEL){
 			Serial.print(F("\t\t\t\tValue sensor: ")); Serial.println(WorkValueSensor.Value);
 			Serial.println(F("\t\t\t\t...Manage channel---> "));
 		}
@@ -497,7 +505,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 					// ========================================================================================
 					case 1:															// Пропорциональный режим управления
 						if (WorkValueSensor.Value >= WorkChannel.MinValue && WorkValueSensor.Value <= WorkChannel.MaxValue){	// Значение сенсора в рабочем диапазоне
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								if(!_ViewStateMode_1){												// Флаг чтобы не выводить два раза
 									Serial.print(F("\t\t\t\t\t...MinValueChannel (")); Serial.print(WorkChannel.MinValue); 
 										Serial.print(F(") < ")); Serial.print(F("Value (")); Serial.print(WorkValueSensor.Value); 
@@ -516,7 +524,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 							_OldValue[WorkChannel.Number - 1] = WorkValueSensor.Value;
 						}					
 						else if (WorkValueSensor.Value > WorkChannel.MaxValue){					// Значение сенсора выше максимального
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								if(!_ViewStateMode_1){
 									Serial.print(F("\t\t\t\t\t...Value (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") > MaxValueChannel ("));  Serial.print(EEPROM.read(E_MaxValueChannel + WorkChannel.Number)); Serial.println(F(")"));
 								}
@@ -524,7 +532,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 							WorkValueSensor.Value = WorkChannel.MaxValue;						// Заставляем контроллер "открыть" исполняемый модуль
 						}
 						else if(WorkValueSensor.Value < WorkChannel.MinValue){					// Значение сенсора меньше минимального
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								if(!_ViewStateMode_1){
 									Serial.print(F("\t\t\t\t\t...Value (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") < MinValueChannel ("));  Serial.print(WorkChannel.MinValue); Serial.println(F(")"));
 								}
@@ -540,7 +548,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 						_StepValue = EEPROM.read(E_MinValueChannel + WorkChannel.Number);
 						if(WorkExecModule.ModuleFound){	
 							if(WorkValueSensor.Value > _StepValue){	
-								if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+								if(OUTPUT_LEVEL_UART_CHANNEL){
 									if(!_ViewStateMode_2){
 										Serial.print(F("\t\t\t\t\t...RealValue (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") > ")); Serial.print(F("MinValueChannel (")); Serial.print(_StepValue); Serial.println(F(")"));
 									}
@@ -548,7 +556,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 							WorkValueSensor.Value = _StepValue;						// Заставляем контроллер "открыть" исполняемый модуль
 							}
 							else{
-								if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+								if(OUTPUT_LEVEL_UART_CHANNEL){
 									if(!_ViewStateMode_2){
 										Serial.print(F("\t\t\t\t\t...RealValue (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") < ")); Serial.print(F("MinValueChannel (")); Serial.print(_StepValue); Serial.println(F(")"));
 									}
@@ -563,7 +571,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 					case 3:															// Режим управления при значении датчика меньше E_MinValueChannel (например включаем обогрев)
 						_StepValue = EEPROM.read(E_MinValueChannel + WorkChannel.Number);
 						if(WorkValueSensor.Value < _StepValue){						// Показания датчика ниже настроек группы (запускаем исполнительные модули)
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								if(!_ViewStateMode_3){
 									Serial.print(F("\t\t\t\t\t...RealValue (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") < ")); Serial.print(F("MinValueChannel (")); Serial.print(_StepValue); Serial.println(F(")"));	
 								}
@@ -571,7 +579,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 							WorkValueSensor.Value = _StepValue;						// Заставляем контроллер "открыть" исполняемый модуль
 						}
 						else{
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								if(!_ViewStateMode_3){
 									Serial.print(F("\t\t\t\t...RealValue (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") > ")); Serial.print(F("MinValueChannel (")); Serial.print(_StepValue); Serial.println(F(")"));
 								}
@@ -585,7 +593,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 			}
 			if((Module + 1) == QuantityExecModule){									// Если прошли по всем модулям
 				if(!_ModuleFound){													// И не нашли ни одного нужного
-					if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+					if(OUTPUT_LEVEL_UART_CHANNEL){
 						Serial.println(F("\t\t\t\t\t...Management of channel is stopped. Modules is not found"));
 					}
 					_ModuleFound = false;
@@ -612,7 +620,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		// ===================================================================
 	}
 	else{								// Если висит ошибка данных датчика или он отключен
-		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+		if(OUTPUT_LEVEL_UART_CHANNEL){
 			Serial.println(F("\t\t\t\t...Management of channel is stopped. There are no data of the sensor"));
 		}
 	}
@@ -622,7 +630,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
  
 void WorkTimerMode(byte _Mode){										// Рабочая ф-ция для режима таймера
 	boolean ModuleFound = false;
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+	if(OUTPUT_LEVEL_UART_CHANNEL){
 		Serial.print(F("Channel ")); Serial.print(WorkChannel.Number); Serial.println(F(" is started"));
 		Serial.println(F("Management of channel is started in timer mode"));
 		switch(_Mode){
@@ -684,7 +692,7 @@ void WorkTimerMode(byte _Mode){										// Рабочая ф-ция для ре
 		}
 		if(Module == QuantityExecModule){									// Если прошли по всем модулям
 			if(!ModuleFound){												// И не нашли ни одного нужного
-				if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+				if(OUTPUT_LEVEL_UART_CHANNEL){
 					Serial.println(F("\t\t...Управление каналом остановлено. Исполнительный модуль не найден"/*"\t\t...Management of channel is stopped. Modules is not found"*/));
 				}
 				ModuleFound = false;
@@ -702,14 +710,14 @@ boolean ValidDataSensors(byte _NumberChannel){							// Ф-ция для пол�
 			return true;
 		}
 		else{
-			if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+			if(OUTPUT_LEVEL_UART_CHANNEL){
 				Serial.println(F("\t\t\t\t...Показание датчика не изменилось"/*"\t\t\t\t...The value of the sensor did not change"*/));
 			}
 			return false;
 		}
 	}
 	else{ 
-		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+		if(OUTPUT_LEVEL_UART_CHANNEL){
 			Serial.println(F("\t\t\t\t...Ошибка показания датчика"/*"\t\t\t\t...The value of the sensor is error"*/));
 		}
 		return false;
@@ -723,7 +731,7 @@ void TermostatFunc(byte _NumberChannel){				// Запуск управления
 	WorkChannel.MinValue = 0;
 	WorkChannel.MaxValue = 0;
 	WorkChannel.TypeControll = EEPROM.read(E_Controll_Channel + _NumberChannel);		// Сохраняем тип управления каналом
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+	if(OUTPUT_LEVEL_UART_CHANNEL){
 		Serial.print(F("\t\t\tManagement of channel is started in Termostat mode (")); Serial.print(WorkChannel.TypeControll); Serial.println(F(")"));
 	}
 	if(ValidDataSensors(_NumberChannel)){				// Проверяем изменилось ли измеренное значение датчика
@@ -741,7 +749,7 @@ void TermostatFunc(byte _NumberChannel){				// Запуск управления
 				WorkChannel.MinValue = EEPROM.read(E_MinValueChannel + _NumberChannel);			// Сохраняем минимальное значение датчика в группе
 				break;
 			default:
-				if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+				if(OUTPUT_LEVEL_UART_CHANNEL){
 					Serial.print(F("\t\t\tManagement of channel '")); Serial.print(_NumberChannel); Serial.println(F("' is not configured"));
 				}
 		}
@@ -760,14 +768,14 @@ void TimerFunc(/*byte _NumberChannel*/){						// Запуск управлени
 	WorkChannel.TimerStop_hours = 0;
 	WorkChannel.TimerStop_minute = 0;
 	WorkChannel.Timer_delta = 0;
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+	if(OUTPUT_LEVEL_UART_CHANNEL){
 		Serial.println(F("=================================================="));
 		Serial.println(F(" =========== Control unit of channel ============ "));
 		Serial.println(F("  ==============================================  "));
 	}	
 	for(byte NumberChannel = 1; NumberChannel <= QuantityChannel; NumberChannel ++){	// Проходим по всем каналам
 		if(EEPROM.read(E_StatusChannel + NumberChannel) == 1){								// Если канал включен
-			if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+			if(OUTPUT_LEVEL_UART_CHANNEL){
 				Serial.print(F("----- Channel ")); Serial.print(NumberChannel); Serial.println(F(" is started -----"));
 			}
 			WorkChannel.Number = NumberChannel;											// Сохраняем номер группы
@@ -791,13 +799,13 @@ void TimerFunc(/*byte _NumberChannel*/){						// Запуск управлени
 					WorkTimerMode(6);
 					break;
 				default:
-					if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+					if(OUTPUT_LEVEL_UART_CHANNEL){
 						Serial.print(F("Management of channel '")); Serial.print(NumberChannel); Serial.println(F("' is not configured"));
 					}
 			}
 		}
 	}
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL && !ControllerSetup){
+	if(OUTPUT_LEVEL_UART_CHANNEL_AND_SETUP){
 		Serial.println(F("============ Close management channel's ============"));
 		Serial.println(F(""));
 	}

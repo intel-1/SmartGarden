@@ -72,11 +72,11 @@ void RecievedConfigController(){
 		}
 		if(0 <= InputFromSerial0[23] || InputFromSerial0[23] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_TOS, InputFromSerial0[23]);					// Значение бита TOS встроенного LM75
-			LM75_Tos(ADRESS_INPUT_TEMP_SENSOR, InputFromSerial0[23]);				// Обновляем данные в датчике температуры
+			LM75_Tos(ADDRESS_INPUT_TEMP_SENSOR, InputFromSerial0[23]);				// Обновляем данные в датчике температуры
 		}
 		if(0 <= InputFromSerial0[24] || InputFromSerial0[24] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_THYST, InputFromSerial0[24]);					// Значение бита Thyst встроенного LM75
-			LM75_Thyst(ADRESS_INPUT_TEMP_SENSOR, InputFromSerial0[24]);				// Обновляем данные в датчике температуры
+			LM75_Thyst(ADDRESS_INPUT_TEMP_SENSOR, InputFromSerial0[24]);			// Обновляем данные в датчике температуры
 		}		
 		for(byte i = 0; i <= 18; i ++){
 			EEPROM.write(E_NameController + i, InputFromSerial0[25 + i]);			// Имя контроллера

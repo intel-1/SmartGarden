@@ -44,11 +44,12 @@ void StatusLED(byte Warning){
 Функция сигнальных светодиодов.
 Описание:
   0 - загрузка прошла штатно ()
-  1 - ошибки SD карты
-    11 - отсутствует SD карта 
-    11 - ошибка записи на SD карту
+  1 - низкое напряжение питания
+  2 - ошибки SD карты
+    21 - отсутствует SD карта 
+    22 - ошибка записи на SD карту
   3 - GSM модуля:
-    31 - отстутвует VCC модуля
+    31 - отстутвует GSM модуля
     32 - нет регистрации в сети
     33 - низкий баланс счета
   4 - низкий заряд батареи
@@ -82,7 +83,19 @@ void StatusLED(byte Warning){
 				_delay_ms(delay_blink);
 			}    
 			break;
-		case 11:
+		case 1:
+			for(byte i=0; i<=2; i++){
+				status_led_red_on();
+				_delay_ms(400);
+				status_led_red_off();
+				_delay_ms(400);
+				
+				status_led_red_on();
+				_delay_ms(400);
+				status_led_red_off();
+			}
+			break;
+		case 21:
 			for(byte i = 0; i<=3; i++){
 				status_led_blue_on();
 				status_led_green_on();
@@ -92,7 +105,7 @@ void StatusLED(byte Warning){
 				_delay_ms(delay_blink);
 			}
 			break;  
-		case 12:
+		case 22:
 			for(byte i = 0; i<=3; i++){
 				status_led_blue_on();
 				_delay_ms(delay_blink);

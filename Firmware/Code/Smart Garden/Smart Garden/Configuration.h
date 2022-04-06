@@ -10,22 +10,21 @@
 
 extern char VersionFirmware[];
 extern char Short_VersionFirmware[];
+extern char TextOfStartController[];
 
-extern String TextOfStartController;
-
+// ======================================================================
 extern boolean ControllerSetup;			// Для обозначения стадии загрузки контроллера (Setup)
 extern byte LOGING_TO_SERIAL;
 extern char NameSensor[17][20];			// Всего датчиков 16 шт, но счет для удобства идет с единицы.
-
-#define ADRESS_INPUT_TEMP_SENSOR 0x4c	// Адрес встроенного датчика температуры LM75
-
 // ======================================================================
-#define QuantityExecModule 16		// Количество исполнительных модулей. Счет идет с единицы, нулевого нет!!!!!
-#define QuantityChannel 16			// Количество групп. Счет идет с единицы, нулевого нет!!!!!
-#define QuantitySensors 16			// Количество сенсоров. Счет идет с единицы, нулевого нет!!!!!
-#define QuantityInputGPIO 6			// Количество портов группы "Input GPIO"
+#define ADDRESS_INPUT_TEMP_SENSOR 0x4c	// Адрес встроенного датчика температуры LM75
+#define ADDRESS_INPUT_LCD 0x3f			// Адрес LCD экрана
 // ======================================================================
-
+#define QuantityExecModule 16			// Количество исполнительных модулей. Счет идет с единицы, нулевого нет!!!!!
+#define QuantityChannel 16				// Количество групп. Счет идет с единицы, нулевого нет!!!!!
+#define QuantitySensors 16				// Количество сенсоров. Счет идет с единицы, нулевого нет!!!!!
+#define QuantityInputGPIO 6				// Количество портов группы "Input GPIO"
+// ======================================================================
 #define SENSOR_0 0
 #define SENSOR_1 1
 #define SENSOR_2 2
@@ -46,16 +45,49 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define SENSOR_17 17
 #define SENSOR_18 18
 #define SENSOR_19 19
-
+// ======================================================================
 #define VALUE_1 0
 #define VALUE_2 1
 #define VALUE_3 2
-
+// ======================================================================
 #define ON 1
 #define YES 1
 #define OFF 0
 #define NO 0
 #define RESET 2
+// ======================================================================
+#define LCD_LINE_1 0
+#define LCD_LINE_2 1
+#define LCD_LINE_3 2
+#define LCD_LINE_4 3
+// ======================================================================
+#define LCD_START_SYMBOL_1 0
+#define LCD_START_SYMBOL_2 1
+#define LCD_START_SYMBOL_3 2
+#define LCD_START_SYMBOL_4 3
+#define LCD_START_SYMBOL_5 4
+#define LCD_START_SYMBOL_6 5
+#define LCD_START_SYMBOL_7 6
+#define LCD_START_SYMBOL_8 7
+#define LCD_START_SYMBOL_9 8
+#define LCD_START_SYMBOL_10 9
+#define LCD_START_SYMBOL_11 10
+#define LCD_START_SYMBOL_12 11
+#define LCD_START_SYMBOL_13 12
+#define LCD_START_SYMBOL_14 13
+#define LCD_START_SYMBOL_15 14
+#define LCD_START_SYMBOL_16 15
+#define LCD_START_SYMBOL_17 16
+#define LCD_START_SYMBOL_18 17
+#define LCD_START_SYMBOL_19 18
+#define LCD_START_SYMBOL_20 19
+// ======================================================================
+#define LED_START_CONTROLLER 0
+#define LED_ERROR_VCC 1
+#define LED_ERROR_SD_CARD 2
+#define LED_NOT_SD_CARD 11
+
+
 
 // =============================================================================
 // ========================== Уровни логирования в UART ========================
@@ -68,11 +100,12 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define UART_LOG_LEVEL_GSM 5
 #define UART_LOG_LEVEL_ERROR 7
 
-
 #define OUTPUT_LEVEL_UART_GSM					LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL || ControllerSetup
 #define OUTPUT_LEVEL_UART_SENSOR				LOGING_TO_SERIAL == UART_LOG_LEVEL_SENSOR || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL || ControllerSetup
 #define OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP	LOGING_TO_SERIAL == UART_LOG_LEVEL_MODULE || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL
 #define OUTPUT_LEVEL_UART_MODULE_AND_SETUP		LOGING_TO_SERIAL == UART_LOG_LEVEL_MODULE || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL && !ControllerSetup
+#define OUTPUT_LEVEL_UART_CHANNEL				LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL
+#define OUTPUT_LEVEL_UART_CHANNEL_AND_SETUP		LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL && !ControllerSetup
 
 // =============================================================================
 // ============================== Порты контроллера ============================

@@ -86,23 +86,23 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 	uint16_t full = lum & 0xFFFF;
 	
 	if(lum == 0){												// Если значение датчика не получена
-		SensorsError[NumberSensor][VALUE_2] = 1;					// Поднимаем ошибку чтения данных датчиком
-		RealValueSensors[NumberSensor][VALUE_2] = 0;				// Обнуляем значение датчика в массиве
+		SensorsError[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
+		RealValueSensors[NumberSensor][VALUE_2] = 0;			// Обнуляем значение датчика в массиве
 	}
 	else{
-		SensorsError[NumberSensor][VALUE_2] = 0;						// Снимаем возможную ошибку чтения данных
+		SensorsError[NumberSensor][VALUE_2] = 0;				// Снимаем возможную ошибку чтения данных
 		switch(EEPROM.read(E_ConfigSensor_A + NumberSensor)){
 			case 1:
 				if(EEPROM_int_read(E_ConfigSensor_B + NumberSensor) == 1){
 					RealValueSensors[NumberSensor][VALUE_2] = CalculateToLux(Sensor, ir, full);	// Измеряем в люксах
 				}
-				else RealValueSensors[NumberSensor][VALUE_2] = full - ir;							// Измеряем в люминах
+				else RealValueSensors[NumberSensor][VALUE_2] = full - ir;						// Измеряем в люминах
 				break;
 			case 2:
 				if(EEPROM_int_read(E_ConfigSensor_B + NumberSensor) == 1){
 					RealValueSensors[NumberSensor][VALUE_2] = CalculateToLux(Sensor, ir, full);	// Измеряем в люксах
 				}	
-				else RealValueSensors[NumberSensor][VALUE_2] = full;								// Измеряем в люминах
+				else RealValueSensors[NumberSensor][VALUE_2] = full;							// Измеряем в люминах
 				break;
 			case 3:
 				if(EEPROM_int_read(E_ConfigSensor_B + NumberSensor) == 1){

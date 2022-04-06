@@ -19,12 +19,14 @@
 float CfCalcDC = 0;										// Поправочные коэфициенты для вычисления VCC
 float VCC = 0.0;										// Текущее напряжение питания
 float Ti = 0;											// Температура встроенного температурного датчика (LM75A)
-int RealValueADC[QuantitySensors];						// Текущие значения аналоговых портов
+int RealValueADC[QuantitySensors + 1];					// Текущие значения аналоговых портов
 float RealValueSensors[QuantitySensors + 1][3];			// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
 float OldValueSensors[QuantitySensors + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-byte SensorsError[QuantitySensors][3];					// Ошибки датчиков
+float Buffer_Value_Sensors[QuantitySensors + 1][3];		// "Сырые" значения датчиков
+byte SensorsError[QuantitySensors + 1][3];				// Ошибки датчиков
 boolean DebugRepet_1;									// Повторять ли вывод в консоль
 int LoopTimeRunCalculateSensor[QuantitySensors + 1];	// Временные интервалы измерения сенсоров
+
 
 struct StructQuantityCalcSensors QuantityCalcSensors;
 
@@ -49,6 +51,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	byte maxLongName = 0;
 	byte maxLongValue[3];
 	byte LongLinesValue;
+	byte maxLongState = 0;
 	
 	maxLongValue[VALUE_1] = 0;
 	maxLongValue[VALUE_2] = 0;
@@ -68,18 +71,29 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 		}
 	}
 	
-	Serial.println(F(" Название  |  Измеренные показания  | Ошибки"));
-	Serial.println(F("--------------------------------------------"));
+	Serial.println(F(" Название   |  Статус  |  Измеренные показания  | Ошибки"));
+	Serial.println(F("---------------------------------------------------------"));
 	
 	for(byte Sensor = 1; Sensor <= QuantitySensors; Sensor++){
-		Serial.print(NameSensor[Sensor]);
-		byte LongLines = strlen(NameSensor[Sensor]);
+		Serial.print(NameSensor[Sensor-1]);
+		byte LongLines = strlen(NameSensor[Sensor-1]);
 		if(LongLines <= maxLongName){
 			byte Space = maxLongName - LongLines;
 			for(byte i = 1; i <= Space; i++){
 				Serial.print(F(" "));
 			}
 		}
+
+		Serial.print(F("   "));		
+		switch(EEPROM.read(E_StatusSensor + Sensor)){
+			case 0:
+				Serial.print(F("ВЫКЛ"));
+				break;
+			case 1:
+				Serial.print(F("ВКЛ "));
+				break;
+		}
+		Serial.print(F("   "));		
 					
 		for(byte Value = 0; Value < 3; Value++){
 			if(Value == 0){
@@ -109,7 +123,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 		}
 		Serial.println();
 	}
-	Serial.println(F("==============================================="));
+	Serial.println(F("========================================================="));
 	Serial.println();
 }
 
@@ -290,58 +304,15 @@ void SentTextToUART(byte NumberSensor){
 void CalculateSensors(){																		// Определяем какие показания хотим измерять (байт конфигурации E_Type_B_Sensor)
 	for (byte NumberSensor = 1; NumberSensor <= QuantitySensors; NumberSensor ++){				// Проходим по всем датчикам
 		wdt_reset();
-		bool AllowSaveValue = false;
 		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){									// Если датчик включен																								
-			boolean AllowReadSensors = AllowCalculateSensor(NumberSensor);						// Проверяем пришло ли время опрашивать датчик
 			byte Type_B_Sensor = EEPROM.read(E_Type_B_Sensor + NumberSensor);
-			if(ControllerSetup){																// Если контроллер в процессе загрузки
-				SentTextToUART(NumberSensor);													// Выводим текст в UART
-				DefinitionSensor(NumberSensor, Type_B_Sensor);									// Просто измеряем показания
-			}
-			else{																				
-				if(AllowReadSensors){															// Если разрешено опрашивать датчик			
-					SentTextToUART(NumberSensor);												// Выводим текст в UART
-					if(QuantityCalcSensors.QuantityCalc[NumberSensor] <= EEPROM.read(E_QuantityReadSensors + NumberSensor)){
-						DefinitionSensor(NumberSensor, Type_B_Sensor);							// Передаем в ф-цию номер датчика и тип измеряемых данных
-						for(byte SGB = 0; SGB < 3; SGB ++){										// Проходим по всем байтам в поисках ошибки измерения
-							//Serial.println(QuantityCalcSensors.SumValue[NumberSensor][SGB]);
-							if(SensorsError[NumberSensor][SGB] == 1){				           			// Если находим ошибку
-								AllowSaveValue = false;
-								SGB = 3;
-							}
-							else AllowSaveValue = true;
-						}
-						if(AllowSaveValue){														// Если нет ни одной ошибки датчика
-							QuantityCalcSensors.QuantityCalc[NumberSensor] ++;					// Увеличиваем счетчик измерений
-						}
-						else{
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
-								Serial.println(F("\t\t==== ошибка, показания не сохраняются ==="));
-							}
-						}
-					}
-					// ======================================================================================================
-					if(QuantityCalcSensors.QuantityCalc[NumberSensor] > EEPROM.read(E_QuantityReadSensors + NumberSensor)){
-						if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
-							Serial.print(F("\t\t...Сохраняем полученные значения"));
-						}
-						for(byte SGB = 0; SGB < 3; SGB ++){	
-							RealValueSensors[NumberSensor][SGB] = QuantityCalcSensors.SumValue[NumberSensor][SGB]/(QuantityCalcSensors.QuantityCalc[NumberSensor]-1);	// Сохраняем итоговое значение датчика (делим сумму показаний на количество измерений)
-							QuantityCalcSensors.SumValue[NumberSensor][SGB] = 0;
-						}
-						QuantityCalcSensors.QuantityCalc[NumberSensor] = 1;					// Обнуляем кол-во измерений
-						if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
-							Serial.println(F("...ОК"));
-						}
-					}
-				}
-			}
-			if(AllowReadSensors && AllowSaveValue){											// Если раньше разрешено ли было опрашивать и сохранять значение датчика
+			if(AllowCalculateSensor(NumberSensor)){																
+				DefinitionSensor(NumberSensor, Type_B_Sensor);									// Измеряем показания
 				for(byte SGB = 0; SGB < 3; SGB ++){											// Проходим по всем байтам привязки к круппам
 					byte NumberChannel = EEPROM.read(E_SBG + (NumberSensor*3) + SGB);		// Получаем номер группы к которой привязано значение датчика
 					if(NumberChannel != 0){													// Группа "0" служебная, управление по ней не идет
 						if(EEPROM.read(E_StatusChannel + NumberChannel) == 1){				// Если группа включена	
-							if(LOGING_TO_SERIAL == UART_LOG_LEVEL_CHANNEL || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
+							if(OUTPUT_LEVEL_UART_CHANNEL){
 								Serial.println(F("\t\t==========================="));
 								Serial.print(F("\t\t...the channel ")); Serial.print(NumberChannel); Serial.print(F(" is connected to value ")); Serial.print(SGB+1); Serial.println(F("..."));
 							}

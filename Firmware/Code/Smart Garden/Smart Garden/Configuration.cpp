@@ -5,10 +5,7 @@
 
 char VersionFirmware[] = "firmware 2.0.2";
 char Short_VersionFirmware[] = "ver. 2.0.2";
-
-
-
-String TextOfStartController = "Controller is started";
+char TextOfStartController[] = "Controller is started";
 
 
 boolean ControllerSetup;					// ƒл€ обозначени€ стадии загрузки контроллера (Setup)

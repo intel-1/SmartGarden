@@ -9,7 +9,6 @@
 #include "lib\SD.h"
 #include "lib\SPI.h"
 
-#include "DataToSerial.h"
 #include "LCDdisplay.h"
 #include "EEPROM_ADR.h"
 #include "GSM.h"
@@ -23,6 +22,7 @@
 #include "ConfigSensors.h"
 
 
+
 unsigned long LoopSecond;
 byte RegisterMCUSR; 
 boolean OnEncoderKey;
@@ -32,13 +32,12 @@ boolean SendSMSorStartController = false;	// Флаг отложеной отп�
 											// Поднимается если GSM не успел зарегистрироваться в сети при старте контроллера
 
 
-
 void ADC_init(){
-	 ADMUX = 0b01000000;		// Измеряем на ADC0, опорное напряжение: "AVCC with external capacitor at AREF pin"
-	 ADCSRA = 0b10001100;		// Включаем АЦП, разрешаем прерывания, делитель = 16
-	 ADCSRB = 0b00000000;		// Включаем ADC каналы, режим единичной выборки
-	 bitWrite(ADCSRA, 6, 1);	// Запускаем преобразование (1 в ADSC)
-	 sei();						// Разрешаем прерывания
+	ADMUX = 0b01000000;		// Измеряем на ADC0, опорное напряжение: "AVCC with external capacitor at AREF pin"
+	ADCSRA = 0b10001100;		// Включаем АЦП, разрешаем прерывания, делитель = 16
+	ADCSRB = 0b00000000;		// Включаем ADC каналы, режим единичной выборки
+	bitWrite(ADCSRA, 6, 1);	// Запускаем преобразование (1 в ADSC)
+	sei();						// Разрешаем прерывания
 }
 
 void Timer5_init(){								// Таймер по переполнению раз в секунду
@@ -98,7 +97,7 @@ ISR(INT5_vect){						// Крутилка энкодера
 ISR(PCINT0_vect) {
 	if (!(PINB & (1 << INPUT_D_PIN_1))) {StatusSwitchPorts[1] = true;	/*Serial.println("INPUT_D_PIN_1");*/}		// INPUT_D_PIN_1 - PCINT5
 	else StatusSwitchPorts[1] = false;
-	if (!(PINB & (1 << INPUT_D_PIN_2))) {StatusSwitchPorts[2] = true;	/*Serial.println("INPUT_D_PIN_2");*/}		// INPUT_D_PIN_2 - PCINT6 
+	if (!(PINB & (1 << INPUT_D_PIN_2))) {StatusSwitchPorts[2] = true;	/*Serial.println("INPUT_D_PIN_2");*/}		// INPUT_D_PIN_2 - PCINT6
 	else StatusSwitchPorts[2] = false;
 	if (!(PINB & (1 << INPUT_D_PIN_3))) {StatusSwitchPorts[3] = true;	/*Serial.println("INPUT_D_PIN_3");*/}		// INPUT_D_PIN_3 - PCINT7
 	else StatusSwitchPorts[3] = false;
@@ -139,13 +138,13 @@ ISR(ADC_vect){
 		SummADC = 0;
 	}
 	//Serial.print("ADC = "); Serial.println(ADC);
-	if(AllowSaveADC){	
+	if(AllowSaveADC){
 		switch(ADMUX){
 			case 0b01000000:							// ADC0
 				RealValueADC[0] = ADC;					// Сохраняем измеренное показание
 				ADMUX = 0b01000001;						// Выставляем следующий канал для измерения (ADC1)
 				ADCSRB = 0b00000000;					// --//--//--//--
-				break; 
+				break;
 			case 0b01000001:							// ADC1
 				RealValueADC[1] = ADC;					// Сохраняем измеренное показание
 				ADMUX = 0b01000011;						// Выставляем следующий канал для измерения (ADC3)
@@ -160,7 +159,7 @@ ISR(ADC_vect){
 				RealValueADC[4] = ADC;					// Сохраняем измеренное показание
 				ADMUX = 0b01000101;						// Выставляем следующий канал для измерения (ADC5)
 				ADCSRB = 0b00000000;					// --//--//--//--
-				break;							
+				break;
 			case 0b01000101:							// ADC5			(ACS712)
 				RealValueADC[5] = ADC;					// Сохраняем измеренное показание
 				ADMUX = 0b01000111;						// Выставляем следующий канал для измерения (ADC7)
@@ -171,13 +170,13 @@ ISR(ADC_vect){
 				switch(WorkChanelADC_7_15){
 					case 7:								// ADC7
 						RealValueADC[7] = ADC;			// Сохраняем измеренное показание
-						ADMUX = 0b01000111;				// Выставляем следующий канал для измерения (ADC15)	
+						ADMUX = 0b01000111;				// Выставляем следующий канал для измерения (ADC15)
 						ADCSRB = 0b00001000;
 						WorkChanelADC_7_15 = 15;
 						break;
 					case 15:									// ADC15 (напряжение питания)
-						RealValueADC[15] = ADC;					// Сохраняем измеренное показание						
-						ADMUX = 0b01000000;						// Выставляем следующий канал для измерения (ADC0)	
+						RealValueADC[15] = ADC;					// Сохраняем измеренное показание
+						ADMUX = 0b01000000;						// Выставляем следующий канал для измерения (ADC0)
 						ADCSRB = 0b00000000;
 						break;
 				}
@@ -241,18 +240,41 @@ void setup() {
 							
 	ControllerSetup = true;					// Обозначаем стадию загрузки контроллера
 	
-	Link_LogWebServer = "http://net.uniscan.biz/LogsStand.php/?Type=1";
-	Link_LogDataWebServer = "http://net.uniscan.biz/ValueStand.php/?Type=1";
+	WDT_state(OFF);							// Выводим причину перезапуска контроллера
+	
+	CfCalcDC = (float(EEPROM_int_read(E_CfCalcDC)) / 100) / 1023 * EEPROM.read(E_InputVCC);		// Поправочный коэфициент для вычисления VCC
+	VCC = RealValueADC[15] * CfCalcDC;															// Вычмсляем апряжение питания
+		
+	Link_LogWebServer		= "http://net.uniscan.biz/LogsStand.php/?Type=1";
+	Link_LogDataWebServer	= "http://net.uniscan.biz/ValueStand.php/?Type=1";
+	
+	// =====================================================================================
+	Serial.println(F("Initialization of the internal periphery:"));
+		Serial.print(F("\tLCD..."));
+			lcd.init();										// Инициализация LCD
+			lcd.clear();									// Очистка экрана
+			InitializingLCDicons();							// Инициализация значков для LCD экрана
+			ViewSignalLevel(99);							// ВЫводим значек уровня сигнала GSM (пока отсутствие)
+		
+		Serial.print(F("\tWire..."));
+			Wire.begin();
+			Serial.println(F("done"));
+	
+		Serial.print(F("\tTime..."));
+			time.begin();									// Инициализация RTC
+			time.period(60);								// Период опроса 60 сек
+			Serial.println(F("done"));
+	Serial.println(F("done"));
+	
 	
 	Serial.println();
 	Serial.println(F("===================================================="));
 	Serial.println(F("================= Controller setup ================="));
 	Serial.println(F("===================================================="));
 	Serial.println();
+	WriteToLCD(String(F("=Setup Controller=")), LCD_LINE_1, LCD_START_SYMBOL_1, false);
 	
-	WDT_state(OFF);							// Выводим причину перезапуска контроллера
 	
-	// ============================ Включение, инициализация GSM модуля и GPRS ============================
 /*	boolean ConfigModeController = false;
 	while(EEPROM.read(E_ConfigModeController) == 1){	// Если контроллер в режиме конфигурирования
 		if(!ConfigModeController){
@@ -270,16 +292,40 @@ void setup() {
 	status_led_green_off();
 	
 
+	// ================================ Измерение напряжения питания ================================
+	WriteToLCD(String(F("Input VCC")), LCD_LINE_2, LCD_START_SYMBOL_1, false);
+	Serial.print(F("Input VCC "));
+	Serial.print(VCC);
+	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){								// Напряжение питания ниже минимального
+		WriteToLCD(String(F("...OK")), LCD_LINE_2, LCD_START_SYMBOL_10, true);
+		Serial.println(F("...OK"));
+		Low_Input_VCC = false;
+	}
+	else{
+		WriteToLCD(String(F("...LOW")), LCD_LINE_2, LCD_START_SYMBOL_10, true);
+		Serial.println(F("...LOW"));
+		Low_Input_VCC = true;														// Поднимаем флаг низкого напряжения питания
+		StatusLED(LED_ERROR_VCC);													
+	}
+
+
 	// ============================ Включение, инициализация GSM модуля и GPRS ============================
- 	if(EEPROM.read(E_WorkSIM800) == ON){						// Если модуль настроен на постоянную работу		 
+ 	if(EEPROM.read(E_WorkSIM800) == ON && !Low_Input_VCC){		// Если модуль настроен на постоянную работу и напряжение питания в норме
+		WriteToLCD(String(F("== Init GSM module =")), LCD_LINE_2, LCD_START_SYMBOL_1, false);
 		Power_GSM(ON);											// Подаем питание на модуль
+		SignalLevel(ON);										// Проверяем уровень сигнала сети
+		ViewSignalLevel(StateGSM.GSM_Signal_Level);				// Выводим уровень сигнала GSM сети
 		if(Check_Readiness_Module(ON) == 1){					// Проверяем готовность модуля (выводим лог в Serial) и если готов (вернул единицу)
 			InitializingGSM();									// то инициализируем GSM			
 			byte a = 0;											// Счетчик времени ожидания соединения
 			while(a <= 20){										// Максимальное время ожидания регистрации 20 сек
 				if(CheckRegistrationGSM(ON)){					// Если GSM модуль зарегистрирован в сети (выводим лог в Serial)
+					
 					delay(50);
 					if(EEPROM.read(E_AllowGPRS) == ON){			// Если разрешена работа GPRS
+						WriteToLCD(String(F("=== Connect GPRS ===")), LCD_LINE_2, LCD_START_SYMBOL_1, false);
+						Clean_LCD(LCD_LINE_3);
+						Clean_LCD(LCD_LINE_4);
 						InitializingGPRS();						// Инициализируем GPRS
 					}
 					break;
@@ -289,151 +335,111 @@ void setup() {
 			}
 		}
 	}
-	SignalLevel(OFF);											// Проверяем уровень сигнала сети
 	
 	
 	// ====================== Отправка причины перезапуска контроллера по GPRS ======================
 	switch(Code_Reason_WDT){
 		case 4:
-			SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: Low voltage")) + (F("\"")));
+			SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: Low voltage")) + (F("\"")));
 			break;
 		case 5:
-			SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: On power")) + (F("\"")));
+			SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: On power")) + (F("\"")));
 			break;
 		case 8:
-			SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: Operation watchdog")) + (F("\"")));
+			SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Controller setup: Operation watchdog")) + (F("\"")));
 			break;
 	}
-	
 
-	// ================================ Измерение напряжения питания ================================
-	CfCalcDC = (float(EEPROM_int_read(E_CfCalcDC)) / 100) / 1023 * EEPROM.read(E_InputVCC);		// Поправочный коэфициент для вычисления VCC
-	VCC = RealValueADC[15] * CfCalcDC;
-	SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Input VCC: ")) + VCC + (F("\"")));
-	WriteToLCD(String(F("Input VCC...   ")), 0);
-	Serial.print(F("Input VCC..."));
-	Serial.print(VCC);
-	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){											// Напряжение питания ниже минимального
-		WriteToLCD(String(F("OK")), 1);
-		Serial.println(F("...OK"));
-		Low_Input_VCC = false;
-	}
-	else{
-		WriteToLCD(String(F("LOW")), 1);
-		Serial.println(F("...LOW"));
-		Low_Input_VCC = true;																	// Поднимаем флаг низкого напряжения питания
-	}	
-	
-	// =====================================================================================
-	SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Initialization of the internal periphery")) + (F("\"")));
-	Serial.println(F("Initialization of the internal periphery:"));
-	Serial.print(F("\tWire..."));
-	Wire.begin();
-	Serial.println(F("done"));
-	
-	Serial.print(F("\tTime..."));
-	time.begin();								// Инициализация RTC
-	time.period(60);							// Период опроса 60 сек
-	Serial.println(F("done"));
-	
-	Serial.print(F("\tLCD..."));
-	lcd.init();									// Инициализация LCD
-	lcd.clear();								// Очистка экрана
-	InitializingLCDicons();						// Инициализация значков для LCD экрана
-	
-	ViewSignalLevel(StateGSM.GSM_Signal_Level);	// Выводим уровень сигнала GSM сети
-	
-	Serial.println(F("done"));
-	// =====================================================================================
-	
 	
 	// =============================== Инициализация датчиков ===============================
-	SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("List of available sensors")) + (F("\"")));
+	SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("List of available sensors")) + (F("\"")));
 	Serial.println(F("List of available sensors: "));
 	i2c_scaner(ON);
 	DS18B20_scaner(ON);
 	Serial.println(F("Initializing Sensors: "));
 	for (byte NumberSensor = 1; NumberSensor <= QuantitySensors; NumberSensor ++){
-		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){			//  Если датчик включен 
+		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){				//  Если датчик включен 
 			ConfigSensor(NumberSensor);
 		}
 	}
 	for(byte Sensor = 1; Sensor <= QuantitySensors; Sensor++){
-		QuantityCalcSensors.QuantityCalc[Sensor] = 1;					// Обнуляем количество измерений
-		for(byte i = 0; i <= 19; i++){									// Заполняем массив с названиями
+		QuantityCalcSensors.QuantityCalc[Sensor] = 1;						// Обнуляем количество измерений
+		for(byte i = 0; i <= 19; i++){										// Заполняем массив с названиями
 			NameSensor[Sensor-1][i] = EEPROM.read(E_NameSensor + (Sensor - 1) * 20 + i);			
 		}
 	}
 	
-	ConfigurationInputTempSensor();				// Настраиваем встроенный датчик температуры LM75	
+	ConfigurationInputTempSensor();											// Настраиваем встроенный датчик температуры LM75	
 	
 	
 	// ================== Инициализация всех исполнительных модулей (возврящение их в нули) ====================
-	SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Initialization Exec Module")) + (F("\"")));
+	SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Initialization Exec Module")) + (F("\"")));
 	Serial.println(F("Initialization Exec Module"));
+	Clean_LCD(LCD_LINE_3);
+	Clean_LCD(LCD_LINE_4);
+	WriteToLCD(String(F("Init Exec Module: "/*18 символов*/)), LCD_LINE_2, LCD_START_SYMBOL_1, false);
 	STEPPER_VCC_off();
-	//DDRC |= _BV(PK5);												// STEPPER_STEP, OUTPUT
-	//DDRC |= _BV(PK4);												// STEPPER_DIR, OUTPUT
+	//DDRC |= _BV(PK5);														// STEPPER_STEP, OUTPUT
+	//DDRC |= _BV(PK4);														// STEPPER_DIR, OUTPUT
 	pinMode(STEPPER_STEP, OUTPUT);
 	pinMode(STEPPER_DIR, OUTPUT);
+	WriteToLCD(String(F("OK")), LCD_LINE_2, LCD_START_SYMBOL_19, false);
 	
-	if(EEPROM.read(E_ReturnModulesToZeros) == OFF){					// Если после перезагрузки не хотим возвращять модули в нули
-		SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Restor variables exec modules")) + (F("\"")));
-		WriteToLCD(String(F("Restor variables")), 0);
-		ArchiveRestoreSaveWordData(2);								// Восстановление рабочих переменных
+	if(EEPROM.read(E_ReturnModulesToZeros) == OFF){							// Если после перезагрузки не хотим возвращять модули в нули
+		SendGETrequest(String (F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Restor variables exec modules")) + (F("\"")));
+		WriteToLCD(String(F("Restor variables:   ")), LCD_LINE_2, LCD_START_SYMBOL_1, false);
+		ArchiveRestoreSaveWordData(2);										// Восстановление рабочих переменных
 		EEPROM.write(E_ReturnModulesToZeros, ON);
-		WriteToLCD(String(F("OK")), 0);
+		WriteToLCD(String(F("OK")), LCD_LINE_2, LCD_START_SYMBOL_18, true);
 	}
 	else{
-		WriteToLCD(String(F("Initializ Module")), 0);
-		SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Initializing exec modules")) + (F("\"")));
+		SendGETrequest(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Initializing exec modules")) + (F("\"")));
+		WriteToLCD(String(F("Init Exec Module    ")), LCD_LINE_2, LCD_START_SYMBOL_1, false);
 		for(byte Module = 1; Module <= QuantityExecModule; Module++){	
-			if(EEPROM.read(E_StatusModule + Module) == 1){				// И если модуль включен)	
+			if(EEPROM.read(E_StatusModule + Module) == 1){					// И если модуль включен)	
 				Serial.print(F("\t...Module ")); Serial.print(Module); 
+				WriteToLCD(String(F("Module ")) + String(Module) + String(F(": ")), LCD_LINE_3, LCD_START_SYMBOL_3, false);
+				
 				if(InitializingExecModule(Module)){
 					Serial.println(F("...done"));
-					WriteToLCD(String(F("Module ")) + String(Module) + String(F(" done   ")), 1);
+					WriteToLCD(String(F("DONE")), LCD_LINE_3, LCD_START_SYMBOL_9, true);
 				}
 				else{
 					Serial.println(F("...error"));
-					WriteToLCD(String(F("Module ")) + String(Module) + String(F(" error   ")), 1);
+					WriteToLCD(String(F("ERROR")), LCD_LINE_3, LCD_START_SYMBOL_9, true);
 				}
 			}
 		}	
 	}
     
 	CalculateSensors();										// Начальное измерение показаний датчиков
-	
-	
+
+
+	// ===========================================================================================
 	// ============================ Сигнализация о запуске контролера ============================
+	// ===========================================================================================
 	Serial.println();
 	Serial.println(F("====================================================================="));
-	Serial.print(F("============== Controller started,  "));
-	Serial.print(VersionFirmware); Serial.println(F("  =============="));
+	Serial.print(F("============== Controller started,  ")); Serial.print(VersionFirmware); Serial.println(F("  =============="));
 	Serial.println(F("====================================================================="));
 	
-	SendGETrequest(String ("AT+HTTPPARA=\"URL\",\"") + Link_LogWebServer + (F("&Log=")) + (F("Controller started")) + (F("\"")));
+	SendGETrequest(String (F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Controller started")) + (F("\"")));
 	
-    WindowMenu(0,0);										// Выводим на LCD инфу о старте контроллера и версии прошивки
-    delay(2000);	
-    StatusLED(0);											// Световая сигнализация
-    lcd.noBacklight();
+	lcd.clear();
+	//WriteToLCD(String(F(" ")), LCD_LINE_1, LCD_START_SYMBOL_1);
+	WriteToLCD(String(F("Controller Run")), LCD_LINE_2, LCD_START_SYMBOL_4, false);
+	WriteToLCD(Short_VersionFirmware, LCD_LINE_3, LCD_START_SYMBOL_6, true);
+	//WriteToLCD(String(F(" ")), LCD_LINE_4, LCD_START_SYMBOL_1);
+	
+    StatusLED(LED_START_CONTROLLER);						// Световая сигнализация
+    
+	delay(2000);
+	
+	lcd.noBacklight();
     lcd.noDisplay();
     WindowMenu(1,0);										// Стартовый экран на LCD
     WindowMenu(1,1);										// Значение переменных
-	// ===========================================================================================
 	
-	LOGING_TO_SERIAL = EEPROM.read(E_LOGING_TO_SERIAL);		// Установка уровня логирования в Serial1
-	
-	ControllerSetup = false;								// Выключение режима инициализации контроллера
-	
-	Timer5_init();											// Настройка пятого таймера
-	Int_encoder_init();										// Настройка энкодера
-	sei();													// Глобально разрешаем прерывания							
-	wdt_enable(WDTO_8S);									// Включаем watchdog
-	set_sleep_mode(SLEEP_MODE_IDLE);						// Настраиваем режим сна
-	sleep_mode();											// Усыпляем контроллер
-
 	
 	// ============================ Отправка СМС о старте контроллера ============================
 	if(EEPROM.read(E_SentSMSorStartController) == ON){				// Если настроена отправка СМС о старте контроллера
@@ -451,6 +457,19 @@ void setup() {
 			else SendSMSorStartController = true;			// Поднимаем флаг чтобы отправить СМС как будет регистрация
 		}	
 	}
+	
+	
+	// ===========================================================================================
+	LOGING_TO_SERIAL = EEPROM.read(E_LOGING_TO_SERIAL);		// Установка уровня логирования в Serial1
+	ControllerSetup = false;								// Выключение режима инициализации контроллера
+	
+	Timer5_init();											// Настройка пятого таймера
+	Int_encoder_init();										// Настройка энкодера
+	sei();													// Глобально разрешаем прерывания
+	wdt_enable(WDTO_8S);									// Включаем watchdog
+	set_sleep_mode(SLEEP_MODE_IDLE);						// Настраиваем режим сна
+	sleep_mode();											// Усыпляем контроллер
+		
 	
 /*	
 	MessageGSM.Arg_1_a = 1;		// Тест
@@ -496,7 +515,7 @@ void loop() {
 	
 	if(T_second > (LoopReadInternalTemp + 1)){			// Измерение показаний встроенного датчика температуры
 		LoopReadInternalTemp = T_second;
-		Ti = lm75(ADRESS_INPUT_TEMP_SENSOR);						
+		Ti = lm75(ADDRESS_INPUT_TEMP_SENSOR);						
 	}
 	
 	// =============================================================================================================================
@@ -519,23 +538,30 @@ void loop() {
 				switch(StateGSM.Code_Connect_GPRS){				// Разбираемся с ошибками GPRS
 					case 0:										// Соединение устанавливается
 						_WaitingForGPRSConnection = true;
-						Serial.println();
-						Serial.println(F("Соединение устанавливается")); 
+						if(OUTPUT_LEVEL_UART_GSM){
+							Serial.println();
+							Serial.println(F("Соединение устанавливается")); 
+						}
 						break;
 					case 1:										// Соединение установлено
 						SignalLevel(ON);						// Проверяем уровень сигнала сети 
-						Serial.println();
-						Serial.println(F("Соединение установлено"));
+						if(OUTPUT_LEVEL_UART_GSM){
+							Serial.println();
+							Serial.println(F("Соединение установлено"));
+						}
 						break;
 					case 2:										// Соединение закрывается
 						_WaitingForGPRSclosure = true;
-						Serial.println();
-						Serial.println(F("Соединение закрывается"));
+						if(OUTPUT_LEVEL_UART_GSM){
+							Serial.println();
+							Serial.println(F("Соединение закрывается"));
+						}
 						break;
 					case 3:										// Нет соединения
-						// 
-						Serial.println();
-						Serial.println(F("Нет соединения"));
+						if(OUTPUT_LEVEL_UART_GSM){ 
+							Serial.println();
+							Serial.println(F("Нет соединения"));
+						}
 						// Заного устанавливаем GPRS соединение
 						String GPRS_ATs[] = {										// массив АТ команд инициализации GPRS
 												(F("AT+SAPBR=1,1")),				// Установка GPRS соединения
@@ -547,7 +573,7 @@ void loop() {
 							Word = sendATCommand(GPRS_ATs[i], YES, YES);			// Отправляем АТ команду, ждем, получаем и выводим ответ в Serial
 							byte TimerCommand = 1;
 							while(TimerCommand <= 4){								// Максимальное кол-во отправок команды
-								if(Word.lastIndexOf("OK") != -1){					// Если ответ "OK"
+								if(Word.lastIndexOf(F("OK")) != -1){					// Если ответ "OK"
 									TimerCommand = 5;								// Останавливаем выполнение цикла while
 									goto end_while;
 								}
@@ -556,7 +582,7 @@ void loop() {
 									TimerCommand ++;
 								}
 							}
-							end_while: ;
+							end_while: ; 
 						}
 						CheckConnectionGPRS();										// Проверяем подключение
 						break;

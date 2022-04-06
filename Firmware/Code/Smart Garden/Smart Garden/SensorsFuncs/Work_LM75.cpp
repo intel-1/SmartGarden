@@ -53,7 +53,7 @@ void LM75_Tos(byte Address, byte Value){
 
 
 void ConfigurationInputTempSensor(){
-	byte Address = ADRESS_INPUT_TEMP_SENSOR;
+	byte Address = ADDRESS_INPUT_TEMP_SENSOR;
 	LM75_Config_CONF(Address, 0, 0, 0);
 	LM75_Thyst(Address, E_INT_LM75_THYST);
 	LM75_Tos(Address, E_INT_LM75_TOS);

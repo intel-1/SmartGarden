@@ -6,7 +6,6 @@
 #include "GSM.h"
 #include "main.h"
 #include "Sensors.h"
-#include "DataToSerial.h"
 #include "Warning.h"
 #include "LCDdisplay.h"
 
@@ -96,18 +95,27 @@ void InitializingGSM(){
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("================= Start initializing GSM module  ================="));
 	}
+	if(ControllerSetup){
+		WriteToLCD(String(F("- AT: ")), LCD_LINE_4, LCD_START_SYMBOL_2, false);
+	}
 	for (byte i = 0; i < sizeof(_GSMATs) / sizeof(_GSMATs[0]); i++) {
 		wdt_reset();
-		sendATCommand(_GSMATs[i], true, true);		// Отправляем АТ команду, ждем ответ и выводим ответ в Serial
+ 		if(ControllerSetup){
+ 			WriteToLCD(String(F("*")), LCD_LINE_4, LCD_START_SYMBOL_8 + i, false);
+ 		}
+		sendATCommand(_GSMATs[i], true, true);					// Отправляем АТ команду, ждем ответ и выводим ответ в Serial
+	}
+	if(ControllerSetup){
+		WriteToLCD(String(F("OK")), LCD_LINE_4, LCD_START_SYMBOL_19, false);
 	}
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("We resolve sleep mode...OK"));
 	}
-	Serial3.println(F("AT+CSCLK=1"));				// Разрешаем спящий режим
+	Serial3.println(F("AT+CSCLK=1"));							// Разрешаем спящий режим
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("================= Initializing complete ================="));
 	}
-	gsm_dtr_on();									// Усыпляем модуль
+	gsm_dtr_on();												// Усыпляем модуль
 }
 
 
@@ -115,7 +123,7 @@ void InitializingGSM(){
 // ========================================= Инициализация GPRS =========================================
 // ======================================================================================================
 void InitializingGPRS(){
-	String _GPRS_ATs[] = {										// массив АТ команд инициализации GPRS
+	String _GPRS_ATs[] = {															// массив АТ команд инициализации GPRS
 							(F("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"")),				// Установка настроек подключения
 							(F("AT+SAPBR=3,1,\"APN\",\"internet.beeline.ru\"")),	// Имя APN точки доступа
 							(F("AT+SAPBR=3,1,\"USER\",\"beeline\"")),				// Имя пользователя
@@ -127,24 +135,38 @@ void InitializingGPRS(){
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("============= Start GPRS ============="));
 	}
+	if(ControllerSetup){
+		WriteToLCD(String(F("- AT: ")), LCD_LINE_3, LCD_START_SYMBOL_2, false);
+		WriteToLCD(String(F("                    ")), LCD_LINE_4, LCD_START_SYMBOL_1, false);
+	}
 	for (byte i = 0; i < sizeof(_GPRS_ATs) / sizeof(_GPRS_ATs[0]); i++) {
 		wdt_reset();
-		_Word = sendATCommand(_GPRS_ATs[i], YES, YES);			// Отправляем АТ команду, ждем, получаем и выводим ответ в Serial
+		if(ControllerSetup){
+			WriteToLCD(String(F("*")), LCD_LINE_3, LCD_START_SYMBOL_8 + i, false);
+		}
+		_Word = sendATCommand(_GPRS_ATs[i], YES, YES);					// Отправляем АТ команду, ждем, получаем и выводим ответ в Serial
 		byte TimerCommand = 1;
-		while(TimerCommand <= 4){								// Максимальное кол-во отправок команды
-			if(_Word.lastIndexOf("OK") != -1){					// Если ответ "OK"
-				TimerCommand = 5;								// Останавливаем выполнение цикла while
+		while(TimerCommand <= 4){										// Максимальное кол-во отправок команды
+			if(_Word.lastIndexOf(F("OK")) != -1){						// Если ответ "OK"
+				TimerCommand = 5;										// Останавливаем выполнение цикла while
 				goto end_while;
 			}
 			else{
-				_Word = sendATCommand(_GPRS_ATs[i], YES, NO);		// Повторно отправляем команду
-				//Serial.println("WAIT");
+				_Word = sendATCommand(_GPRS_ATs[i], YES, NO);			// Повторно отправляем команду
 				TimerCommand ++;
 			}
 		}
 		end_while: ;
 	}
-	CheckConnectionGPRS();											// Проверяем подключение
+	if(ControllerSetup){
+		WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, true);
+	}
+	CheckConnectionGPRS();												// Проверяем подключение
+	if(ControllerSetup){
+		WriteToLCD(String(F("- IP: ")), LCD_LINE_4, LCD_START_SYMBOL_2, false);
+		WriteToLCD(StateGSM.IP_GPRS, LCD_LINE_4, LCD_START_SYMBOL_7, true);
+		
+	}
 }
 
 
@@ -333,15 +355,12 @@ byte SignalLevel(bool _LogView){
 		_Return = _Return.substring(7,9);							// Убираем лишние символы
 		_Level = _Return.toInt();									// Возвращает уровень сигнала
 	}
-	
 	if(_LogView){
 		if(OUTPUT_LEVEL_UART_GSM){
 			Serial.print(F("Уровень сигнала: "));
 		}
 	}
-	
 	if(_Level == 0){
-		//lcd.print();
 		StateGSM.GSM_Signal_Level = 115;
 		if(_LogView){
 			if(OUTPUT_LEVEL_UART_GSM){
@@ -351,7 +370,6 @@ byte SignalLevel(bool _LogView){
 		goto Stop;
 	}
 	else if(_Level == 1){
-		//lcd.print();
 		StateGSM.GSM_Signal_Level = 111;
 		if(_LogView){
 			if(OUTPUT_LEVEL_UART_GSM){
@@ -361,7 +379,6 @@ byte SignalLevel(bool _LogView){
 		goto Stop;
 	}
 	else if(2 <= _Level <= 30){
-		//lcd.print(Signal_OK);
 		if(_LogView){
 			StateGSM.GSM_Signal_Level = map(_Level, 2, 30, 109, 53);
 			if(OUTPUT_LEVEL_UART_GSM){
@@ -372,7 +389,6 @@ byte SignalLevel(bool _LogView){
 		goto Stop;
 	}
 	else if(_Level == 31){
-		//lcd.print();
 		StateGSM.GSM_Signal_Level = 52;
 		if(_LogView){
 			if(OUTPUT_LEVEL_UART_GSM){
@@ -382,7 +398,6 @@ byte SignalLevel(bool _LogView){
 		goto Stop;
 	}
 	else if(_Level == 99){
-		//lcd.print();
 		StateGSM.GSM_Signal_Level = 99;
 		if(_LogView){
 			if(OUTPUT_LEVEL_UART_GSM){
@@ -391,14 +406,6 @@ byte SignalLevel(bool _LogView){
 		}
 		goto Stop;
 	}
-// 	else if(_Level == 255){
-// 		if(_LogView){
-// 			if(OUTPUT_LEVEL_UART_GSM){
-// 				Serial.println(F("Ошибка данных"));
-// 			}
-// 		}
-// 		goto Stop;
-// 	}
 	Stop:
 	return _Level;
 }
@@ -418,19 +425,26 @@ byte SignalLevel(bool _LogView){
 // ========================================================================================================
 byte Check_Readiness_Module(boolean _LogView){					 
 	
+	if(ControllerSetup){
+		WriteToLCD(String(F("- Readiness:      ")), LCD_LINE_3, LCD_START_SYMBOL_2, false);
+	}
+	
 	if(_LogView){
 		if(OUTPUT_LEVEL_UART_GSM){
 			Serial.print(F("Состояние GSM модуля (\"AT\"): "));
 		}
 	}
-	String _Response[] = {	(F("NOT INSERTED")),				// Готов
-							(F("OK"))};							// Зарегистрирован в сети
+	String _Response[] = {	(F("NOT INSERTED")),								// Готов
+							(F("OK"))};											// Зарегистрирован в сети
 	
-	String _Error = sendATCommand(F("AT"), true, false);			// Отправляем комманду, ждем ответ, но в Serial его не выводим
+	String _Error = sendATCommand(F("AT"), true, false);						// Отправляем комманду, ждем ответ, но в Serial его не выводим
 	for(byte Pos = 0; Pos < sizeof(_Response) / sizeof(_Response[0]); Pos ++){	// Ищем в списке возможных ответов
 		if(_Error.lastIndexOf(_Response[Pos]) != -1){							// И если нашли совпадение
 			switch(Pos){
-				case 0:											// Нет SIM карты
+				case 0:															// Нет SIM карты
+					if(ControllerSetup){
+						WriteToLCD(String(F("Not SIM")), LCD_LINE_3, LCD_START_SYMBOL_14, true);
+					}
 					if(_LogView){
 						if(OUTPUT_LEVEL_UART_GSM){
 							Serial.print(F("Нет SIM карты"));
@@ -439,7 +453,10 @@ byte Check_Readiness_Module(boolean _LogView){
 					Pos = 2;
 					StateGSM.State_GSM_Module = 0;
 					break;
-				case 1:											// Готов
+				case 1:															// Готов
+					if(ControllerSetup){
+						WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, true);
+					}
 					if(_LogView){
 						if(OUTPUT_LEVEL_UART_GSM){
 							Serial.println(F("OK"));
@@ -448,7 +465,10 @@ byte Check_Readiness_Module(boolean _LogView){
 					Pos = 2;
 					StateGSM.State_GSM_Module = 1;
 					break;
-				default:										// Неизвестно
+				default:														// Неизвестно
+					if(ControllerSetup){
+						WriteToLCD(String(F("Unknown")), LCD_LINE_3, LCD_START_SYMBOL_14, true);
+					}
 					if(_LogView){
 						if(OUTPUT_LEVEL_UART_GSM){
 							Serial.println(F("Неизвестно"));
@@ -479,13 +499,13 @@ bool CheckRegistrationGSM(bool _LogView){
 		}
 	}
 	
-	String _Response[] = {	(F("+CREG: 0,0")),			// Не зарегистрирован в сети
-							(F("+CREG: 0,1")),			// Зарегистрирован в сети
-							(F("+CREG: 0,2")),			// Поиск сети
-							(F("+CREG: 0,3")),			// Регистрация отклонена
-							(F("+CREG: 0,4"))};			// Неизвестно
+	String _Response[] = {	(F("+CREG: 0,0")),				// Не зарегистрирован в сети
+							(F("+CREG: 0,1")),				// Зарегистрирован в сети
+							(F("+CREG: 0,2")),				// Поиск сети
+							(F("+CREG: 0,3")),				// Регистрация отклонена
+							(F("+CREG: 0,4"))};				// Неизвестно
 	
-	String _Error = sendATCommand(F("AT+CREG?"), true, false);				// Отправляем команду, ждем ответ, но в Serial его не выводим
+	String _Error = sendATCommand(F("AT+CREG?"), true, false);					// Отправляем команду, ждем ответ, но в Serial его не выводим
 	
 	for(byte Pos = 0; Pos < sizeof(_Error) / sizeof(_Error[0]); Pos ++){		// Ищем в списке возможных ответов
 		if(_Error.lastIndexOf(_Response[Pos]) != -1){							// И если нашли совпадение
@@ -493,32 +513,42 @@ bool CheckRegistrationGSM(bool _LogView){
 				switch(Pos){
 					case 0:
 						if(_LogView){
-							Serial.print(F("Не зарегистрирован в сети: "));
-							Serial.println(F("Нет поиска сети"));
+							if(OUTPUT_LEVEL_UART_GSM){
+								Serial.print(F("Не зарегистрирован в сети: "));
+								Serial.println(F("Нет поиска сети"));
+							}
 						}
 						StateGSM.GSM_Registered = false;
 						goto StopCheck;
 					case 1:
 						if(_LogView){
-							Serial.println(F("Зарегистрирован в сети"));
+							if(OUTPUT_LEVEL_UART_GSM){
+								Serial.println(F("Зарегистрирован в сети"));
+							}
 						}
 						StateGSM.GSM_Registered = true;
 						goto StopCheck;
 					case 2:
 						if(_LogView){
-							Serial.println(F("Поиск сети"));
+							if(OUTPUT_LEVEL_UART_GSM){
+								Serial.println(F("Поиск сети"));
+							}
 						}
 						StateGSM.GSM_Registered = false;
 						goto StopCheck;
 					case 3:
 						if(_LogView){
-							Serial.println(F("Регистрация отклонена"));
+							if(OUTPUT_LEVEL_UART_GSM){
+								Serial.println(F("Регистрация отклонена"));
+							}
 						}
 						StateGSM.GSM_Registered = false;
 						goto StopCheck;
 					case 4:
 						if(_LogView){
-							Serial.println(F("Неизвестно"));
+							if(OUTPUT_LEVEL_UART_GSM){
+								Serial.println(F("Неизвестно"));
+							}
 						}
 						StateGSM.GSM_Registered = false;
 						goto StopCheck;
@@ -527,9 +557,11 @@ bool CheckRegistrationGSM(bool _LogView){
 			StateGSM.Code_Connect_GSM = Pos;
 		}
 	}
-
+	
 	if(_LogView){
-		Serial.println();
+		if(OUTPUT_LEVEL_UART_GSM){
+			Serial.println();
+		}
 	}
 	StateGSM.GSM_Registered = false;
 	// -------------------------------
@@ -573,7 +605,7 @@ void Answer_check_GET(String _Text, bool _LogView){
 	
 	StateGSM.Code_Error_Sent_GET = 255;				// default ошибка "100"
 	
-	if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL || ControllerSetup){
+	if(OUTPUT_LEVEL_UART_GSM){
 		if(_LogView){
 			Serial.print(F("Response from WEB server: "));
 		}
@@ -706,7 +738,11 @@ bool CheckConnectionGPRS(){
 			}
 		}
 	}
-	else Serial.println();									// Простой перевод строки если нет ответа. Сделано для красоты
+	else{ 
+		if(OUTPUT_LEVEL_UART_GSM){
+			Serial.println();								// Простой перевод строки если нет ответа. Сделано для красоты
+		}
+	}
 	return StateGSM.GPRS_Connect;
 }
 
@@ -747,20 +783,20 @@ void MasterSMS(String _Line) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("Status"));
 		}
-		SendSMS(String	(F("Temp_Box: ")) + RealValueSensors[SENSOR_0][VALUE_1] + (F(", ")) +
-		(F("Temp_UP: ")) + RealValueSensors[SENSOR_8][VALUE_1] + (F(", ")) +
-		(F("Temp_DOWN: ")) + RealValueSensors[SENSOR_5][VALUE_1] + (", ") +
-		(F("Temp_Left: ")) + RealValueSensors[SENSOR_7][VALUE_1] + (", ") +
-		(F("Temp_Right: ")) + RealValueSensors[SENSOR_2][VALUE_1] + (", ") +
-		(F("VCC: ")) + VCC, 4);
+		SendSMS(String	(F("Temp_Box: "))	+ RealValueSensors[SENSOR_0][VALUE_1]	+	(F(", ")) +
+						(F("Temp_UP: "))	+ RealValueSensors[SENSOR_8][VALUE_1]	+	(F(", ")) +
+						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_5][VALUE_1]	+	(F(", ")) +
+						(F("Temp_Left: "))	+ RealValueSensors[SENSOR_7][VALUE_1]	+	(F(", ")) +
+						(F("Temp_Right: ")) + RealValueSensors[SENSOR_2][VALUE_1]	+	(F(", ")) +
+						(F("VCC: ")) + VCC, 4);
 	}
 	// ===========================================================================================================
 	if ((_Line.indexOf(F("temp")) > -1)) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("temp"));
 		}
-		SendSMS(String	(F("Temp_UP: ")) + RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
-		(F("Temp_DOWN: ")) + RealValueSensors[SENSOR_3][VALUE_1] + (", ") , 1);
+		SendSMS(String	(F("Temp_UP: "))	+ RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
+						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_3][VALUE_1] + (F(", ")) , 1);
 	}
 	RingPhone = "";								// Очищаем номер автора смс
 	clearsms();									// Очищаем очередь входящих СМС

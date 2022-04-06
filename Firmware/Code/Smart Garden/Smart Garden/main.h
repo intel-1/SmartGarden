@@ -30,7 +30,7 @@ void TimeIntervals();
 void ManagementVCC();
 void MainFunc();
 void TermostatFunc(byte _NumberChannel);
-void TimerFunc(/*byte _NumberChannel*/);
+void TimerFunc();
 void EncoderKeyInt();
 void CleanTimeIntervals();
 boolean ArchiveRestoreSaveWordData(byte _Type);

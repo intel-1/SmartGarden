@@ -20,8 +20,9 @@ extern boolean LightLCDEnable;  // Включена ли подсветка эк
 void InitializingLCDicons();					// Инициализация значков для LCD экрана
 void UpdateMenu();
 
-void WriteToLCD(String Text, byte line);
+void WriteToLCD(String Text, byte line, byte Position, bool Delay);
 void ViewSignalLevel(byte Level);
+void Clean_LCD(byte line);
 
 void WindowMenu(byte NumberMenu, byte Update); 
 
