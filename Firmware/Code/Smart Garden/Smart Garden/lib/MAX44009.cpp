@@ -3,8 +3,7 @@
 
 MAX44009::MAX44009() {}
 
-bool MAX44009::begin(uint8_t addr)
-{
+bool MAX44009::begin(uint8_t addr){
 	Wire.beginTransmission(addr);
 	Wire.write(0x02);
 	//Wire.write(0x40);
@@ -16,8 +15,7 @@ bool MAX44009::begin(uint8_t addr)
 }
 
 
-float MAX44009::get_lux(uint8_t addr)
-{
+float MAX44009::get_lux(uint8_t addr){
 	unsigned int data[2];
 	
 	Wire.beginTransmission(addr);

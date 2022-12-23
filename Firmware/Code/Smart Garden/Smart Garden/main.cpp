@@ -10,6 +10,7 @@
 #include "ExecModules.h"
 #include "DigitalPorts.h"
 #include "ConfigSensors.h"
+#include "RecievedUART\RecievedConfigController.h"
 
 
 iarduino_RTC time(RTC_DS3231);
@@ -26,6 +27,8 @@ unsigned int LoopMaximumTimeResponseGSM;
 unsigned int LoopResetTimeGSM;				// Время перезагрузки GSM модуля
 unsigned int LoopOutputGPRS;				// Отправка GPRS пакетов на сайт
 unsigned int LoopReadInternalTemp;			// Интервал измерения встроеный LM75
+unsigned int LoopCheckIntervalGPRS;			// Интервал проверки регистрации GPRS
+unsigned int LoopCheckBalanseSIM;			// Проверка баланса SIM карты
 
 
 boolean RegistrationGSM = false;			// Флаг что отправлена команда для проверки регистрации GSM
@@ -38,7 +41,7 @@ byte T_min;									// Счетчик минут таймера
 byte T_hour;								// Счетчик часов таймера 
 unsigned int T_day;							// Счетчик дней таймера 
 
-int UpStepValue[QuantityExecModule];		// Массив со значениями перемещений исп. модулей для пропорционального управления
+int UpStepValue[QUANTITY_EXEC_MODULES];		// Массив со значениями перемещений исп. модулей для пропорционального управления
 
 
 
@@ -92,7 +95,9 @@ void CleanTimeIntervals(){					// Сброс счетчиков интервал
 	LoopMaximumTimeResponseGSM = 0;
 	LoopOutputGPRS = 0;
 	LoopReadInternalTemp = 0;
-	for(byte Sensor = 0; Sensor <= QuantitySensors; Sensor ++){
+	LoopCheckIntervalGPRS = 0;
+	LoopCheckBalanseSIM = 0;
+	for(byte Sensor = 0; Sensor <= QUANTITY_SENSORS; Sensor ++){
 		LoopTimeRunCalculateSensor[Sensor] = 0;
 	}
 }
@@ -106,7 +111,7 @@ boolean ArchiveRestoreSaveWordData(byte Type){							// Ф-ция сохране
 			Serial.print(F("\tВосстановление значений рабочих переменных..."));
 	}
 	
-	for(byte Sensor = 0; Sensor < QuantitySensors; Sensor ++){			// Проходим по байтам конфигурации всех датчиков
+	for(byte Sensor = 0; Sensor < QUANTITY_SENSORS; Sensor ++){			// Проходим по байтам конфигурации всех датчиков
 		for(byte SGB = 0; SGB < 3; SGB ++){								// Ищем датчики прикрепленные к группе по байтам конфигурации E_SBG_A_*, E_SBG_B_*, E_SBG_C_*
 			switch(Type){
 				case 1:
@@ -117,7 +122,7 @@ boolean ArchiveRestoreSaveWordData(byte Type){							// Ф-ция сохране
 		}
 	}
 	
-	for(byte Module = 0; Module < QuantityExecModule; Module ++){	
+	for(byte Module = 0; Module < QUANTITY_EXEC_MODULES; Module ++){	
 		switch(Type){
 			case 1:
 				EEPROM.write(E_UpStepValue + Module*2, UpStepValue[Module]);				// Под каждое значение в EEPROM выделяется по 2 байта
@@ -130,7 +135,7 @@ boolean ArchiveRestoreSaveWordData(byte Type){							// Ф-ция сохране
 }
 
 
-void EncoderKeyInt(){
+void Turning_Backlight_LCD(){
 	lcd.backlight();
 	lcd.display();
 	LightLCDEnable = true;
@@ -153,12 +158,12 @@ void TimeIntervals(){
 	wdt_reset();																		// Сбрасываем watchdog
 	static boolean Switch;
 	if(EEPROM_int_read(E_LoopLCDLightTime) != 0){										// Если 0, то не выключаем подсветку
-		if(LightLCDEnable == true){															// Если включена подсветка LCD экрана
+		if(LightLCDEnable){																// Если включена подсветка LCD экрана
 			if(!Switch){						
 				LoopLCDLightTime = T_second;
 				Switch = true;
 			}
-			if(T_second > (LoopLCDLightTime + EEPROM_int_read(E_LoopLCDLightTime))){		// Выключение подсветки экрана
+			if(T_second > (LoopLCDLightTime + EEPROM_int_read(E_LoopLCDLightTime))){	// Выключение подсветки экрана
 				LoopLCDLightTime = T_second;
 				lcd.noBacklight();
 				lcd.noDisplay();
@@ -178,140 +183,208 @@ void TimeIntervals(){
 				Serial.print(time.gettime("H:i:s")); Serial.println(F(" === Опрос датчиков ========="));
 				Serial.println(F("==============================================="));
 			}
-			CalculateSensors();											// Измеряем значения датчиков
+			CalculateSensors();												// Измеряем значения датчиков
 			if(OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println();
 				Serial.println(F("========================================================="));
 				Serial.println(F("========== Измеренные показания всех датчиков ==========="));
 				Serial.println(F("========================================================="));
 				wdt_reset();
-				ViewValueAllSensors();									// Выводим измеренные показания всех датчиков
+				ViewValueAllSensors();										// Выводим измеренные показания всех датчиков
 			}
 		}
 	}
-	// ===============================================================================================================
-	if(EEPROM.read(E_ConfigPowerBluetooth) == 2){										// Если настроен режим включаем Bluetooth модуля по требованию
-		if(T_second > (LoopOffBluetoothTime + EEPROM_int_read(E_BluetoothTimeOff))){   
+	// ============================ Если настроен режим включаем Bluetooth модуля по требованию ============================
+	if(EEPROM.read(E_ConfigPowerBluetooth) == 2){
+		if(T_second > (LoopOffBluetoothTime + EEPROM_int_read(E_BluetoothTimeOff))){
 			LoopOffBluetoothTime = T_second;
-			bt_vcc_off();							
+			bt_vcc_off();
 		}
 	}
-	// ===============================================================================================================
-	if(T_second > (LoopCalculationDC + 6)){												// Выводим напряжение питания и температуры встроенного датчика (LM75A)
+	// ================== Выводим в консоль напряжение питания и температуру встроенного датчика (LM75A) ===================
+	if(T_second > (LoopCalculationDC + 6)){
 		LoopCalculationDC = T_second;
 		if(OUTPUT_LEVEL_UART_SENSOR){
 			Serial.print(F("Напряжение питания: ")); Serial.println(VCC);
 			Serial.print(F("Температура контроллера: ")); Serial.println(Ti);
 		}
-		
-		
-		//sendATCommand("AT+CNTPCID=1", true, true);
-		
-		//sendATCommand("AT+CNTP=\"pool.ntp.org\",7", true, true);
-		
-		//sendATCommand("AT+CNTP", true, true);
-		
-		//sendATCommand("AT+CCLK?", true, true);
-		
-		
 	} 
-	// ===============================================================================================================
-	if(EEPROM.read(E_WorkSIM800) == ON){							// Если GSM модуль настроен на постоянную работу
+	// ===================================== Проверка баланса SIM карты (раз в 3 минуты) ===================================
+	if(StateGSM.Code_Connect_GSM == GSM_REGISTERED){
+		if(T_second > (LoopCheckBalanseSIM + 60)){
+			LoopCheckBalanseSIM = T_second;
+			send_AT_Command(F("AT+CUSD=1,\"#102#\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+		}	
+	}
+	// =================================== Если GSM модуль настроен на постоянную работу ===================================
+	if(EEPROM.read(E_WorkSIM800) == ON){
 		if(T_second > (LoopOutputGPRS + 60)){
 			LoopOutputGPRS = T_second;
-			SendGETrequest(String	(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogDataWebServer + 
-									(F("&Ti="))	  + Ti									  + 
-									(F("&S_1="))  + RealValueSensors[SENSOR_1] [VALUE_1]  + 
-									(F("&S_2="))  + RealValueSensors[SENSOR_2] [VALUE_1]  + 
-									(F("&S_3="))  + RealValueSensors[SENSOR_3] [VALUE_1]  + 
-									(F("&S_4="))  + RealValueSensors[SENSOR_4] [VALUE_1]  + 
-									(F("&S_5="))  + RealValueSensors[SENSOR_5] [VALUE_1]  + 
-									(F("&S_6="))  + RealValueSensors[SENSOR_6] [VALUE_2]  + 
-									(F("&S_7="))  + RealValueSensors[SENSOR_7] [VALUE_1]  + 
-									(F("&S_8="))  + RealValueSensors[SENSOR_8] [VALUE_1]  + 
-									(F("&S_9="))  + RealValueSensors[SENSOR_9] [VALUE_2]  + 
-									(F("&S_10=")) + RealValueSensors[SENSOR_10][VALUE_1]  +
-									(F("&S_11=")) + RealValueSensors[SENSOR_11][VALUE_1]  + 
-									(F("&S_12=")) + RealValueSensors[SENSOR_12][VALUE_1]  +
-									(F("&S_13=")) + RealValueSensors[SENSOR_13][VALUE_1]  +
-									(F("&S_14=")) + RealValueSensors[SENSOR_14][VALUE_1]  + 
-									(F("&S_15=")) + RealValueSensors[SENSOR_15][VALUE_1]  +
-									(F("&S_16=")) + RealValueSensors[SENSOR_16][VALUE_1]  +
-									(F("&VCC="))  + VCC									  +
-									(F("\"")));
+			String VCC_Ext = String(VCC, 1);									// Убираем лишние символы после запятой
+			Send_GET_request(String	(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogDataWebServer	+ 
+									(F("&VCC="))	+ VCC_Ext		        				+
+									(F("&Ti="))		+ Ti									+ 
+									(F("&S11="))	+ RealValueSensors[SENSOR_1] [VALUE_1]  + 
+									(F("&S12="))	+ RealValueSensors[SENSOR_1] [VALUE_2]  + 
+									(F("&S13="))	+ RealValueSensors[SENSOR_1] [VALUE_3]  + 
+									
+									(F("&S21="))	+ RealValueSensors[SENSOR_2] [VALUE_1]  +
+									(F("&S22="))	+ RealValueSensors[SENSOR_2] [VALUE_2]  +
+									(F("&S23="))	+ RealValueSensors[SENSOR_2] [VALUE_3]  + 
+									
+									(F("&S31="))	+ RealValueSensors[SENSOR_3] [VALUE_1]  + 
+									(F("&S32="))	+ RealValueSensors[SENSOR_3] [VALUE_2]  + 
+									(F("&S33="))	+ RealValueSensors[SENSOR_3] [VALUE_3]  + 
+									
+									(F("&S41="))	+ RealValueSensors[SENSOR_4] [VALUE_1]  + 
+									(F("&S42="))	+ RealValueSensors[SENSOR_4] [VALUE_2]  + 
+									(F("&S43="))	+ RealValueSensors[SENSOR_4] [VALUE_3]  + 
+									
+ 									(F("&S51="))	+ RealValueSensors[SENSOR_5] [VALUE_1]  + 
+ 									(F("&S52="))	+ RealValueSensors[SENSOR_5] [VALUE_2]  + 
+ 									(F("&S53="))	+ RealValueSensors[SENSOR_5] [VALUE_3]  + 
+									
+									(F("&S61="))	+ RealValueSensors[SENSOR_6] [VALUE_1]  +
+									(F("&S62="))	+ RealValueSensors[SENSOR_6] [VALUE_2]  +
+									(F("&S63="))	+ RealValueSensors[SENSOR_6] [VALUE_3]  +
+																		
+									(F("&S71="))	+ RealValueSensors[SENSOR_7] [VALUE_1]  +
+									(F("&S72="))	+ RealValueSensors[SENSOR_7] [VALUE_2]  +
+									(F("&S73="))	+ RealValueSensors[SENSOR_7] [VALUE_3]  +
+									
+									(F("&S81="))	+ RealValueSensors[SENSOR_8] [VALUE_1]  +
+									(F("&S82="))	+ RealValueSensors[SENSOR_8] [VALUE_2]  +
+									(F("&S83="))	+ RealValueSensors[SENSOR_8] [VALUE_3]  +
+																	 
+									(F("&S91="))	+ RealValueSensors[SENSOR_9] [VALUE_1]  + 
+									(F("&S92="))	+ RealValueSensors[SENSOR_9] [VALUE_2]  + 
+									(F("&S93="))	+ RealValueSensors[SENSOR_9] [VALUE_3]  + 
+									
+									(F("&S101="))	+ RealValueSensors[SENSOR_10][VALUE_1]  +
+									(F("&S102="))	+ RealValueSensors[SENSOR_10][VALUE_2]  +
+									(F("&S102="))	+ RealValueSensors[SENSOR_10][VALUE_3]  +
+									
+									(F("&S111="))	+ RealValueSensors[SENSOR_11][VALUE_1]  + 
+									(F("&S112="))	+ RealValueSensors[SENSOR_11][VALUE_2]  +
+									(F("&S113="))	+ RealValueSensors[SENSOR_11][VALUE_3]  +
+									
+// 									(F("&S121="))	+ RealValueSensors[SENSOR_12][VALUE_1]  +
+// 									(F("&S122="))	+ RealValueSensors[SENSOR_12][VALUE_2]  +
+// 									(F("&S123="))	+ RealValueSensors[SENSOR_12][VALUE_3]  +
+// 									
+// 									(F("&S131="))	+ RealValueSensors[SENSOR_13][VALUE_1]  +
+// 									(F("&S132="))	+ RealValueSensors[SENSOR_13][VALUE_2]  +
+// 									(F("&S133="))	+ RealValueSensors[SENSOR_13][VALUE_3]  +
+// 									
+// 									(F("&S141="))	+ RealValueSensors[SENSOR_14][VALUE_1]  + 
+// 									(F("&S142="))	+ RealValueSensors[SENSOR_14][VALUE_2]  + 
+// 									(F("&S143="))	+ RealValueSensors[SENSOR_14][VALUE_3]  + 
+// 									
+// 									(F("&S151="))	+ RealValueSensors[SENSOR_15][VALUE_1]  +
+// 									(F("&S152="))	+ RealValueSensors[SENSOR_15][VALUE_2]  +
+// 									(F("&S153="))	+ RealValueSensors[SENSOR_15][VALUE_3]  +
+// 									
+// 									(F("&S161="))	+ RealValueSensors[SENSOR_16][VALUE_1]  +
+// 									(F("&S162="))	+ RealValueSensors[SENSOR_16][VALUE_2]  +
+// 									(F("&S163="))	+ RealValueSensors[SENSOR_16][VALUE_3]  +
+									
+									(F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_VALUE_REQUEST);
 		}
 	}
 }
 
 
-#define NumberChecksVCC 20
-float GridMeasuredIndications[NumberChecksVCC];
-byte Counter = 0;
+#define Number_Measurements_VCC 5
 boolean LowChargeBattery_SMS = 0;
+byte Counter_Number_Measurements = 1;
+float GridMeasuredIndications[Number_Measurements_VCC + 1];
 
-
-void ManagementVCC(){		
-	if(Counter < NumberChecksVCC){											// Заполняем массива значение
-		GridMeasuredIndications [Counter] = VCC;
-		Counter ++;
+void ManagementVCC(){	
+	if(Counter_Number_Measurements <= Number_Measurements_VCC){											
+		GridMeasuredIndications [Counter_Number_Measurements] = VCC;		// Заполняем массив значением
+		Counter_Number_Measurements ++;
 	}
-	else {																	// и когда заполняем
+	else{																	// и когда заполнили
+		Counter_Number_Measurements = 0;									// Обнуляем счетчик
 		float MinVCCEEPROM = float(EEPROM.read(E_MinInputVCC)) / 10;
 		byte CounterMinValues = 0;
 		byte CounterMaxValues = 0;
 		
-		for (byte i = 0; i < NumberChecksVCC; i ++){						// Проходимся по всем ячейкам массива
-			if(GridMeasuredIndications [i] < MinVCCEEPROM){					// Если значение меньше эталонного из EEPROM
+		for (byte i = 1; i <= Number_Measurements_VCC; i ++){				// Проходимся по всем ячейкам массива
+			if(GridMeasuredIndications[i] < MinVCCEEPROM){					// Если значение меньше эталонного из EEPROM
 				CounterMinValues ++;
-				//Serial.println(F("VCC min"));
 			}
-			if(GridMeasuredIndications [i] > MinVCCEEPROM){					// Если значение больше эталонного из EEPROM
+			if(GridMeasuredIndications[i] > MinVCCEEPROM){					// Если значение больше эталонного из EEPROM
 				CounterMaxValues ++;
-				//Serial.println(F("VCC max"));
 			}
-			
-			// ======================================== Обработка значений ========================================
-			if(i == NumberChecksVCC - 1){									// Если прошли по всему массиву GridMeasuredIndications[]
-				//Serial.println(F("Обработка данных"));
-				if(CounterMinValues == NumberChecksVCC){				// Если все значения в массиве были меньше E_MinInputVCC (напряжение питания ниже минимального)
-					if (LowChargeBattery_SMS == 0){							// Если СМС не отправлялось
-						//Serial.println(F("Напряжение питания ниже минимального"));
-						LowChargeBattery_SMS = 1;							// СМС отправлено
-						Low_Input_VCC = true;									// Поднимаем флаг низкого напряжения питания
-					}
+		}
+		// ======================================== Обработка значений ========================================
+		if(CounterMinValues == Number_Measurements_VCC){			// Если все значения в массиве оказались ниже минимального				
+			if(OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("Low input VCC"));
+			}
+			if (LowChargeBattery_SMS == false){						// Если СМС не отправлялось
+				switch(EEPROM.read(E_ReactToMinVCC)){
+					case REACTION_ERORR_VCC_SEND_SMS:
+						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_WARNING_SMS);
+						break;
+					case REACTION_ERORR_VCC_SEND_GET:
+						Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+						break;
+					case REACTION_ERORR_VCC_SEND_SMS_AND_GET:
+						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_WARNING_SMS);
+						Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Low input VCC: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+						break;
 				}
-				if(CounterMaxValues == NumberChecksVCC){					// Если все значения в массиве были больше E_MinInputVCC  (напряжение питания выше минимального)
-					if(Low_Input_VCC){											// Если висит флаг низкого напряжения питания
-						//Serial.println(F("Напряжение питания OK"));			// Говорим что напряжения питания в норме
-						Low_Input_VCC = false;
-						LowChargeBattery_SMS = 0;
+				LowChargeBattery_SMS = true;						// СМС отправлено
+				Low_Input_VCC = true;								// Поднимаем флаг низкого напряжения питания
+			}
+		}
+		if(CounterMaxValues == Number_Measurements_VCC){			// Если все значения в массиве были больше E_MinInputVCC (напряжение питания стабилизировалось и  выше минимального)
+			if(OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("Input VCC OK"));
+			}
+			if(Low_Input_VCC){										// Если висит флаг низкого напряжения питания
+				Low_Input_VCC = false;
+				if(LowChargeBattery_SMS){							// Если ранее отправлялась СМС
+					switch(EEPROM.read(E_ReactToMinVCC)){
+						case REACTION_ERORR_VCC_SEND_SMS:
+							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_WARNING_SMS);
+							break;
+						case REACTION_ERORR_VCC_SEND_GET:
+							Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+							break;
+						case REACTION_ERORR_VCC_SEND_SMS_AND_GET:
+							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_WARNING_SMS);
+							Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+							break;
 					}
+					LowChargeBattery_SMS = false;
 				}
 			}
 		}
 		
-		// =================================== Затираем рабочие массив и счетчик ===================================
-		for(byte i = 0; i < NumberChecksVCC; i ++){
-			GridMeasuredIndications [i] = 0;
+		// =================================== Затираем рабочий массив и счетчик ===================================
+		for(byte i = 1; i < Number_Measurements_VCC; i ++){
+			GridMeasuredIndications[i] = 0;
 		}
-		Counter = 0;
 	}
 }
 
 
-// =====================================================================================================================
-void ReadValueSensor(byte _NumberChannel){								// Ищем измеренные значения датчика по привязке в группе
+// ============================== Поиск измеренных значений датчика по привязке в группе ==============================
+void Read_Value_Sensor(byte _NumberChannel){								
 	WorkValueSensor.NumberSensor = 0;
 	WorkValueSensor.NumberSGB = 0;
 	WorkValueSensor.OldValue = 0;
 	WorkValueSensor.Value = 0;
-	for(byte Sensor = 0; Sensor < QuantitySensors; Sensor ++){						// Проходим по байтам конфигурации всех датчиков
-		if(EEPROM.read(E_StatusSensor + Sensor + 1) == 1){							// Если датчик включен
+	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor ++){					// Проходим по байтам конфигурации всех датчиков
+		if(EEPROM.read(E_StatusSensor + Sensor) == 1){								// Если датчик включен
 			for(byte SGB = 0; SGB < 3; SGB ++){										// Ищем датчики прикрепленные к группе по байтам конфигурации E_SBG_A_*, E_SBG_B_*, E_SBG_C_*
-				if(EEPROM.read(E_SBG + ((Sensor + 1) * 3) + SGB) == _NumberChannel){// если нашли
+				if(EEPROM.read(E_SBG + ((Sensor) * 3) + SGB) == _NumberChannel){	// если нашли
 					WorkValueSensor.NumberSGB = SGB;								// Сохраняем номер SGB
-					WorkValueSensor.NumberSensor = Sensor;							// Сохраняем номер датчика
-					if(SensorsError[Sensor][SGB] == 0){								// если не висит флаг ошибочности значений
+					WorkValueSensor.NumberSensor = Sensor;							// Сохраняем номер датчика		
+					if(SensorsError[Sensor][SGB] == 0){								// если не висит флаг ошибочности значений						
 						WorkValueSensor.Error = false;								// На всякий случай снимаем ошибку показаний датчика
 						WorkValueSensor.Value = RealValueSensors[Sensor][SGB];		// Присваиваем переменной измеренное показание датчика
 						WorkValueSensor.OldValue = OldValueSensors[Sensor][SGB];	// Получаем старое показание датчика
@@ -335,7 +408,7 @@ void FindExecModule(byte _Module, byte _NumberChannel){				// Поиск исп�
 	if(EEPROM.read(E_BindExecModile + _Module) == _NumberChannel){	// Ищем модуль привязанный к NumberChannel и если нашли
 		if(EEPROM.read(E_StatusModule + _Module) == 1){				// И если модуль включен
 			WorkExecModule.ModuleFound = true;						// Поднимаем флаг что модуль найден (нужно для ф-ции управления группой)
-			WorkExecModule.Module = _Module;							// Записываем номер найденного модуля
+			WorkExecModule.Module = _Module;						// Записываем номер найденного модуля
 			WorkExecModule.TypeModule = EEPROM.read(E_TypeExecModule + _Module);		// И тип управления модулем
 		}
 	}
@@ -351,30 +424,31 @@ void ExecModules(byte _NumberChannel, byte _Mode){
 	int _StepValueStepper;			// Количество шагов передаваемое исполнительному модулю.
 	byte _DigitalLevel;				// В режиме "Digital Port" просто включает порт
 	byte _QuantityDigital;
-	switch(WorkExecModule.TypeModule){						// По типу модуля определяем нужное кол-во шагов для перемешения
-		case 1:												// --- Шаговый мотор
+	switch(WorkExecModule.TypeModule){										// По типу модуля определяем нужное кол-во шагов для перемешения
+		case 1:																// --- Шаговый мотор
 			if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
 				Serial.print(F("\t\t\t\t\t\t...Executive module: ")); Serial.print(WorkExecModule.Module); Serial.println(F(". It is ready as Stepper motor "));
 			}
-			if(_Mode == 1){									// Если канал в режиме пропорционального управления
+			if(_Mode == 1){													// Если канал в режиме пропорционального управления
 				if(WorkValueSensor.Value != 0){
 					_StepValue = map(WorkValueSensor.Value, _MinValueChannel, _MaxValueChannel, 0, EEPROM.read(E_MaxLimitRotation + WorkExecModule.Module));
 				}
 				else _StepValue = 0;
 			}
-			else{											// Если нет, то работаем в режиме ключа, вкл\выкл мотор на максимум
-				if(WorkValueSensor.Value > 0){				// 
+			else{															// Если нет, то работаем в режиме ключа, вкл\выкл мотор на максимум
+				if(WorkValueSensor.Value > 0){								// 
 					_StepValue = EEPROM.read(E_MaxLimitRotation + WorkExecModule.Module);	// Открываем на максимум
 				}
-				else _StepValue = 0;							// Или спускаем мотор в "нули"
+				else _StepValue = 0;										// Или спускаем мотор в "нули"
 			}				
 			_StepValueStepper = _StepValue - UpStepValue[WorkExecModule.Module - 1];
 			RunStepperMotor(WorkExecModule.Module, _StepValueStepper, 0);	// Запускаем шаговый мотор
-			UpStepValue[WorkExecModule.Module - 1] = _StepValue;				// Сохраняем количество шагов для дальшейшего использования
+			UpStepValue[WorkExecModule.Module - 1] = _StepValue;			// Сохраняем количество шагов для дальшейшего использования
 			break;
 		case 2:																// --- ШИМ
 			if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
 				Serial.print(F("\t\t\t\t\t\t...Executive module: ")); Serial.print(WorkExecModule.Module); Serial.println(F(". It is ready as PWM"));
+				//Serial.print(F("\t\t\t\t\t\t...Executive module: ") + String(WorkExecModule.Module) + F(". It is ready as PWM"));
 			}
 			if(AllowPWMport(EEPROM.read(E_PortExecModule + WorkExecModule.Module))){	// Если порты настроены на работу с PWM пинами
 				if(_Mode == 1){
@@ -438,10 +512,10 @@ void ExecModules(byte _NumberChannel, byte _Mode){
 			if (_Mode == 2 || _Mode == 3 || _Mode == 4 || _Mode == 5){		// Если каналами не в режиме пропорционального управления
 				if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
 					Serial.print(F("\t\t\t\t\t\t\t...port "));
-					DigitalPort(EEPROM.read(E_PortExecModule + WorkExecModule.Module), 0, 1);				// Выводим название порта в консоль
+					DigitalPort(EEPROM.read(E_PortExecModule + WorkExecModule.Module), DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);	// Выводим название порта в консоль
 				}
-				DigitalPort(EEPROM.read(E_PortExecModule + WorkExecModule.Module), _QuantityDigital, 2);		// Запускаем управление портом
-				StateDigitalPorts[E_PortExecModule + WorkExecModule.Module, _QuantityDigital];				// Сохраняем состояние порта в массив
+				DigitalPort(EEPROM.read(E_PortExecModule + WorkExecModule.Module), _QuantityDigital, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Запускаем управление портом
+				StateDigitalPorts[E_PortExecModule + WorkExecModule.Module, _QuantityDigital];									// Сохраняем состояние порта в массив
 				if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
 					if(_QuantityDigital == 1){
 						Serial.println(F(": HIGH"));
@@ -476,7 +550,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 */
 	boolean _State = true;			// Включать или нет сам испольнительный механизм. По default стоит "включать"
 	int _StepValue;
-	static float _OldValue[QuantitySensors];
+	static float _OldValue[QUANTITY_SENSORS];
 	boolean _ViewStateMode_1 = false;
 	boolean _ViewStateMode_2 = false;
 	boolean _ViewStateMode_3 = false;
@@ -497,10 +571,10 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 			Serial.print(F("\t\t\t\tValue sensor: ")); Serial.println(WorkValueSensor.Value);
 			Serial.println(F("\t\t\t\t...Manage channel---> "));
 		}
-		for(byte Module = 1; Module <= QuantityExecModule; Module ++){		// Проходим по всем модулям
+		for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){	// Проходим по всем модулям
 			FindExecModule(Module, WorkChannel.Number);						// Ф-ция поиска рабочего модуля
 			if(WorkExecModule.ModuleFound){									// Если нашли модуль
-				_ModuleFound = true;											// Поднимаем флаг что модуль найден
+				_ModuleFound = true;										// Поднимаем флаг что модуль найден
 				switch(_Mode){
 					// ========================================================================================
 					case 1:															// Пропорциональный режим управления
@@ -544,7 +618,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 						break;
 					// ========================================================================================
 					case 2:																	// Управление при значении датчика > E_MinValueChannel
-						ReadValueSensor(WorkChannel.Number);								// Получаем показание датчика
+						Read_Value_Sensor(WorkChannel.Number);								// Получаем показание датчика
 						_StepValue = EEPROM.read(E_MinValueChannel + WorkChannel.Number);
 						if(WorkExecModule.ModuleFound){	
 							if(WorkValueSensor.Value > _StepValue){	
@@ -584,17 +658,18 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 									Serial.print(F("\t\t\t\t...RealValue (")); Serial.print(WorkValueSensor.Value); Serial.print(F(") > ")); Serial.print(F("MinValueChannel (")); Serial.print(_StepValue); Serial.println(F(")"));
 								}
 							}
-							WorkValueSensor.Value = -_StepValue;						// "Закрываем" исполнительный модуль	
+							WorkValueSensor.Value = -_StepValue;					// "Закрываем" исполнительный модуль	
 						}
 						_ViewStateMode_3 = true;										// Поднимаем флаг чтобы повторно не выводить данные
 						ExecModules(WorkChannel.Number, _Mode);						// Запускаем управление исполнительными модулями. Данные берем из структур ValueSensor и ExecModule
 						break;
 				}
 			}
-			if((Module + 1) == QuantityExecModule){									// Если прошли по всем модулям
+			if((Module + 1) == QUANTITY_EXEC_MODULES){								// Если прошли по всем модулям
 				if(!_ModuleFound){													// И не нашли ни одного нужного
 					if(OUTPUT_LEVEL_UART_CHANNEL){
-						Serial.println(F("\t\t\t\t\t...Management of channel is stopped. Modules is not found"));
+						Serial.println(F("\t\t\t\t\t...Management of channel is stopped."));
+						Serial.println(F("\t\t\t\t\t...Exec modules is not found"));
 					}
 					_ModuleFound = false;
 				}
@@ -604,7 +679,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		if (WorkValueSensor.Value < EEPROM.read(E_MinValueToReact + (WorkChannel.Number - 1))){
 			if(EEPROM.read(E_AllowReactToMinValue + (WorkChannel.Number - 1)) == 1){											// Если настроено на отправку этого уведомления
 				if(EEPROM.read(E_SendingSMSminValue + (WorkChannel.Number - 1)) == 1){										// Если СМС не отправлялось
-					SendSMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is lower than minimum")), 4);  
+					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is lower than minimum")), GSM_ERROR_SMS);  
 					EEPROM.write(E_SendingSMSmaxValue + (WorkChannel.Number - 1), 1);
 				}
 			}
@@ -612,7 +687,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		if (WorkValueSensor.Value > EEPROM.read(E_MaxValueToReact + (WorkChannel.Number - 1))){
 			if(EEPROM.read(E_AllowReactToMaxValue + (WorkChannel.Number - 1)) == 1){											// Если настроено на отправку этого уведомления
 				if(EEPROM.read(E_SendingSMSmaxValue + (WorkChannel.Number - 1)) == 1){										// Если СМС не отправлялось
-					SendSMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is higher than maximum")), 4);  
+					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is higher than maximum")), GSM_ERROR_SMS);  
 					EEPROM.write(E_SendingSMSmaxValue + (WorkChannel.Number - 1), 1);
 				}
 			}
@@ -647,11 +722,11 @@ void WorkTimerMode(byte _Mode){										// Рабочая ф-ция для ре
 				break;
 		}
 	}
-	for(byte Module = 1; Module <= QuantityExecModule; Module ++){	// Проходим по всем модулям
-		FindExecModule(Module, WorkChannel.Number);					// Ищем модуль привязанный к группе
-		if(WorkExecModule.ModuleFound){								// Если нашли модуль
-			ModuleFound = true;										// Поднимаем флаг что модуль найден
-			switch(_Mode){											// Определяем тип управления модулем
+	for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){	// Проходим по всем модулям
+		FindExecModule(Module, WorkChannel.Number);						// Ищем модуль привязанный к группе
+		if(WorkExecModule.ModuleFound){									// Если нашли модуль
+			ModuleFound = true;											// Поднимаем флаг что модуль найден
+			switch(_Mode){												// Определяем тип управления модулем
 				case 4:
 					if(time.Hours == EEPROM.read(E_TimerStart_hours + WorkChannel.Number)){
 						if(time.minutes == EEPROM.read(E_TimerStart_minute + WorkChannel.Number)){
@@ -690,7 +765,7 @@ void WorkTimerMode(byte _Mode){										// Рабочая ф-ция для ре
 					break;
 			}
 		}
-		if(Module == QuantityExecModule){									// Если прошли по всем модулям
+		if(Module == QUANTITY_EXEC_MODULES){								// Если прошли по всем модулям
 			if(!ModuleFound){												// И не нашли ни одного нужного
 				if(OUTPUT_LEVEL_UART_CHANNEL){
 					Serial.println(F("\t\t...Управление каналом остановлено. Исполнительный модуль не найден"/*"\t\t...Management of channel is stopped. Modules is not found"*/));
@@ -703,7 +778,7 @@ void WorkTimerMode(byte _Mode){										// Рабочая ф-ция для ре
 
 
 boolean ValidDataSensors(byte _NumberChannel){							// Ф-ция для получения и проверки значения датчика 
-	ReadValueSensor(_NumberChannel);									// Получаем показание датчика
+	Read_Value_Sensor(_NumberChannel);									// Получаем показание датчика
 	if(!WorkValueSensor.Error){											// Если нет ошибок показаний
 		if(WorkValueSensor.Value != WorkValueSensor.OldValue){			// Если показание датчика привязанного к группе изменилось
 			OldValueSensors[WorkValueSensor.NumberSensor][WorkValueSensor.NumberSGB] = WorkValueSensor.Value; // Сохраняем значение
@@ -730,7 +805,7 @@ void TermostatFunc(byte _NumberChannel){				// Запуск управления
 	WorkChannel.Status = 0;
 	WorkChannel.MinValue = 0;
 	WorkChannel.MaxValue = 0;
-	WorkChannel.TypeControll = EEPROM.read(E_Controll_Channel + _NumberChannel);		// Сохраняем тип управления каналом
+	WorkChannel.TypeControll = EEPROM.read(E_Controll_Channel + _NumberChannel);				// Сохраняем тип управления каналом
 	if(OUTPUT_LEVEL_UART_CHANNEL){
 		Serial.print(F("\t\t\tManagement of channel is started in Termostat mode (")); Serial.print(WorkChannel.TypeControll); Serial.println(F(")"));
 	}
@@ -753,7 +828,7 @@ void TermostatFunc(byte _NumberChannel){				// Запуск управления
 					Serial.print(F("\t\t\tManagement of channel '")); Serial.print(_NumberChannel); Serial.println(F("' is not configured"));
 				}
 		}
-		WorkThermostatMode(WorkChannel.TypeControll);			// Запускаем исполняемую ф-цию
+		WorkThermostatMode(WorkChannel.TypeControll);	// Запускаем исполняемую ф-цию
 	}
 }
 
@@ -773,29 +848,29 @@ void TimerFunc(/*byte _NumberChannel*/){						// Запуск управлени
 		Serial.println(F(" =========== Control unit of channel ============ "));
 		Serial.println(F("  ==============================================  "));
 	}	
-	for(byte NumberChannel = 1; NumberChannel <= QuantityChannel; NumberChannel ++){	// Проходим по всем каналам
+	for(byte NumberChannel = 1; NumberChannel <= QUANTITY_CHANNEL; NumberChannel ++){		// Проходим по всем каналам
 		if(EEPROM.read(E_StatusChannel + NumberChannel) == 1){								// Если канал включен
 			if(OUTPUT_LEVEL_UART_CHANNEL){
 				Serial.print(F("----- Channel ")); Serial.print(NumberChannel); Serial.println(F(" is started -----"));
 			}
-			WorkChannel.Number = NumberChannel;											// Сохраняем номер группы
+			WorkChannel.Number = NumberChannel;												// Сохраняем номер группы
 			WorkChannel.TypeControll = EEPROM.read(E_Controll_Channel + NumberChannel);		// Сохраняем тип управления группой
 			switch(WorkChannel.TypeControll){
-				case 4:									// Работа по таймеру. Включение по E_TimeRun и выключение по E_TimeStop
-					WorkChannel.TimerStart_hours = EEPROM.read(E_TimerStart_hours + NumberChannel);;
-					WorkChannel.TimerStart_minute = EEPROM.read(E_TimerStart_minute + NumberChannel);;
-					WorkChannel.TimerStop_hours = EEPROM.read(E_TimerStop_hours + NumberChannel);;
-					WorkChannel.TimerStop_minute = EEPROM.read(E_TimerStop_minute + NumberChannel);;
+				case 4:											// Работа по таймеру. Включение по E_TimeRun и выключение по E_TimeStop
+					WorkChannel.TimerStart_hours = EEPROM.read(E_TimerStart_hours + NumberChannel);
+					WorkChannel.TimerStart_minute = EEPROM.read(E_TimerStart_minute + NumberChannel);
+					WorkChannel.TimerStop_hours = EEPROM.read(E_TimerStop_hours + NumberChannel);
+					WorkChannel.TimerStop_minute = EEPROM.read(E_TimerStop_minute + NumberChannel);
 					WorkTimerMode(4);
 					break;
-				case 5:									// Работа по таймеру. Включение по таймеру, выключение по длительности E_Delta
-					WorkChannel.TimerStart_hours = EEPROM.read(E_TimerStart_hours + NumberChannel);;
-					WorkChannel.TimerStart_minute = EEPROM.read(E_TimerStart_minute + NumberChannel);;
-					WorkChannel.Timer_delta = EEPROM.read(E_Timer_delta + NumberChannel);;
+				case 5:											// Работа по таймеру. Включение по таймеру, выключение по длительности E_Delta
+					WorkChannel.TimerStart_hours = EEPROM.read(E_TimerStart_hours + NumberChannel);
+					WorkChannel.TimerStart_minute = EEPROM.read(E_TimerStart_minute + NumberChannel);
+					WorkChannel.Timer_delta = EEPROM.read(E_Timer_delta + NumberChannel);
 					WorkTimerMode(5);
 					break;
-				case 6:									// Работа по таймеру. Включение и выключение по интервалу E_Delta
-					WorkChannel.Timer_delta = EEPROM.read(E_Timer_delta + NumberChannel);;
+				case 6:											// Работа по таймеру. Включение и выключение по интервалу E_Delta
+					WorkChannel.Timer_delta = EEPROM.read(E_Timer_delta + NumberChannel);
 					WorkTimerMode(6);
 					break;
 				default:

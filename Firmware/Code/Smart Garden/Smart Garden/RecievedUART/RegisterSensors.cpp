@@ -49,7 +49,7 @@ void Read_ETAS_register(byte Sensor){				// Чтение регистра ETAS (
 		case 7:
 			Serial.println(F("Analog Sensor"));
 			Serial.print(F("Порт: "));
-			DigitalPort(EEPROM.read(E_Address_Sensor + (Sensor * 10)), 0, 1);
+			DigitalPort(EEPROM.read(E_Address_Sensor + (Sensor * 10)), DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);
 			Serial.println(F(""));
 			break;
 		case 8:
@@ -95,6 +95,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Температуры"/*"Temp"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 2: 			// Измерение влажности воздуха
@@ -105,6 +107,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Влажности воздуха"/*"Humidity Air"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 3: 			// Измерение влажности почвы
@@ -115,6 +119,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("влажности почвы"/*"Humidity Soil"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 4: 			// Измерение интенсивноски солнечного света
@@ -125,6 +131,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Освещения"/*"Light Sensor"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 5: 			// Измерение атмосферного давления
@@ -135,6 +143,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Атмосферного давления"/*"Atmospheric Pressure"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 6: 			// Измерение напряжения солнечной панели
@@ -145,6 +155,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Напряжения"/*"External Tension"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 7: 			// Измерение тока солнечной панели
@@ -155,6 +167,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Тока"/*"External Current"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 8:				// Аналоговое значение 
@@ -165,6 +179,8 @@ void Read_E_Type_B_Sensor_register(byte Sensor, byte ViewText){
 				case 2:
 					Serial.println(F("Аналогово измерения"/*"Analog Value"*/));
 					break;
+				default:
+					Serial.println();
 			}
 			break;
 		case 12: 			// Multi Sensor - температура и влажность воздуха

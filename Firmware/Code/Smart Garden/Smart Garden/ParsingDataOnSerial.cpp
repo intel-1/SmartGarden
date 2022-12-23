@@ -11,7 +11,7 @@
 #include "RecievedUART\RecievedUART.h"
 
 
-int InputFromSerial0[25];					// Массив с полученными по UART0 данными
+int InputFromSerial0[50];					// Массив с полученными по UART0 данными
 
 boolean recievedFlag_date;
 boolean transmitFlag_date;
@@ -213,18 +213,18 @@ void serialISR() {
 
 
 	
-void CleaningDuplicatedPorts(int Value){							// Ф-ция для проверки не назначен ли порт кому либо. 
-	for(byte Module = 1; Module <= QuantityExecModule; Module ++){	// Проходим по всем модулям		
-		if(EEPROM.read(E_LowSwitchPortModule + Module) == Value){	// HIGH концевик у модулей
+void CleaningDuplicatedPorts(int Value){								// Ф-ция для проверки не назначен ли порт кому либо. 
+	for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){	// Проходим по всем модулям		
+		if(EEPROM.read(E_LowSwitchPortModule + Module) == Value){		// HIGH концевик у модулей
 			EEPROM.write(E_LowSwitchPortModule + Module, 0);
 			break;
 		}
-		if(EEPROM.read(E_HighSwitchPortModule + Module) == Value){	// LOW концевик у модулей
+		if(EEPROM.read(E_HighSwitchPortModule + Module) == Value){		// LOW концевик у модулей
 			EEPROM.write(E_HighSwitchPortModule + Module, 0);
 			break;
 		}
 	}
-	for(byte Sensor = 1; Sensor <= QuantitySensors; Sensor++){			// Проходим по всем датчикам
+	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor++){			// Проходим по всем датчикам
 		if(EEPROM.read(E_SensorControllPort + Sensor) == Value){		// Порт управления у датчиков
 			EEPROM.write(E_SensorControllPort + Sensor, 0);
 			break;

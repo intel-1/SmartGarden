@@ -25,23 +25,23 @@
 
 extern OneWire oneWire;
 
+extern int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
-extern int LoopTimeRunCalculateSensor[QuantitySensors + 1];			// Временные интервалы измерения сенсоров
+extern float CfCalcDC;											// Поправочные коэфициенты для вычисления VCC
+extern float VCC;												// Текущее напряжение питания
+extern float Ti;												// Температура встроенного температурного датчика (LM75A) 
+extern boolean DebugRepet_1;									// Повторять ли вывод в консоль или нет
 
-extern float CfCalcDC;										// Поправочные коэфициенты для вычисления VCC
-extern float VCC;											// Текущее напряжение питания
-extern float Ti;											// Температура встроенного температурного датчика (LM75A) 
-extern boolean DebugRepet_1;								// Повторять ли вывод в консоль или нет
-extern int RealValueADC[QuantitySensors + 1];				// Текущие значения аналоговых портов
-extern float RealValueSensors[QuantitySensors + 1][3];		// Текущие значения датчиков
-extern float OldValueSensors[QuantitySensors + 1][3];		// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-extern byte SensorsError[QuantitySensors + 1][3];			// Ошибки датчиков
-extern float Buffer_Value_Sensors[QuantitySensors + 1][3];	// "Сырые" значения датчиков
+extern int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
+extern float RealValueSensors[QUANTITY_SENSORS + 1][3];			// Текущие значения датчиков
+extern float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
+extern byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
+
 
 extern struct StructQuantityCalcSensors{
-	float SumValue[QuantitySensors + 1][3];					// Суммы измеренных значений датчиков ()
-	byte QuantityCalc[QuantitySensors + 1];					// Счетчик количество измеренных значений датчиков
-	//bool AllowSummData[QuantitySensors];					// Флаг что данные успешно суммированы и нет никаких ошибок измерений
+	float SumValue[QUANTITY_SENSORS + 1][3];					// Суммы измеренных значений датчиков (сырые)
+	byte QuantityCalc[QUANTITY_SENSORS + 1];					// Счетчик количество измеренных значений датчиков
+	//bool AllowSummData[QuantitySensors];						// Флаг что данные успешно суммированы и нет никаких ошибок измерений
 } QuantityCalcSensors;
 
 

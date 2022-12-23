@@ -10,6 +10,7 @@
 #include "../ExecModules.h"
 #include "../DigitalPorts.h"
 #include "../GSM.h"
+#include "../LCDdisplay.h"
 
 
 void ViewStateLoginToSerial(byte State){
@@ -111,58 +112,58 @@ void RecievedDebug(){
 				break;
 			// Блок управления GSM модемом
 			case 13:
-				InitializingGSM();					// Инициализация GSM модуля
+				Initializing_GSM(LCD_ALLOW_OTPUT_ON_SCREEN);	// Инициализация GSM модуля
 				break;
 			case 14:
-				sendATCommand(F("AT"), true, true);
-				//Serial3.println(F("AT"));			// Готовность модуля к работе
+				send_AT_Command(F("AT"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
+				//Serial3.println(F("AT"));					// Готовность модуля к работе
 				break;
 			case 15:
-				sendATCommand(F("ATI"), true, true);
-				//Serial3.println(F("ATI"));			// Запрос информации об устройстве
+				send_AT_Command(F("ATI"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
+				//Serial3.println(F("ATI"));				// Запрос информации об устройстве
 				break;
 			case 16:
-				sendATCommand(F("AT+CSQ"), true, true);
-				//Serial3.println(F("AT+CSQ"));		// Запрос качества связи
+				send_AT_Command(F("AT+CSQ"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
+				//Serial3.println(F("AT+CSQ"));				// Запрос качества связи
 				break;
 			case 17:
-				sendATCommand(F("AT+CREG?"), true, true);
+				send_AT_Command(F("AT+CREG?"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CREG?"));		// Тип регистрации в сети
 				break;
 			case 18:
-				sendATCommand(F("AT+COPS?"), true, true);
+				send_AT_Command(F("AT+COPS?"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+COPS?"));		// Информация об операторе
 				break;
 			case 19:
-				sendATCommand(F("AT+CPAS"), true, true);
+				send_AT_Command(F("AT+CPAS"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CPAS"));		// Статус телефона GSM-модуля
 				break;
 			case 20:
-				sendATCommand(F("AT+CGM"), true, true);
+				send_AT_Command(F("AT+CGM"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CGM"));		// Запрос версии установленного ПО
 				break;
 			case 21:
-				sendATCommand(F("AT+CCALR?"), true, true);
+				send_AT_Command(F("AT+CCALR?"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CCALR?"));	// Готовность модуля совершать звонки
 				break;
 			case 22:
-				sendATCommand(F("AT+GSN"), true, true);
+				send_AT_Command(F("AT+GSN"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+GSN"));		// Запрос IMEI-модуля
 				break;
 			case 23:
-				sendATCommand(F("AT+GSV"), true, true);
+				send_AT_Command(F("AT+GSV"), true, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+GSV"));		// Запрос идентификационной информации модуля
 				break;
 			case 24:
-				sendATCommand(F("AT+CBC"), true, true);
+				send_AT_Command(F("AT+CBC"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CBC"));		// Напряжение питания
 				break;
 			case 25:
-				sendATCommand(F("AT+COPN"), true, true);
+				send_AT_Command(F("AT+COPN"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+COPN"));		// Получение списка всех операторов
 				break;
 			case 26:
-				sendATCommand(F("AT+CFUN?"), true, true);
+				send_AT_Command(F("AT+CFUN?"), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
 				//Serial3.println(F("AT+CFUN?"));		// Проверка функциональности модуля
 				break;
 			case 27:

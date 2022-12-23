@@ -7,12 +7,13 @@
 #include "EEPROM_ADR.h"
 
 
-void EEPROM_int_write(int addr, int val){ // запись в EEPROM
-	uint8_t  *x = (uint8_t *)&val;
-	for(uint8_t i = 0; i < 4; i++){
-		EEPROM.write(i+addr, x[i]);
-	}
-}
+// void EEPROM_int_write(int addr, int val){ // запись в EEPROM
+// // 	uint8_t  *x = (uint8_t *)&val;
+// // 	for(uint8_t i = 0; i < 4; i++){
+// // 		EEPROM.write(i+addr, x[i]);
+// // 	}
+// 	EEPROM.put(addr, val);
+// }
 int EEPROM_int_read(int addr){ // чтение из EEPROM
 	uint8_t  x[4];
 	for(uint8_t i = 0; i < 4; i++){

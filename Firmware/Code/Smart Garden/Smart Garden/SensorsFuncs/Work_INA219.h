@@ -7,6 +7,7 @@
 
 
 extern Adafruit_INA219 ina219;
+extern Adafruit_INA219 ina219_int;
 
 
 void CalculateINA219(byte NumberSensor, byte TypeDataSensor);

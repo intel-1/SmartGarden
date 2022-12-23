@@ -11,32 +11,32 @@
 // Define milliseconds delay for ESP8266 platform
 #if defined(ESP8266)
 
-  #include <pgmspace.h>
-  #define _delay_ms(ms) delayMicroseconds((ms) * 1000)
+	#include <pgmspace.h>
+	#define _delay_ms(ms) delayMicroseconds((ms) * 1000)
 
 // Use _delay_ms from utils for AVR-based platforms
 #elif defined(__avr__)
-  #include <util/delay.h>
+	#include <util/delay.h>
 
 // Use Wiring's delay for compability with another platforms
 #else
-  #define _delay_ms(ms) delay(ms)
+	#define _delay_ms(ms) delay(ms)
 #endif
 
 
 // Legacy Wire.write() function fix
 #if (ARDUINO >= 100)
-  #define __wire_write(d) Wire.write(d)
+	#define __wire_write(d) Wire.write(d)
 #else
-  #define __wire_write(d) Wire.send(d)
+	#define __wire_write(d) Wire.send(d)
 #endif
 
 
 // Legacy Wire.read() function fix
 #if (ARDUINO >= 100)
-  #define __wire_read() Wire.read()
+	#define __wire_read() Wire.read()
 #else
-  #define __wire_read() Wire.receive()
+	#define __wire_read() Wire.receive()
 #endif
 
 
@@ -48,8 +48,7 @@
  */
 BH1750::BH1750(byte addr) {
 
-  BH1750_I2CADDR = addr;
-
+	BH1750_I2CADDR = addr;
 }
 
 
@@ -59,11 +58,10 @@ BH1750::BH1750(byte addr) {
  */
 bool BH1750::begin(Mode mode) {
 
-  // I2C is expected to be initialized outside this library
+	// I2C is expected to be initialized outside this library
 
-  // Configure sensor in specified mode
-  return configure(mode);
-
+	// Configure sensor in specified mode
+	return configure(mode);
 }
 
 
@@ -73,59 +71,57 @@ bool BH1750::begin(Mode mode) {
  */
 bool BH1750::configure(Mode mode) {
 
-  // default transmission result to a value out of normal range
-  byte ack = 5;
+	// default transmission result to a value out of normal range
+	byte ack = 5;
 
-  // Check measurement mode is valid
-  switch (mode) {
+	// Check measurement mode is valid
+	switch (mode) {
 
-    case BH1750::CONTINUOUS_HIGH_RES_MODE:
-    case BH1750::CONTINUOUS_HIGH_RES_MODE_2:
-    case BH1750::CONTINUOUS_LOW_RES_MODE:
-    case BH1750::ONE_TIME_HIGH_RES_MODE:
-    case BH1750::ONE_TIME_HIGH_RES_MODE_2:
-    case BH1750::ONE_TIME_LOW_RES_MODE:
+		case BH1750::CONTINUOUS_HIGH_RES_MODE:
+		case BH1750::CONTINUOUS_HIGH_RES_MODE_2:
+		case BH1750::CONTINUOUS_LOW_RES_MODE:
+		case BH1750::ONE_TIME_HIGH_RES_MODE:
+		case BH1750::ONE_TIME_HIGH_RES_MODE_2:
+		case BH1750::ONE_TIME_LOW_RES_MODE:
 
-      // Send mode to sensor
-      Wire.beginTransmission(BH1750_I2CADDR);
-      __wire_write((uint8_t)BH1750_MODE);
-      ack = Wire.endTransmission();
+		// Send mode to sensor
+		Wire.beginTransmission(BH1750_I2CADDR);
+		__wire_write((uint8_t)BH1750_MODE);
+		ack = Wire.endTransmission();
 
-      // Wait a few moments to wake up
-      _delay_ms(10);
-      break;
+		// Wait a few moments to wake up
+		_delay_ms(10);
+		break;
 
     default:
-      // Invalid measurement mode
-      Serial.println(F("[BH1750] ERROR: Invalid mode"));
-      break;
-
-  }
+		// Invalid measurement mode
+		Serial.println(F("[BH1750] ERROR: Invalid mode"));
+		break;
+	}
 
   // Check result code
   switch (ack) {
-    case 0:
-      BH1750_MODE = mode;
-      return true;
+	case 0:
+		BH1750_MODE = mode;
+		return true;
     case 1: // too long for transmit buffer
-      Serial.println(F("[BH1750] ERROR: too long for transmit buffer"));
-      break;
+		Serial.println(F("[BH1750] ERROR: too long for transmit buffer"));
+		break;
     case 2: // received NACK on transmit of address
-      Serial.println(F("[BH1750] ERROR: received NACK on transmit of address"));
-      break;
+		Serial.println(F("[BH1750] ERROR: received NACK on transmit of address"));
+		break;
     case 3: // received NACK on transmit of data
-      Serial.println(F("[BH1750] ERROR: received NACK on transmit of data"));
-      break;
+		Serial.println(F("[BH1750] ERROR: received NACK on transmit of data"));
+		break;
     case 4: // other error
-      Serial.println(F("[BH1750] ERROR: other error"));
-      break;
+		Serial.println(F("[BH1750] ERROR: other error"));
+		break;
     default:
-      Serial.println(F("[BH1750] ERROR: undefined error"));
-      break;
+		Serial.println(F("[BH1750] ERROR: undefined error"));
+		break;
   }
 
   return false;
-
 }
 
 /**
@@ -136,63 +132,62 @@ bool BH1750::configure(Mode mode) {
  * 		false if MTreg not changed or parameter out of range
  */
 bool BH1750::setMTreg(byte MTreg) {
-  //Bug: lowest value seems to be 32!
-  if (MTreg <= 31 || MTreg > 254) {
-    Serial.println(F("[BH1750] ERROR: MTreg out of range"));
-    return false;
-  }
-  byte ack = 5;
-  // Send MTreg and the current mode to the sensor
-  //   High bit: 01000_MT[7,6,5]
-  //    Low bit: 011_MT[4,3,2,1,0]
-  Wire.beginTransmission(BH1750_I2CADDR);
-  __wire_write((0b01000 << 3) | (MTreg >> 5));
-  ack = Wire.endTransmission();
-  Wire.beginTransmission(BH1750_I2CADDR);
-  __wire_write((0b011 << 5 )  | (MTreg & 0b111));
-  ack = ack | Wire.endTransmission();
-  Wire.beginTransmission(BH1750_I2CADDR);
-  __wire_write(BH1750_MODE);
-  ack = ack | Wire.endTransmission();
+	//Bug: lowest value seems to be 32!
+	if (MTreg <= 31 || MTreg > 254) {
+		Serial.println(F("[BH1750] ERROR: MTreg out of range"));
+		return false;
+	}
+	byte ack = 5;
+	// Send MTreg and the current mode to the sensor
+	//   High bit: 01000_MT[7,6,5]
+	//    Low bit: 011_MT[4,3,2,1,0]
+	Wire.beginTransmission(BH1750_I2CADDR);
+	__wire_write((0b01000 << 3) | (MTreg >> 5));
+	ack = Wire.endTransmission();
+	Wire.beginTransmission(BH1750_I2CADDR);
+	__wire_write((0b011 << 5 )  | (MTreg & 0b111));
+	ack = ack | Wire.endTransmission();
+	Wire.beginTransmission(BH1750_I2CADDR);
+	__wire_write(BH1750_MODE);
+	ack = ack | Wire.endTransmission();
 
-  // Wait a few moments to wake up
-  _delay_ms(10);
+	// Wait a few moments to wake up
+	_delay_ms(10);
 
-  // Check result code
-  switch (ack) {
-    case 0:
-      BH1750_MTreg = MTreg;
-      // Delay for specific continuous mode to get valid values
-    	switch (BH1750_MODE) {
-    	  case BH1750::CONTINUOUS_LOW_RES_MODE:
-      		_delay_ms(24 * BH1750_MTreg/(byte)BH1750_DEFAULT_MTREG);
-      		break;
-    	  case BH1750::CONTINUOUS_HIGH_RES_MODE:
-    	  case BH1750::CONTINUOUS_HIGH_RES_MODE_2:
-      		_delay_ms(180 * BH1750_MTreg/(byte)BH1750_DEFAULT_MTREG);
-      		break;
-    	  default:
-          break;
-  	  }
-      return true;
-    case 1: // too long for transmit buffer
-      Serial.println(F("[BH1750] ERROR: too long for transmit buffer"));
-      break;
-    case 2: // received NACK on transmit of address
-      Serial.println(F("[BH1750] ERROR: received NACK on transmit of address"));
-      break;
-    case 3: // received NACK on transmit of data
-      Serial.println(F("[BH1750] ERROR: received NACK on transmit of data"));
-      break;
-    case 4: // other error
-      Serial.println(F("[BH1750] ERROR: other error"));
-      break;
-    default:
-      Serial.println(F("[BH1750] ERROR: undefined error"));
-      break;
-  }
-
-  return false;
+	// Check result code
+	switch (ack) {
+		case 0:
+			BH1750_MTreg = MTreg;
+			// Delay for specific continuous mode to get valid values
+    		switch (BH1750_MODE) {
+    			case BH1750::CONTINUOUS_LOW_RES_MODE:
+      				_delay_ms(24 * BH1750_MTreg/(byte)BH1750_DEFAULT_MTREG);
+      				break;
+    			case BH1750::CONTINUOUS_HIGH_RES_MODE:
+    			case BH1750::CONTINUOUS_HIGH_RES_MODE_2:
+      				_delay_ms(180 * BH1750_MTreg/(byte)BH1750_DEFAULT_MTREG);
+      				break;
+    			default:
+				break;
+  			}
+			return true;
+		case 1:			// too long for transmit buffer
+			Serial.println(F("[BH1750] ERROR: too long for transmit buffer"));
+			break;
+		case 2:			// received NACK on transmit of address
+			Serial.println(F("[BH1750] ERROR: received NACK on transmit of address"));
+			break;
+		case 3:			// received NACK on transmit of data
+			Serial.println(F("[BH1750] ERROR: received NACK on transmit of data"));
+			break;
+		case 4:			// other error
+			Serial.println(F("[BH1750] ERROR: other error"));
+			break;
+		default:
+			Serial.println(F("[BH1750] ERROR: undefined error"));
+			break;
+	}
+	return false;
 }
 
 /**
@@ -206,7 +201,7 @@ bool BH1750::setMTreg(byte MTreg) {
 float BH1750::readLightLevel(bool maxWait) {
 
   if (BH1750_MODE == UNCONFIGURED) {
-    Serial.println(F("[BH1750] Device is not configured!"));
+    //Serial.println(F("[BH1750] Device is not configured!"));
     return -2.0;
   }
 

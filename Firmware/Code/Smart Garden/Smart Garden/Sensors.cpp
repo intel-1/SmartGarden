@@ -19,17 +19,15 @@
 float CfCalcDC = 0;										// Поправочные коэфициенты для вычисления VCC
 float VCC = 0.0;										// Текущее напряжение питания
 float Ti = 0;											// Температура встроенного температурного датчика (LM75A)
-int RealValueADC[QuantitySensors + 1];					// Текущие значения аналоговых портов
-float RealValueSensors[QuantitySensors + 1][3];			// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
-float OldValueSensors[QuantitySensors + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-float Buffer_Value_Sensors[QuantitySensors + 1][3];		// "Сырые" значения датчиков
-byte SensorsError[QuantitySensors + 1][3];				// Ошибки датчиков
-boolean DebugRepet_1;									// Повторять ли вывод в консоль
-int LoopTimeRunCalculateSensor[QuantitySensors + 1];	// Временные интервалы измерения сенсоров
+int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
+float RealValueSensors[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
+float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
+byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
+//boolean DebugRepet_1;									// Повторять ли вывод в консоль
+int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
 
 struct StructQuantityCalcSensors QuantityCalcSensors;
-
 
 
 byte ViewMaxLongValue(byte NameSensor, int Value){
@@ -57,7 +55,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	maxLongValue[VALUE_2] = 0;
 	maxLongValue[VALUE_3] = 0;
 	
-	for(byte NumberSensor = 1; NumberSensor < QuantitySensors; NumberSensor++){				// Ищем самое длинное название датчика
+	for(byte NumberSensor = 1; NumberSensor < QUANTITY_SENSORS; NumberSensor++){				// Ищем самое длинное название датчика
 		byte BufferLongName = strlen(NameSensor[NumberSensor]);
 		if(BufferLongName > maxLongName){
 			maxLongName = BufferLongName;
@@ -74,7 +72,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	Serial.println(F(" Название   |  Статус  |  Измеренные показания  | Ошибки"));
 	Serial.println(F("---------------------------------------------------------"));
 	
-	for(byte Sensor = 1; Sensor <= QuantitySensors; Sensor++){
+	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor++){
 		Serial.print(NameSensor[Sensor-1]);
 		byte LongLines = strlen(NameSensor[Sensor-1]);
 		if(LongLines <= maxLongName){
@@ -147,7 +145,6 @@ void  ReadValueAnalogPort(byte NumberSensor, byte NumberADC){
 
 void ReadAnalogPort(byte NumberSensor, byte TypeDataSensor){
  	if (OUTPUT_LEVEL_UART_SENSOR){
-// 		Serial.println(F("::Choice_AnalogPort"));
 		Serial.println();
  	}
 
@@ -190,13 +187,13 @@ void ReadAnalogPort(byte NumberSensor, byte TypeDataSensor){
 				Serial.println(F("\t\t\t...the port does not support analog measurements"));
 			}
 	}
-	ControllPort(NumberSensor, 0);												// Включаем управление Controll портом	
+	ControllPort(NumberSensor, 0);											// Включаем управление Controll портом	
 }
 
 void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Определяем наименование датчика и запускам нужные ф-ции измерения
 	/*	
-		NumberSensor - порядковый номер датчика
-		TypeDataSensor - тип данных которые измерить датчик (температуры, влажности воздуха, ....)
+		NumberSensor	- порядковый номер датчика
+		TypeDataSensor	- тип данных которые измерить датчик (температуры, влажности воздуха, ....)
 	*/
 	switch (EEPROM.read(E_Type_A_Sensor + NumberSensor)){					// Читаем регистр E_Type_A_Sensor и определяем наименование датчика
 		case 1:							/* - DS18B20 */
@@ -249,7 +246,7 @@ void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Опред�
 			break;
 		case 9:									/* BH1750 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
-				Serial.println(F("BH1750"));
+				Serial.print(F("BH1750"));
 			}
 			CalculateBH1750(NumberSensor, TypeDataSensor);
 			break;
@@ -291,23 +288,18 @@ boolean AllowCalculateSensor(byte NumberSensor){
 	}
 }
 
-void SentTextToUART(byte NumberSensor){
-	if (OUTPUT_LEVEL_UART_SENSOR){
-		Serial.print(F("\t...Датчик ")); Serial.print(NumberSensor); Serial.print(F(" "));
-		if(!ControllerSetup){
-			Serial.print(F("...Измерение ")); Serial.print(QuantityCalcSensors.QuantityCalc[NumberSensor]); Serial.print(F(" из ")); Serial.println(EEPROM.read(E_QuantityReadSensors + NumberSensor));
-			Serial.print(F("\t\t...Наименование датчика: "));
-		}
-	}
-}
 
-void CalculateSensors(){																		// Определяем какие показания хотим измерять (байт конфигурации E_Type_B_Sensor)
-	for (byte NumberSensor = 1; NumberSensor <= QuantitySensors; NumberSensor ++){				// Проходим по всем датчикам
+void CalculateSensors(){																	// Определяем какие показания хотим измерять (байт конфигурации E_Type_B_Sensor)
+	for (byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor ++){			// Проходим по всем датчикам
 		wdt_reset();
-		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){									// Если датчик включен																								
+		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){								// Если датчик включен																								
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.print(F("\t...Датчик ")); Serial.print(NumberSensor); Serial.println(F(":"));
+				Serial.print(F("\t\t...Наименование датчика: "));
+			}
 			byte Type_B_Sensor = EEPROM.read(E_Type_B_Sensor + NumberSensor);
 			if(AllowCalculateSensor(NumberSensor)){																
-				DefinitionSensor(NumberSensor, Type_B_Sensor);									// Измеряем показания
+				DefinitionSensor(NumberSensor, Type_B_Sensor);								// Измеряем показания
 				for(byte SGB = 0; SGB < 3; SGB ++){											// Проходим по всем байтам привязки к круппам
 					byte NumberChannel = EEPROM.read(E_SBG + (NumberSensor*3) + SGB);		// Получаем номер группы к которой привязано значение датчика
 					if(NumberChannel != 0){													// Группа "0" служебная, управление по ней не идет
@@ -323,6 +315,7 @@ void CalculateSensors(){																		// Определяем какие п�
 			}
 		}
 	}
+	StartMeasurementIndicationsDS18B20();
 }
 
 
@@ -336,38 +329,40 @@ void ControllPort(byte NumberSensor, byte Controll){							// Управлени
 		TypeControll:	0 - выключить
 						1 - включить
 	*/
-	byte NumberPort = EEPROM.read(E_SensorControllPort + NumberSensor);				// Узнаем номер порта
-	if (OUTPUT_LEVEL_UART_SENSOR){
-		switch(Controll){
-			case 0:
-				Serial.print(F("\t\t\t...turn off the control port..."));
-				break;
-			case 1:
-				Serial.print(F("\t\t\t...turn on the control port..."));
-				break;
+	if(EEPROM.read(E_AllowSensorControllPort + NumberSensor) == 1){
+		byte NumberPort = EEPROM.read(E_SensorControllPort + NumberSensor);				// Узнаем номер порта
+		if (OUTPUT_LEVEL_UART_SENSOR){
+			switch(Controll){
+				case 0:
+					Serial.print(F("\t\t\t...turn off the control port..."));
+					break;
+				case 1:
+					Serial.print(F("\t\t\t...turn on the control port..."));
+					break;
+			}
 		}
-	}
 	
-	if(DigitalPort(NumberPort, Controll, 1) != 255){								// Если порт правильно сконфигурирован
-		DigitalPort(NumberPort, Controll, 2);										// Включаем\выключаем порт
-		if (OUTPUT_LEVEL_UART_SENSOR){
-			Serial.println(F("...done"));
+		if(DigitalPort(NumberPort, Controll, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART) != 255){	// Если порт правильно сконфигурирован
+			DigitalPort(NumberPort, Controll, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);				// Включаем\выключаем порт
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("...done"));
+			}
+			switch(Controll){
+				case 1:
+					UpControllPort = true;												// Поднимаем флаг что включен управляющий порт
+					break;
+				case 0:
+					UpControllPort = false;												// Поднимаем флаг что включен управляющий порт
+					break;
+			}
+			if(Controll == 1){															// Включаем задержку только после включения порта
+				delay(EEPROM_int_read(E_DelayToRunControllPort + NumberSensor * 2));	// Задержка чтобы успело стабилизоваться питание на Controll порту
+			}
 		}
-		switch(Controll){
-			case 1:
-				UpControllPort = true;											// Поднимаем флаг что включен управляющий порт
-				break;
-			case 0:
-				UpControllPort = false;											// Поднимаем флаг что включен управляющий порт
-				break;
-		}
-		if(Controll == 1){														// Включаем задержку только после включения порта
-			delay(EEPROM_int_read(E_DelayToRunControllPort + NumberSensor * 2));	// Задержка чтобы успело стабилизоваться питание на Controll порту
-		}
-	}
-	else{
-		if (OUTPUT_LEVEL_UART_SENSOR){
-			Serial.println(F("isn't configured"));
+		else{
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("isn't configured"));
+			}
 		}
 	}
 }
@@ -391,25 +386,29 @@ void i2c_scaner(boolean LogView){
 			if(stringOne == "0f") Serial.println(F("'Motor Driver'"));
 			if(stringOne == "1d") Serial.println(F("'ADXL345 Input 3-Axis Digital Accelerometer'"));
 			if(stringOne == "1e") Serial.println(F("'HMC5883 3-Axis Digital Compass'"));
-			if(stringOne == "3f") Serial.println(F("'LCM1602 LCD Adapter'"));
+			if(stringOne == "3f") Serial.println(F("'LCD module'"));
 			if(stringOne == "5a") Serial.println(F("'Touch Sensor'"));
 			if(stringOne == "5b") Serial.println(F("'Touch Sensor'"));
-			if(stringOne == "5C") Serial.println(F("'BH1750FVI digital Light Sensor' OR 'Touch Sensor"  ));
+			if(stringOne == "5C") Serial.println(F("'BH1750FVI Light Sensor' OR 'Touch Sensor"  ));
 			if(stringOne == "5d") Serial.println(F("'Touch Sensor'"));
-			if(stringOne == "20") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'LCM1602 LCD Adapter' "));
+			if(stringOne == "20") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'LCD module' "));
 			if(stringOne == "21") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
 			if(stringOne == "22") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
 			if(stringOne == "23") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'BH1750FVI Light Sensor'"));
 			if(stringOne == "24") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
 			if(stringOne == "25") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
 			if(stringOne == "26") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
-			if(stringOne == "27") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'LCM1602 LCD Adapter '"));
-			if(stringOne == "39") Serial.println(F("'TSL2561 Ambient Light Sensor'"));
-			if(stringOne == "40") Serial.println(F("'BMP180, Si7013, Si7020, Si7021, HTU21D, SHT21'" ));
+			if(stringOne == "27") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'LCD module'"));
+			if(stringOne == "29") Serial.println(F("'TSL2561 Light Sensor'"));
+			if(stringOne == "39") Serial.println(F("'TSL2561 Light Sensor'"));
+			if(stringOne == "40") Serial.println(F("'BMP180, Si7013, Si7020, Si7021, HTU21D, SHT21, INA219'" ));
+			if(stringOne == "41") Serial.println(F("'INA219'" ));
+			if(stringOne == "44") Serial.println(F("'INA219'" ));
+			if(stringOne == "45") Serial.println(F("'INA219'" ));
 			if(stringOne == "48") Serial.println(F("'ADS1115 Module 16-Bit' OR 'LM75'"));
-			if(stringOne == "49") Serial.println(F("'ADS1115 Module 16-Bit' OR 'SPI-to-UART'"));
-			if(stringOne == "4a") Serial.println(F("'ADS1115 Module 16-Bit'"));
-			if(stringOne == "4b") Serial.println(F("'ADS1115 Module 16-Bit'"));
+			if(stringOne == "49") Serial.println(F("'ADS1115 Module 16-Bit' OR 'SPI-to-UART' OR 'TSL2561 Light Sensor'"));
+			if(stringOne == "4a") Serial.println(F("'ADS1115 Module 16-Bit' OR 'MAX44009'"));
+			if(stringOne == "4b") Serial.println(F("'ADS1115 Module 16-Bit' OR 'MAX44009'"));
 			if(stringOne == "4c") Serial.println(F("'LM75'"));
 			if(stringOne == "50") Serial.println(F("'AT24C32 EEPROM'"));
 			if(stringOne == "53") Serial.println(F("'ADXL345 Input 3-Axis Digital Accelerometer'"));

@@ -1,34 +1,35 @@
 
 #include <Arduino.h>
 #include "Configuration.h"
+#include "DigitalPorts.h"
 
 
-char VersionFirmware[] = "firmware 2.0.2";
-char Short_VersionFirmware[] = "ver. 2.0.2";
+char VersionFirmware[] = "firmware 2.0.3";
+char Short_VersionFirmware[] = "ver. 2.0.3";
 char TextOfStartController[] = "Controller is started";
 
 
 boolean ControllerSetup;					// Для обозначения стадии загрузки контроллера (Setup)
 byte LOGING_TO_SERIAL;
-char NameSensor[QuantitySensors + 1][20];	// Максимум 16 датчиков по 20 символов (в названии) максимум, счет идет с единицы
+char NameSensor[QUANTITY_SENSORS + 1][20];	// Максимум 16 датчиков по 20 символов (в названии) максимум, счет идет с единицы
 
 
 // ============= Ф-ции для проверки портов =================
 boolean AllowAnalogPort(byte Port){
-	if(20 <= Port && Port <= 24){		// Разрешенные порты с 20-го по 24-ый
+	if(PORT_INPUT_GPIO_P2 <= Port && Port <= PORT_INPUT_GPIO_P6){		// Разрешенные порты с 20-го по 24-ый
 		return true;
 	}
 	else return false;
 }
 
 boolean AllowPWMport(byte Port){
-	if(1 <= Port && Port <= 5){			// Разрешенные порты с 1-го по 5-ый
+	if(PORT_EXT_PIN_1 <= Port && Port <= PORT_EXT_PIN_5){			// Разрешенные порты с 1-го по 5-ый
 		return true;
 	}
-	if(Port == 7){						// Разрешенный порт 7
+	if(Port == PORT_EXT_PIN_7){						// Разрешенный порт 7
 		return true;
 	}
-	if(Port == 40){						// Разрешенный порт 40
+	if(Port == PORT_EXT_PIN_10){					// Разрешенный порт 10
 		return true;
 	}
 	else return false;
@@ -38,28 +39,20 @@ boolean AllowServoPort(byte Port){
 	if(1 <= Port && Port <= 4){			// Разрешенные порты с 1-го по 4-ый
 		return true;
 	}
-	if(Port == 40){						// Разрешенный порт 40
-		return true;
-	}
 	else return false;
 }
 
 boolean AllowDigitalPort(byte Port){
 	// External Digital Pins
-	if(1 <= Port && Port <= 10){		// Разрешенные порты с 1-го по 8-ый
+	if(PORT_EXT_PIN_1 <= Port && Port <= PORT_EXT_PIN_14){		// Разрешенные порты с 1-го по 14-ый
 		return true;
 	}
 	// Output Digital Pins
-	if(11 <= Port && Port <= 18){		// Разрешенные порты с 11-го по 18-ый
-		return true;
-	}
-	if(Port == 40){						// Разрешенный порт 40
+	if(PORT_GPIO_1 <= Port && Port <= PORT_GPIO_8){				// Разрешенные порты с 21-го по 28-ый
 		return true;
 	}
 	else return false;
 }
-
-
 
 
 // ============= STATUS LED =======================
@@ -106,7 +99,6 @@ void status_led_blue_invert(){
 }
 
 
-
 // ============= GSM ===================
 void gsm_vcc_on(){
 	DDRA |= _BV(GSM_VCC_RUN);	// OUTPUT
@@ -134,21 +126,15 @@ void gsm_dtr_off(){
 }
 
 
-
 // ============= SD CARD =====================
 void sd_vcc_on(){
-	//pinMode(SD_VCC_RUN, OUTPUT);
-	//digitalWrite(SD_VCC_RUN, HIGH);
 	DDRL |= _BV(SD_VCC_RUN);		// OUTPUT
 	PORTL |= _BV(SD_VCC_RUN);	// 1
 }
 void sd_vcc_off(){
-	//digitalWrite(SD_VCC_RUN, LOW);
 	DDRL |= _BV(SD_VCC_RUN);	// OUTPUT
 	PORTL &= ~_BV(SD_VCC_RUN);	// 0
 }
-
-
 
 
 // ============= BLUETOOTH =====================
@@ -160,7 +146,6 @@ void bt_vcc_off(){
 	DDRK |= _BV(BT_RUN_VCC);	// OUTPUT
 	PORTK |= _BV(BT_RUN_VCC);	// 1
 }
-
 
 
 // ============== Output Digital Pins ==============
@@ -232,45 +217,53 @@ void GPIO8_off(){
 
 
 // ============== Analog Input Pins ==============
-void INPUT_A_S1_on(){
-	DDRF |= _BV(INPUT_A_S1);		// OUTPUT
-	PORTF |= _BV(INPUT_A_S1);		// 1
+void INPUT_GPIO_P1_on(){
+	DDRF |= _BV(INPUT_GPIO_P1);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P1);	// 1
 }
-void INPUT_A_S1_off(){
-	DDRF |= _BV(INPUT_A_S1);		// OUTPUT
-	PORTF &= ~_BV(INPUT_A_S1);		// 0
+void INPUT_GPIO_P1_off(){
+	DDRF |= _BV(INPUT_GPIO_P1);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P1);	// 0
 }
-void INPUT_A_S2_on(){
-	DDRF |= _BV(INPUT_A_S2);		// OUTPUT
-	PORTF |= _BV(INPUT_A_S2);		// 1
+void INPUT_GPIO_P2_on(){
+	DDRF |= _BV(INPUT_GPIO_P2);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P2);	// 1
 }
-void INPUT_A_S2_off(){
-	DDRF |= _BV(INPUT_A_S2);		// OUTPUT
-	PORTF &= ~_BV(INPUT_A_S2);		// 0
+void INPUT_GPIO_P2_off(){
+	DDRF |= _BV(INPUT_GPIO_P2);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P2);	// 0
 }
-void INPUT_A_S3_on(){
-	DDRF |= _BV(INPUT_A_S3);		// OUTPUT
-	PORTF |= _BV(INPUT_A_S3);		// 1
+void INPUT_GPIO_P3_on(){
+	DDRF |= _BV(INPUT_GPIO_P3);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P3);	// 1
 }
-void INPUT_A_S3_off(){
-	DDRF |= _BV(INPUT_A_S3);		// OUTPUT
-	PORTF &= ~_BV(INPUT_A_S3);		// 0
+void INPUT_GPIO_P3_off(){
+	DDRF |= _BV(INPUT_GPIO_P3);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P3);	// 0
 }
-void INPUT_A_S4_on(){
-	DDRF |= _BV(INPUT_A_S4);		// OUTPUT
-	PORTF |= _BV(INPUT_A_S4);		// 1
+void INPUT_GPIO_P4_on(){
+	DDRF |= _BV(INPUT_GPIO_P4);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P4);	// 1
 }
-void INPUT_A_S4_off(){
-	DDRF |= _BV(INPUT_A_S4);		// OUTPUT
-	PORTF &= ~_BV(INPUT_A_S4);		// 0
+void INPUT_GPIO_P4_off(){
+	DDRF |= _BV(INPUT_GPIO_P4);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P4);	// 0
 }
-void INPUT_A_S5_on(){
-	DDRF |= _BV(INPUT_A_S5);		// OUTPUT
-	PORTF |= _BV(INPUT_A_S5);		// 1
+void INPUT_GPIO_P5_on(){
+	DDRF |= _BV(INPUT_GPIO_P5);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P5);	// 1
 }
-void INPUT_A_S5_off(){
-	DDRF |= _BV(INPUT_A_S5);		// OUTPUT
-	PORTF &= ~_BV(INPUT_A_S5);		// 0
+void INPUT_GPIO_P5_off(){
+	DDRF |= _BV(INPUT_GPIO_P5);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P5);	// 0
+}
+void INPUT_GPIO_P6_on(){
+	DDRF |= _BV(INPUT_GPIO_P6);		// OUTPUT
+	PORTF |= _BV(INPUT_GPIO_P6);	// 1
+}
+void INPUT_GPIO_P6_off(){
+	DDRF |= _BV(INPUT_GPIO_P6);		// OUTPUT
+	PORTF &= ~_BV(INPUT_GPIO_P6);	// 0
 }
 
 
@@ -301,36 +294,36 @@ void EXT_PIN_3_off(){
 	PORTE &= ~_BV(EXT_PIN_3);	// 0
 }
 void EXT_PIN_4_on(){
-	DDRH |= _BV(EXT_PIN_4);		// OUTPUT
-	PORTH |= _BV(EXT_PIN_4);	// 1
+	DDRE |= _BV(EXT_PIN_4);		// OUTPUT
+	PORTE |= _BV(EXT_PIN_4);	// 1
 }
 void EXT_PIN_4_off(){
-	DDRH |= _BV(EXT_PIN_4);		// OUTPUT
-	PORTH &= ~_BV(EXT_PIN_4);	// 0
+	DDRE |= _BV(EXT_PIN_4);		// OUTPUT
+	PORTE &= ~_BV(EXT_PIN_4);	// 0
 }
 void EXT_PIN_5_on(){
-	DDRE |= _BV(EXT_PIN_5);		// OUTPUT
-	PORTE |= _BV(EXT_PIN_5);	// 1
+	DDRH |= _BV(EXT_PIN_5);		// OUTPUT
+	PORTH |= _BV(EXT_PIN_5);	// 1
 }
 void EXT_PIN_5_off(){
-	DDRE |= _BV(EXT_PIN_5);		// OUTPUT
-	PORTE &= ~_BV(EXT_PIN_5);	// 0
+	DDRH |= _BV(EXT_PIN_5);		// OUTPUT
+	PORTH &= ~_BV(EXT_PIN_5);	// 0
 }
 void EXT_PIN_6_on(){
-	DDRK |= _BV(EXT_PIN_6);		// OUTPUT
-	PORTK |= _BV(EXT_PIN_6);	// 1
+	DDRH |= _BV(EXT_PIN_6);		// OUTPUT
+	PORTH |= _BV(EXT_PIN_6);	// 1
 }
 void EXT_PIN_6_off(){
-	DDRK |= _BV(EXT_PIN_6);		// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_6);	// 0
+	DDRH |= _BV(EXT_PIN_6);		// OUTPUT
+	PORTH &= ~_BV(EXT_PIN_6);	// 0
 }
 void EXT_PIN_7_on(){
-	DDRH |= _BV(EXT_PIN_7);		// OUTPUT
-	PORTH |= _BV(EXT_PIN_7);	// 1
+	DDRK |= _BV(EXT_PIN_7);		// OUTPUT
+	PORTK |= _BV(EXT_PIN_7);	// 1
 }
 void EXT_PIN_7_off(){
-	DDRH |= _BV(EXT_PIN_7);		// OUTPUT
-	PORTH &= ~_BV(EXT_PIN_7);	// 0
+	DDRK |= _BV(EXT_PIN_7);		// OUTPUT
+	PORTK &= ~_BV(EXT_PIN_7);	// 0
 }
 void EXT_PIN_8_on(){
 	DDRK |= _BV(EXT_PIN_8);		// OUTPUT
@@ -341,42 +334,60 @@ void EXT_PIN_8_off(){
 	PORTK &= ~_BV(EXT_PIN_8);	// 0
 }
 void EXT_PIN_9_on(){
-	DDRF |= _BV(EXT_PIN_9);		// OUTPUT
-	PORTF |= _BV(EXT_PIN_9);	// 1
+	DDRK |= _BV(EXT_PIN_9);		// OUTPUT
+	PORTK |= _BV(EXT_PIN_9);	// 1
 }
 void EXT_PIN_9_off(){
-	DDRF |= _BV(EXT_PIN_9);		// OUTPUT
-	PORTF &= ~_BV(EXT_PIN_9);	// 0
+	DDRK |= _BV(EXT_PIN_9);		// OUTPUT
+	PORTK &= ~_BV(EXT_PIN_9);	// 0
 }
 void EXT_PIN_10_on(){
-	DDRK |= _BV(EXT_PIN_10);	// OUTPUT
-	PORTK |= _BV(EXT_PIN_10);	// 1
+	DDRG |= _BV(EXT_PIN_10);	// OUTPUT
+	PORTG |= _BV(EXT_PIN_10);	// 1
 }
 void EXT_PIN_10_off(){
-	DDRK |= _BV(EXT_PIN_10);	// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_10);	// 0
+	DDRG |= _BV(EXT_PIN_10);	// OUTPUT
+	PORTG &= ~_BV(EXT_PIN_10);	// 0
 }
+void EXT_PIN_11_on(){}
+void EXT_PIN_11_off(){}
 
+void EXT_PIN_12_on(){
+	DDRK |= _BV(EXT_PIN_12);	// OUTPUT
+	PORTK |= _BV(EXT_PIN_12);	// 1
+}
+void EXT_PIN_12_off(){
+	DDRK |= _BV(EXT_PIN_12);	// OUTPUT
+	PORTK &= ~_BV(EXT_PIN_12);	// 0
+}
+void EXT_PIN_13_on(){
+	DDRF |= _BV(EXT_PIN_13);	// OUTPUT
+	PORTF |= _BV(EXT_PIN_13);	// 1
+}
+void EXT_PIN_13_off(){
+	DDRF |= _BV(EXT_PIN_13);	// OUTPUT
+	PORTF &= ~_BV(EXT_PIN_13);	// 0
+}
+void EXT_PIN_14_on(){
+	DDRK |= _BV(EXT_PIN_14);	// OUTPUT
+	PORTK |= _BV(EXT_PIN_14);	// 1
+}
+void EXT_PIN_14_off(){
+	DDRK |= _BV(EXT_PIN_14);	// OUTPUT
+	PORTK &= ~_BV(EXT_PIN_14);	// 0
+}
 					
-// ============== ENABLE пин шаговика ==============
-void STEPPER_on(){
-	DDRG |= _BV(EXT_RUN_STEPPER);	// OUTPUT
-	PORTG |= _BV(EXT_RUN_STEPPER);	// 1
-}
-void STEPPER_off(){
-	DDRG |= _BV(EXT_RUN_STEPPER);	// OUTPUT
-	PORTG &= ~_BV(EXT_RUN_STEPPER);	// 0
-}
 
-// ============== Питание драйвера шаговика ==============
+// ============== Порт включения питания драйверов исполнительных модулей ==============
 void STEPPER_VCC_on(){
-	DDRH |= _BV(VCC_STEPPER_DRIVERS);	// OUTPUT
-	PORTH |= _BV(VCC_STEPPER_DRIVERS);	// 1
+	DDRE |= _BV(VCC_STEPPER_DRIVERS);	// OUTPUT
+	PORTE |= _BV(VCC_STEPPER_DRIVERS);	// 1
 }
 void STEPPER_VCC_off(){
-	DDRH |= _BV(VCC_STEPPER_DRIVERS);	// OUTPUT
-	PORTH &= ~_BV(VCC_STEPPER_DRIVERS);	// 0
+	DDRE |= _BV(VCC_STEPPER_DRIVERS);	// OUTPUT
+	PORTE &= ~_BV(VCC_STEPPER_DRIVERS);	// 0
 }
+
 
 void ControllAllPortsOutput(){
 	DDRG &= ~_BV(PG0);
@@ -419,8 +430,6 @@ void ControllAllPortsOutput(){
 	DDRA &= ~_BV(PA5);
 	DDRA &= ~_BV(PA6);
 
-	//DDRJ &= ~_BV(PJ0);
-	//DDRJ &= ~_BV(PJ1);
 	DDRJ &= ~_BV(PJ2);
 	DDRJ &= ~_BV(PJ3);
 	DDRJ &= ~_BV(PJ4);

@@ -9,6 +9,7 @@
 #include "lib\AccelStepper.h"
 #include "Warning.h"
 #include "EEPROM_ADR.h"
+#include "LCDdisplay.h"
 
 
 
@@ -20,27 +21,37 @@ int PassableSteperMotor[16];
 boolean StepperMotorRun = false;
 boolean AllowRunMotor = true;		// Аварийная переменная. Если false, то снято питания на моторе
 
-boolean InitializingExecModule(byte Module){							// Ф-ция инициализации исполнительных модулей
-	byte SwitchPort = EEPROM.read(E_LowSwitchPortModule + Module);		// Порт Down концевика
-	byte MaxQuantityStep;												// Максимальная величина открытия модуля
+byte Stepper_Space = 0;				// Переменная для вывода звездочек на экране LCD во время загрузки контроллера
+
+
+boolean InitializingExecModule(byte _ExecModule){								// Ф-ция инициализации исполнительных модулей
+	byte SwitchPort = EEPROM.read(E_LowSwitchPortModule + _ExecModule);			// Порт Down концевика
+	byte MaxQuantityStep;														// Максимальная величина открытия модуля
 	byte Step = 0;
-	byte PortExecModule = EEPROM.read(E_PortExecModule + Module);		// Порт модуля
-	switch(EEPROM.read(E_TypeExecModule + Module)){						// Определяем тип модуля
-		case 1:															// Шаговый мотор
-			PassableSteperMotor[Module] = 0;							// Обнуляем массив пройденных шагов мотора			
-			MaxQuantityStep = EEPROM.read(E_MaxLimitRotation + Module);	// Максимальное кол-во см для закрытия модуля			
-			if(!ReadInputDigitalPorts(SwitchPort)){						// Проверяем не закрыта ли форточка
-				while(!StatusSwitchPorts[SwitchPort - 30]){				// Пока не сработает концевик DOWN
+	byte PortExecModule = EEPROM.read(E_PortExecModule + _ExecModule);			// Порт модуля
+	bool _Error = false;
+	switch(EEPROM.read(E_TypeExecModule + _ExecModule)){						// Определяем тип модуля
+		case 1:																	// Шаговый мотор			
+			PassableSteperMotor[_ExecModule] = 0;								// Обнуляем массив пройденных шагов мотора			
+			MaxQuantityStep = EEPROM.read(E_MaxLimitRotation + _ExecModule);	// Максимальное кол-во см для закрытия модуля			
+			if(!ReadInputDigitalPorts(SwitchPort)){								// Проверяем не закрыта ли форточка				
+				while(!ReadInputDigitalPorts(SwitchPort)){
+				//while(!StatusSwitchPorts[SwitchPort - 40]){						// Пока не сработает концевик DOWN
 					if(Step <= MaxQuantityStep){
 						Step ++;
-						RunStepperMotor(Module, -1, 1);
+						RunStepperMotor(_ExecModule, -1, 1);
 					}
-					else break;
+					else{ 
+						_Error = true;											// Если не сработал концевик или форточка не закрылась
+						goto ExitWhile;
+					}
 				}
 			}
+			ExitWhile:
+			Stepper_Space = 0;
 			StatusSwitchPorts[SwitchPort - 30] = false;					// Обнуляем состояние концевика
-			PassableSteperMotor[Module] = 0;							// Обнуляем пройденное кол-во шагов
-			return true;
+			PassableSteperMotor[_ExecModule] = 0;						// Обнуляем пройденное кол-во шагов
+			return _Error;
 			break;
 		case 2:															// PWM
 			RunPWMonPort(PortExecModule, 0);
@@ -51,28 +62,25 @@ boolean InitializingExecModule(byte Module){							// Ф-ция инициализации исполн
 			return true;
 			break;
 		case 4:															// Digital port
-			DigitalPort(PortExecModule, 0, 2);							// Выключаем порт
+			DigitalPort(PortExecModule, DIGITAL_PORT_OFF, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Выключаем порт
 			return true;
 			break;
 		case 5:															// Колекторный мотор
-			if(EEPROM.read(E_TypeHighSwitchModule + Module) == 2){	
+			if(EEPROM.read(E_TypeHighSwitchModule + _ExecModule) == 2){	
 				
 			}
 			return true;
 			break;
 	}
+	return _Error;
 }
 
-
-void GSM_module(){
-	
-}
 
 void RunPWMonPort(byte Port, int LevelPWM){
 	if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
-		Serial.print(F("\t\t\t\t...Run PWM on port ")); DigitalPort(Port, 0, 1); Serial.print(F(". Signal Level: ")); Serial.print(LevelPWM); Serial.println(F("*"));
+		Serial.print(F("\t\t\t\t...Run PWM on port ")); DigitalPort(Port, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART); Serial.print(F(". Signal Level: ")); Serial.print(LevelPWM); Serial.println(F("*"));
 	}
-	digitalWrite(DigitalPort(Port, 0, 3), LevelPWM);
+	digitalWrite(DigitalPort(Port, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT, NO_LOG_TO_UART), LevelPWM);
 }
 
 
@@ -82,11 +90,11 @@ void RunServoMotor(byte Module, byte AngleRotation){
 	AngleRotation - угол поворота сервы
 */	
 	byte Port = EEPROM.read(E_PortExecModule + Module);
-	byte ArduinoPort = DigitalPort(Port, 0, 3);					// Получаем номер управлящего порта в Arduino формате
-	if(ArduinoPort != 255){										// Если порт сконфигурирован (значение отличное от 255)
+	byte ArduinoPort = DigitalPort(Port, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT, NO_LOG_TO_UART);	// Получаем номер управлящего порта в Arduino формате
+	if(ArduinoPort != 255){																			// Если порт сконфигурирован (значение отличное от 255)
 		if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
 			Serial.print(F("\t\t\t\t\t\t\t...Run Servo motor on "));
-			DigitalPort(Port, 0, 1); Serial.print(F(" (")); Serial.print(DigitalPort(Port, 0, 3)); Serial.print(F(")"));
+			DigitalPort(Port, 0, 1, NO_LOG_TO_UART); Serial.print(F(" (")); Serial.print(DigitalPort(Port, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT, NO_LOG_TO_UART)); Serial.print(F(")"));
 			Serial.print(F(". Angle Rotation: ")); Serial.print(AngleRotation); Serial.println(F("*"));
 		}
 		if(EEPROM.read(E_ManualModeModule + Module) == 1){		// Если включен ручной режим настройки сервы
@@ -133,7 +141,7 @@ void ViewStateSwitch(byte Level){
 			Serial.println(F("on"));
 			break;
 		default:
-			Serial.println(F(""));
+			Serial.println();
 	}
 }
 
@@ -142,15 +150,18 @@ void RunStepperMotor(byte Module, int Step, byte Mode){
 /*
 	Module - Номер исполнительного модуля
 	Step - Количество шагов для перемещения
-	Mode - штатная работа или "закрытия" модуля
+	Mode - штатная работа или "закрытие" модуля
 */	
 	Stepper.setCurrentPosition(0);
 	int setAcceleration = EEPROM_int_read(E_StepperMotor_setAcceleration + Module * 2);
-	int setMaxSpeed = EEPROM_int_read(E_StepperMotor_setMaxSpeed + Module * 2);
- 	if(ControllerSetup){						// Если контроллер в стадии Setup 
- 		Serial.print(F("."));
+	int setMaxSpeed = EEPROM_int_read(E_StepperMotor_setMaxSpeed + Module * 2);	 	
+	if(ControllerSetup){						// Если контроллер в стадии Setup 
+		Serial.print(F("."));
+		WriteToLCD(String(F("*")), LCD_LINE_4, LCD_START_SYMBOL_2 + Stepper_Space, LCD_NO_SCREEN_REFRESH_DELAY);
+		Stepper_Space ++;
  	}
 	if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
+		
 		byte StateSwitch;
 		byte SwitchPort;
 		if(EEPROM.read(E_LowSwitchPortModule + Module) != 0){			// Если добавлен DOWN концевик
@@ -172,14 +183,14 @@ void RunStepperMotor(byte Module, int Step, byte Mode){
 			ViewStateSwitch(StateSwitch);								// Выводим состояние в Serial
 		}
 		Serial.print(F("\t\t\t\t\t\t\t...driver stepper motor on port "));
-		DigitalPort(EEPROM.read(E_PortExecModule + Module), 0, 1);		// Выводим имя порта
+		DigitalPort(EEPROM.read(E_PortExecModule + Module), DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);		// Выводим имя порта
 	}
 	// =============================================================
 	// Включаем драйвер и питание если кол-во шагов отлично от нуля
 	// =============================================================
 	if(Step != 0){		
-		STEPPER_VCC_on();												// Подаем питание												
-		DigitalPort(EEPROM.read(E_PortExecModule + Module), 0, 2);		// Запускаем драйвер шаговика низким уровнем на порту
+		STEPPER_VCC_on();																	// Подаем питание												
+		DigitalPort(EEPROM.read(E_PortExecModule + Module), DIGITAL_PORT_OFF, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Запускаем драйвер шаговика низким уровнем на порту
 		if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
 			Serial.println(F(" it is started"));
 		}
@@ -195,29 +206,30 @@ void RunStepperMotor(byte Module, int Step, byte Mode){
 	// =================================================================================================
 	// Устанавливаем скорость и ускорение работы (берем default если они выходят за границы разрешенных)
 	// =================================================================================================
-	if(setAcceleration > 0 && setAcceleration <= 10000){											// Если настройка setAcceleration в разрешенном диапазоне
-		Stepper.setAcceleration(setAcceleration * EEPROM.read(E_StepperMotor_DriverStep + Module));	// Принимаем ее в качестве рабочей умноженой на делитель
+	if(setAcceleration > 0 && setAcceleration <= 10000){												// Если настройка setAcceleration в разрешенном диапазоне
+		Stepper.setAcceleration(setAcceleration * EEPROM.read(E_StepperMotor_DividerStep + Module));	// Принимаем ее в качестве рабочей умноженой на делитель
 	}
 	else{ 
 		if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
 			Serial.println(F("\t\t\t\t\t\t\t...Use default setAcceleration = 1000"));
 		}
-		Stepper.setAcceleration(1000);														// Иначе применяем default настройки
+		Stepper.setAcceleration(1000);															// Иначе применяем default настройки
 	}
-	if(setMaxSpeed > 0 && setMaxSpeed <= 10000){											// Если настройка setMaxSpeed в разрешенном диапазоне
-		Stepper.setMaxSpeed(setMaxSpeed * EEPROM.read(E_StepperMotor_DriverStep + Module));	// Принимаем ее в качестве рабочей умноженой на делитель
+	if(setMaxSpeed > 0 && setMaxSpeed <= 10000){												// Если настройка setMaxSpeed в разрешенном диапазоне
+		Stepper.setMaxSpeed(setMaxSpeed * EEPROM.read(E_StepperMotor_DividerStep + Module));	// Принимаем ее в качестве рабочей умноженой на делитель
 	}
 	else{ 
 		if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
 			Serial.println(F("\t\t\t\t\t\t\t...Use default setMaxSpeed = 500"));
 		}
-		Stepper.setMaxSpeed(500);								// Иначе применяем default настройки
+		Stepper.setMaxSpeed(500);											// Иначе применяем default настройки
 	}	
 	// ============================================================================
 	// ============= Основные процедуры запуска мотора ============================
 	// ============================================================================
-	long StepperMotor_Step = EEPROM_int_read(E_StepperMotor_Step + Module * 2) * EEPROM.read(E_StepperMotor_DriverStep + Module);
-	long MotorStep = StepperMotor_Step * ((long)Step);				// Количество шагов для перемещения
+	long StepperMotor_Step = EEPROM_int_read(E_StepperMotor_Step + Module * 2) * EEPROM.read(E_StepperMotor_DividerStep + Module);	// Количество шагов на один сантиметр умноженое на делитель шага
+	long MotorStep = StepperMotor_Step * ((long)Step);						// Количество шагов для перемещения
+		
 	if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
 		Serial.print(F("\t\t\t\t\t\t\t...Quantity of steps of the motor = ")); Serial.println(MotorStep);
 	}
@@ -227,10 +239,9 @@ void RunStepperMotor(byte Module, int Step, byte Mode){
 		//Stepper.runToPosition();				// Запуск шагового двигателя (Блокирующая ф-ция, работает пока не остановился двигатель)
 		long Steps;
 		while(Stepper.run()){					// Пока не прошли все перемещение или не сработала аварийная защита
- 			wdt_reset();						// Сбрасываем собаку
+			wdt_reset();						// Сбрасываем собаку
 			Steps ++;							// Счетчик пройденных шагов
 			if (Steps > MotorStep){				// ЗАЩИТА!!!!! Если число пройденных шагов оказалось больше нужного
-				
 			}
 		}
 		AllowRunMotor = true;
@@ -248,12 +259,13 @@ void RunStepperMotor(byte Module, int Step, byte Mode){
 			Serial.print(F("\t\t\t\t\t\t\t...Hardware quantity of the passable steps = ")); Serial.println(Stepper.currentPosition() / MotorStep);
 		}
 	}
+	DigitalPort(EEPROM.read(E_PortExecModule + Module), DIGITAL_PORT_ON, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Останавливаем драйвер шаговика высоким уровнем на порту
 	// -------------------------------------------------------------------------------------
 	if(Step != 0){														// Если не запускали мотор то и драйвер выключать не нужно
 		if(OUTPUT_LEVEL_UART_MODULE_AND_SETUP){
 			Serial.println(F("\t\t\t\t\t\t\t...driver stepper motor is stop"));
 		}
-		STEPPER_VCC_off();												// Выключаем питание	
-		DigitalPort(EEPROM.read(E_PortExecModule + Module), 1, 2);		// Останавливаем драйвер шаговика высоким уровнем на порту
+		STEPPER_VCC_off();																				// Выключаем питание	
+		DigitalPort(EEPROM.read(E_PortExecModule + Module), DIGITAL_PORT_ON, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Останавливаем драйвер шаговика высоким уровнем на порту
 	}
 }

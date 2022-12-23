@@ -17,7 +17,7 @@ void ProcessingDataFromSerial();
 void CleaningDuplicatedPorts(int Value);
 
 
-extern int InputFromSerial0[25];
+extern int InputFromSerial0[50];
 
 extern boolean recievedFlag_date;
 extern boolean transmitFlag_date;

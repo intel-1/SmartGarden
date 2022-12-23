@@ -15,7 +15,10 @@ LiquidCrystal_I2C lcd(ADDRESS_INPUT_LCD,20,4);
 #define GSM_Signal_Marginal 3
 #define GSM_Signal_OK 4
 #define GSM_Signal_Good 5
-#define GSM_Signal_Excellent 6
+#define GSM_Signal_Very_Good 6
+#define GSM_Signal_Excellent 7
+#define LCD_ICON_NOT_SIM 8
+
 
 char buffer[16];
 byte EnableKey = 1;
@@ -25,6 +28,14 @@ boolean StatMenu;                   // Вывод\обновления меню 
 boolean LightLCDEnable = false;     // Включена ли подсветка экрана. Значения 1\0 (включена\выключена)
 
 
+byte Icon_Not_SIM[8] = {				// Нет SIM карты
+	B01111,
+	B10001,
+	B11011,
+	B10101,
+	B11011,
+	B10001,
+	B11111 };
 byte Icon_Signal_OFF[8] = {				// 99 dBm
 	B11111,
 	B00000,
@@ -33,7 +44,15 @@ byte Icon_Signal_OFF[8] = {				// 99 dBm
 	B01001,
 	B00000,
 	B10000 };
-byte Icon_Signal_Marginal[8] = {			// 31 dBm
+byte Icon_Signal_Marginal[8] = {		// 31 dBm
+	B11111,
+	B00000,
+	B00000,
+	B00000,
+	B00000,
+	B00000,
+	B10000 };
+byte Icon_Signal_OK[8] = {				// 2-30 dBm
 	B11111,
 	B00000,
 	B00000,
@@ -41,7 +60,7 @@ byte Icon_Signal_Marginal[8] = {			// 31 dBm
 	B00000,
 	B01000,
 	B11000 };
-byte Icon_Signal_OK[8] = {				// 2-30 dBm
+byte Icon_Signal_Good[8] = {			// 1
 	B11111,
 	B00000,
 	B00000,
@@ -49,7 +68,7 @@ byte Icon_Signal_OK[8] = {				// 2-30 dBm
 	B00100,
 	B01100,
 	B11100 };
-byte Icon_Signal_Good[8] = {				// 1 
+byte Icon_Signal_Very_Good[8] = {			// 1 
 	B11111,
 	B00000,
 	B00000,
@@ -64,8 +83,7 @@ byte Icon_Signal_Excellent[8] = {		// 0
 	B00011,
 	B00111,
 	B01111,
-	B11111 };
-	
+	B11111 };	
 byte Icon_TempChar[8] = {                // Значок градуса
 	B00111,
 	B00101,
@@ -74,115 +92,61 @@ byte Icon_TempChar[8] = {                // Значок градуса
 	B00000,
 	B00000,
 	B00000 };
-/*	
-byte BatteryChar0[8] = {                // Батарейка 0% заряда
-	B01110,
-	B10001,
-	B10001,
-	B10001,
-	B10001,
-	B10001,
-	B01111 };
-
-byte BatteryChar20[8] = {                // Батарейка 20% заряда
-	B01110,
-	B10001,
-	B10001,
-	B10001,
-	B10001,
-	B11111,
-	B01111 };
-
-byte BatteryChar40[8] = {                // Батарейка 40% заряда
-	B01110,
-	B10001,
-	B10001,
-	B10001,
-	B11111,
-	B11111,
-	B01111 };
-	
-byte BatteryChar60[8] = {                // Батарейка 60% заряда
-	B01110,
-	B10001,
-	B10001,
-	B11111,
-	B11111,
-	B11111,
-	B01111 };
-
-byte BatteryChar80[8] = {                // Батарейка 80% заряда
-	B01110,
-	B10001,
-	B11111,
-	B11111,
-	B11111,
-	B11111,
-	B01111 };
-	
-byte BatteryChar100[8] = {                // Батарейка 100% заряда
-	B01110,
-	B11111,
-	B11111,
-	B11111,
-	B11111,
-	B11111,
-	B01111 };
-*/
 
 
-void InitializingLCDicons(){								// Инициализация значков для LCD экрана
-	lcd.createChar(LCD_Temp_Char, Icon_TempChar);			// Инициализация значка температуры
+void InitializingLCDicons(){										// Инициализация значков для LCD экрана
+	lcd.createChar(LCD_Temp_Char, Icon_TempChar);					// Инициализация значка температуры
 	lcd.createChar(GSM_Signal_OFF, Icon_Signal_OFF);
 	lcd.createChar(GSM_Signal_Marginal, Icon_Signal_Marginal);
 	lcd.createChar(GSM_Signal_OK, Icon_Signal_OK);
 	lcd.createChar(GSM_Signal_Good, Icon_Signal_Good);
+	lcd.createChar(GSM_Signal_Very_Good, Icon_Signal_Very_Good);
 	lcd.createChar(GSM_Signal_Excellent, Icon_Signal_Excellent);
+	lcd.createChar(LCD_ICON_NOT_SIM, Icon_Not_SIM);
 }
 
 
 void UpdateMenu(){
 	switch (StatusMenu){
 		case 1:
-			WindowMenu(1, 1);
-			break;
-		case 2:
-			WindowMenu(2, 1);
-			break;
-		case 3:
-			WindowMenu(3, 1);
-			break;
-		case 4:
-			WindowMenu(4, 1);
+			WindowMenu(1, LCD_UPDATE_SCREEN);
 			break;
 	}		
 }
 
 
 void ViewSignalLevel(byte _Level){
-	lcd.setCursor(19,0);
-	if(_Level == 0){
-		lcd.print(char(GSM_Signal_Excellent));			// 	lcd.createChar(6, Signal_Excellent);
+	lcd.setCursor(LCD_START_SYMBOL_20, LCD_LINE_1);
+	if (_Level == 99){
+		lcd.print(char(GSM_Signal_OFF));
 	}
-	else if(_Level == 1){
-		lcd.print(char(GSM_Signal_Good));				// 	lcd.createChar(5, Signal_Good);
+	if (_Level == 52){
+		lcd.print(char(GSM_Signal_Excellent));
 	}
-	else if(2 <= _Level <= 30){
-		lcd.print(char(GSM_Signal_OK));					// 	lcd.createChar(4, Signal_OK);
+	if (54 <= _Level && _Level <= 81){
+		lcd.print(char(GSM_Signal_Very_Good));
 	}
-	else if(_Level == 31){
-		lcd.print(char(GSM_Signal_Marginal));			// 	lcd.createChar(3, Signal_Marginal);
+	if (82 <= _Level && _Level <= 110){
+		lcd.print(char(GSM_Signal_Good));
 	}
-	else if(_Level == 99){
-		lcd.print(char(GSM_Signal_OFF));				// 	lcd.createChar(2, Signal_OFF);
-	}
+	if (_Level == 111){
+		lcd.print(char(GSM_Signal_OK));
+	}	
+	if (_Level == 115){
+		lcd.print(char(GSM_Signal_Marginal));
+	}	
 }
 
 
-void Clean_LCD(byte line){
+void Clean_LCD(byte line, byte StartSymbol){
+	String Space = "";
 	lcd.setCursor(0,line);
-	lcd.print(F("                    "));
+	for(byte i = StartSymbol; i <= LCD_START_SYMBOL_20; i++){
+		Space += " ";	
+	}
+	lcd.print(Space);
 }
+
 
 void Output_Log_To_LCD(byte StartPosition, byte StartLine, String Text){
 	static String BuferText[4];
@@ -193,34 +157,24 @@ void Output_Log_To_LCD(byte StartPosition, byte StartLine, String Text){
 
 void WriteToLCD(String Text, byte line, byte Position, bool Delay){
 	lcd.backlight();
-// 	byte LongText = Text.length();
-// 	String Space;
-// 	for (byte i = 0; i <= 20 - LongText; i++) {
-// 		Space = Space + " ";
-// 	}		
 	lcd.setCursor(Position,line);
 	lcd.print(Text/* + Space*/);
-	if(line == 0){
-		lcd.setCursor(20,1);
-		ViewSignalLevel(StateGSM.GSM_Signal_Level);				// Восстанавливаем значек уровня сигнала GSM сети
-	}
 	if(Delay){
 		_delay_ms(1100);
 	}
 }
 
-
-void WindowMenu(byte NumberMenu, byte Update){   
+void WindowMenu(byte NumberScreen, byte Update){   
 /*   
- *    StatMenu - номер меню
+ *    NumberScreen - номер экрана
  *    Update - выводить статическую информацию или динамических данных (0\1)
  */
-	StatusMenu = NumberMenu;
-	lcd.setCursor(0,0);
-	switch(NumberMenu){							  
-		case 1:													// Первый экран 
+	StatusMenu = NumberScreen;
+	lcd.setCursor(LCD_START_SYMBOL_1,LCD_LINE_1);
+	switch(NumberScreen){							  
+		case LCD_SCREEN_MAIN:									// Первый экран 
 			switch(Update){
-				case 0:											// Выводить стартовую информацию
+				case LCD_CONCLUSION_SCREEN:						// Выводить стартовую информацию
 					lcd.clear();								// Очистка экрана
 					if(EEPROM.read(E_ModeController) == 1){
 						lcd.print(F("Automatic          "));	// "Automatic"
@@ -229,9 +183,8 @@ void WindowMenu(byte NumberMenu, byte Update){
 						lcd.print(F("Manual             "));	// "Manual"
 					}
 
-					lcd.setCursor(LCD_START_SYMBOL_16,LCD_LINE_1);
+					lcd.setCursor(LCD_START_SYMBOL_17,LCD_LINE_1);
 					lcd.print(F("v"));
-					
 					
 					lcd.setCursor(LCD_START_SYMBOL_1,LCD_LINE_2);
 					lcd.print(F("Tint: "));
@@ -257,18 +210,18 @@ void WindowMenu(byte NumberMenu, byte Update){
 					lcd.print(F("%"));
 					// ==============================================================					
 					break;
-				case 1:												// Обновление динамических данных
+				case LCD_UPDATE_SCREEN:								// Обновление динамических данных
 					lcd.setCursor(LCD_START_SYMBOL_12,LCD_LINE_1);
-					lcd.print(VCC, 1);
+					lcd.print(VCC, 2);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_7,LCD_LINE_2);
 					lcd.print(Ti, 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_6,LCD_LINE_3);
-					lcd.print(RealValueSensors[SENSOR_6][VALUE_1], 1);
+					lcd.print(RealValueSensors[SENSOR_1][VALUE_1], 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_8,LCD_LINE_4);
-					lcd.print(Ti, 1);
+					lcd.print(RealValueSensors[SENSOR_5][VALUE_1], 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_16,LCD_LINE_4);
 					lcd.print(time.gettime("H:i"));
@@ -278,10 +231,10 @@ void WindowMenu(byte NumberMenu, byte Update){
 					
 					break;
 			}
-		case 2:
+		case LCD_SCREEN_MANAGEMENT:
 			lcd.setCursor(0,0);
 			break;
-		case 3:
+		case LCD_SCREEN_CONFIG:
 			lcd.setCursor(0,0);
 			lcd.print(F("Light Panel     "));
 			lcd.setCursor(0,1);
@@ -292,31 +245,6 @@ void WindowMenu(byte NumberMenu, byte Update){
 			lcd.print(F("I:"));
 			//lcd.print(Ext_I);
 			lcd.print(F("    "));
-			break;
-		case 4:
-			byte x = 0;
-			lcd.setCursor(0,0);
-			lcd.print(F("Error menu      "));
-			lcd.setCursor(x,1);
-			if(PostCode =! 0){
-			  lcd.print(F(""));
-			}
-			lcd.print("                ");
-			if (ErrorCloseWindow_1 == true){
-			  lcd.setCursor(x,1);
-			  lcd.print(F("21"));
-			  x = x + 3;
-			}
-			if (ErrorCloseWindow_2 == true){
-			  lcd.setCursor(x,1);
-			  lcd.print(F("22"));
-			  x = x + 3;
-			}
-			if (ErrorCloseWindow_3 == true){
-			  lcd.setCursor(x,1);
-			  lcd.print(F("23"));
-			  x = x + 3;
-			}
 			break;
 	}
 } 

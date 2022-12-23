@@ -98,7 +98,7 @@ void SentDebugConfigModuleUART(){
 	}
 	Serial.print(F("Exec module: "));
 	
-	for(byte Module = 1; Module <= QuantityExecModule; Module ++){
+	for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){
 		if(EEPROM.read(E_BindExecModile + Module) == InputFromSerial0[0]){
 			Serial.print(Module); Serial.print(F(" "));
 		}
@@ -115,8 +115,8 @@ void WriteConfigChannel(){
 	}
 	// Нужно при смене типа управления группой обнулять значения сохраненных шагов модулей
 	if(0 < InputFromSerial0[3] && InputFromSerial0[3] <= 5 ){								// Разрешенное значение от 0-5.
-		if(EEPROM.read(E_Controll_Channel + InputFromSerial0[0]) != InputFromSerial0[3]){		// Если новое значение отлично от старого
-			for(byte Module; Module <= QuantityExecModule; Module ++){							// Ищем модуль привязанный к номеру модуля
+		if(EEPROM.read(E_Controll_Channel + InputFromSerial0[0]) != InputFromSerial0[3]){	// Если новое значение отлично от старого
+			for(byte Module; Module <= QUANTITY_EXEC_MODULES; Module ++){					// Ищем модуль привязанный к номеру модуля
 				if(EEPROM.read(E_BindExecModile + Module) == InputFromSerial0[0]){			// и если нашли
 					UpStepValue[Module - 1] = 0;											// то обнуляем ее рабочее значение в массиве
 					PassableSteperMotor[Module] = 0;
@@ -154,7 +154,7 @@ void RerecievedChannel(){
 		}
 	}
 	
-	if(1 <= InputFromSerial0[0] && InputFromSerial0[0] <= QuantityChannel || InputFromSerial0[0] == 255){			// Разрешенное кол-во групп не более 16-ти. Нельзя вводить больше
+	if(1 <= InputFromSerial0[0] && InputFromSerial0[0] <= QUANTITY_CHANNEL || InputFromSerial0[0] == 255){			// Разрешенное кол-во групп не более 16-ти. Нельзя вводить больше
 		if (flag){
 			if(InputFromSerial0[0] != 255){
 				WriteConfigChannel();
@@ -172,7 +172,7 @@ void RerecievedChannel(){
 					SentDebugConfigModuleUART();
 				}
 				else{												// Выводим полную инфу для отладки
-					for(byte Channel = 1; Channel <= QuantityChannel; Channel ++){
+					for(byte Channel = 1; Channel <= QUANTITY_CHANNEL; Channel ++){
 						InputFromSerial0[0] = Channel;
 						SentDebugConfigModuleUART();
 					}

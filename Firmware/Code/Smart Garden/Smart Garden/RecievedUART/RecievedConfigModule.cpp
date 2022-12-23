@@ -29,8 +29,8 @@ void SentConfigModuleUART(){
 	switch(EEPROM.read(E_TypeExecModule + InputFromSerial0[0])){		// Тип исполняемого модуля
 		case 1:
 			Serial.println(F("Шаговый мотор"/*"Stepper motor"*/));
-			Serial.print(F("Порт управления: "/*"Control port: "*/));
-			DigitalPort(PortModule, 0, 1);
+			Serial.print(F("Порт включения драйвера: "/*"Control port: "*/));
+			DigitalPort(PortModule, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, LOG_TO_UART);
 			Serial.println(F(""));
 			Serial.print(F("Режим работы: "/*"Mode configure: "*/));
 			switch(EEPROM.read(E_ManualModeModule + InputFromSerial0[0])){
@@ -45,13 +45,13 @@ void SentConfigModuleUART(){
 			Serial.print(F("Максимальная скорость: "/*"setMaxSpeed: "*/)); Serial.print(EEPROM_int_read(E_StepperMotor_setMaxSpeed + InputFromSerial0[0] * 2)); Serial.println(F("шагов/секунду"));
 			Serial.print(F("Максимальное ускорение: "/*"setAcceleration: "*/)); Serial.print(EEPROM_int_read(E_StepperMotor_setAcceleration + InputFromSerial0[0] * 2)); Serial.println(F("шагов/секунду^2"));
 			Serial.print(F("Кол-во оборотов на 1см подъема: "/*"Step see/about: "*/)); Serial.print(EEPROM_int_read(E_StepperMotor_Step + InputFromSerial0[0] * 2)); Serial.println(F("шагов/см"));
-			Serial.print(F("Делитель шага драйвера: ")); Serial.print(F("1/")); Serial.print(EEPROM.read(E_StepperMotor_DriverStep + InputFromSerial0[0])); Serial.println(F("шага"));
-			break;
+			Serial.print(F("Делитель шага драйвера: ")); Serial.print(F("1/")); Serial.print(EEPROM.read(E_StepperMotor_DividerStep + InputFromSerial0[0])); Serial.println(F("шага"));
+			break;   
 		case 2:
 			Serial.println(F("ШИМ"/*"PWM"*/));
 			Serial.print(F("Управляющий порт"/*"Control port: "*/));
 			if(AllowPWMport(PortModule)){	// Если порт управления в списке разрешенных для работы с ШИМ
-				DigitalPort(PortModule, 0, 1);
+				DigitalPort(PortModule, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);
 				Serial.println(F(""));
 			}
 			else Serial.println(F("the port isn't configured"));
@@ -59,9 +59,9 @@ void SentConfigModuleUART(){
 			break;
 		case 3:
 			Serial.println(F("Servo motor"));
-			Serial.print(F("Control port: "));
+			Serial.print(F("Управляющий порт: "));
 			if(AllowServoPort(PortModule)){
-				DigitalPort(PortModule, 0, 1);
+				DigitalPort(PortModule, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);
 				Serial.println(F(""));
 			}
 			else Serial.println(F("the port isn't configured"));
@@ -80,14 +80,14 @@ void SentConfigModuleUART(){
 			break;
 		case 4:
 			Serial.println(F("Digital port"));
-			Serial.print(F("Control port: "));
-			DigitalPort(PortModule, 0, 1);
+			Serial.print(F("Управляющий порт: "));
+			DigitalPort(PortModule, DIGITAL_PORT_OFF, DIGITAL_PORT_RETURN_NAME_PORT, NO_LOG_TO_UART);
 			Serial.println(F(""));
 			break;
 		default:
 			Serial.println(F("The type of the module isn't configured"));
 	}
-	Serial.print(F("Bind channel: ")); Serial.println(EEPROM.read(E_BindExecModile + InputFromSerial0[0]));
+	Serial.print(F("Группа: ")); Serial.println(EEPROM.read(E_BindExecModile + InputFromSerial0[0]));
 	if(EEPROM.read(E_LowSwitchPortModule + InputFromSerial0[0]) != 0){
 		Serial.print(F("Switch DOWN port: ")); ViewNameInputDigitalPorts(EEPROM.read(E_LowSwitchPortModule + InputFromSerial0[0])); Serial.println(F(""));
 	}
@@ -121,7 +121,7 @@ void SentConfigModuleExtApp(){
 	Serial.print(EEPROM_int_read(E_StepperMotor_setMaxSpeed + InputFromSerial0[0] * 2));			Serial.print(F(" "));	// Максимальная скорость вращения (только для шагового мотора)
 	Serial.print(EEPROM_int_read(E_StepperMotor_setAcceleration + InputFromSerial0[0] * 2));		Serial.print(F(" "));	// Ускорение мотора (только для шагового мотора)
 	Serial.print(EEPROM_int_read(E_StepperMotor_Step + InputFromSerial0[0] * 2));					Serial.print(F(" "));	// Количество шагов на один см подъема
-	Serial.print(EEPROM.read(E_StepperMotor_DriverStep + InputFromSerial0[0]));						Serial.print(F(" "));	// Делитель шага Stepper драйвера (Нужент для режима шагового мотора)
+	Serial.print(EEPROM.read(E_StepperMotor_DividerStep + InputFromSerial0[0]));					Serial.print(F(" "));	// Делитель шага Stepper драйвера (Нужент для режима шагового мотора)
 	Serial.print(EEPROM_int_read(E_Servo_MinImp + InputFromSerial0[0]*2));							Serial.print(F(" "));	// (тип int) Серво привод. Величина импульса для поворота в 0*
 	Serial.print(EEPROM_int_read(E_Servo_MaxImp + InputFromSerial0[0]*2));							Serial.print(F(" "));	// (тип int) Серво привод. Величина импульса для поворота в 180*
 	Serial.print(EEPROM.read(E_ManualModeModule + InputFromSerial0[0]));							Serial.print(F(" "));
@@ -145,34 +145,35 @@ void WriteDataConfigExecModule(){
 	// ---------------- Максимальная величина открытия модуля ----------------
 	EEPROM.update(E_MaxLimitRotation + InputFromSerial0[0], InputFromSerial0[5]);					// Максимальная величина открытия модуля
 	// ---------------- Порт управления модулем ----------------
-	for(byte Module = 1; Module <= QuantityExecModule; Module ++){									// ищем во всех байтах конфигурации данные совпадающие с введенным из UART значением (защита от дурака)
+	for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){								// ищем во всех байтах конфигурации данные совпадающие с введенным из UART значением (защита от дурака)
 		if(EEPROM.read(E_PortExecModule + Module) == InputFromSerial0[5]){							// и если находим
 			EEPROM.write(E_PortExecModule + Module, 0);												// то затираем ее нулями чтобы данные датчика не привязались двум разным группам
 		}
 	}
 	if(EEPROM.read(E_PortExecModule + InputFromSerial0[0]) != InputFromSerial0[6]){					// Если меняется номер управляющего порта
-		DigitalPort(InputFromSerial0[6], StateDigitalPorts[InputFromSerial0[6] - 1], 2);			// то копируем состояние старого порта в новый
-		DigitalPort(EEPROM.read(E_PortExecModule + InputFromSerial0[0]), 0, 2);						// Выключаем старый порт
+		DigitalPort(InputFromSerial0[6], StateDigitalPorts[InputFromSerial0[6] - 1], DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);			// то копируем состояние старого порта в новый
+		DigitalPort(EEPROM.read(E_PortExecModule + InputFromSerial0[0]), DIGITAL_PORT_OFF, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);	// Выключаем старый порт
 		StateDigitalPorts[InputFromSerial0[6] - 1] = 0;												// Обнуляем состояние старого порта в массиве
 		EEPROM.write(E_PortExecModule + InputFromSerial0[0], InputFromSerial0[6]);					// Записываем адрес порта управления модулем
 	}
 	// ---------------- Максимальная скорость вращения шаговика ----------------
-	EEPROM_int_write(E_StepperMotor_setMaxSpeed + InputFromSerial0[0]*2, InputFromSerial0[7]);		// (тип int) Максимальная скорость вращения ротора двигателя (шагов/секунду)
+	EEPROM.put(E_StepperMotor_setMaxSpeed + InputFromSerial0[0]*2, InputFromSerial0[7]);			// (тип int) Максимальная скорость вращения ротора двигателя (шагов/секунду)
 	// ---------------- Максимальное ускорение шаговика ----------------
-	EEPROM_int_write(E_StepperMotor_setAcceleration + InputFromSerial0[0]*2, InputFromSerial0[8]);	// (тип int) Ускорение мотора (шагов/секунду^2)
+	EEPROM.put(E_StepperMotor_setAcceleration + InputFromSerial0[0]*2, InputFromSerial0[8]);		// (тип int) Ускорение мотора (шагов/секунду^2)
 	// ---------------- Кол-во шагов шаговика на один см подъема ----------------
 	if(EEPROM_int_read(E_StepperMotor_Step + InputFromSerial0[0]*2) != InputFromSerial0[9]){		// Если изменяем кол-во шагов на оборот шпильки
-		EEPROM_int_write(E_StepperMotor_Step + InputFromSerial0[0]*2, InputFromSerial0[9]);			// (тип int) Кол-во оборотов на 1мм шпильки
+		EEPROM.put(E_StepperMotor_Step + InputFromSerial0[0]*2, InputFromSerial0[9]);				// (тип int) Кол-во оборотов на 1мм шпильки
 		//InitializingExecModule(InputFromSerial_config_module[0]);									// Заного инициализируем шаговый мотор, т.е. перемещаем его в нули
 	}
 	// ---------------------- Серво мотор. Делитель шага драйвера ----------------------
-	if(InputFromSerial0[10] == 1 ||	InputFromSerial0[10] == 2 || InputFromSerial0[10] == 4 || InputFromSerial0[10] == 8 || InputFromSerial0[10] == 16 ){
-		EEPROM.update(E_StepperMotor_DriverStep + InputFromSerial0[0], InputFromSerial0[10]);
+	if(InputFromSerial0[10] == 1 ||	InputFromSerial0[10] == 2 || InputFromSerial0[10] == 4 || InputFromSerial0[10] == 8 || InputFromSerial0[10] == 16 || InputFromSerial0[10] == 32 || InputFromSerial0[10] == 64){
+		EEPROM.update(E_StepperMotor_DividerStep + InputFromSerial0[0], InputFromSerial0[10]);
 	}
+	else EEPROM.update(E_StepperMotor_DividerStep + InputFromSerial0[0], 1);						// default значение если вводим не правильные данные
 	// ---------------- Серво мотор. Величина импульса для поворота в 0" ----------------
-	EEPROM_int_write(E_Servo_MinImp + InputFromSerial0[0]*2, InputFromSerial0[11]);					// (тип int) Серво привод. Величина импульса для поворота в 0*
+	EEPROM.put(E_Servo_MinImp + InputFromSerial0[0]*2, InputFromSerial0[11]);						// (тип int) Серво привод. Величина импульса для поворота в 0*
 	// ---------------- Серво мотор. Величина импульса для поворота в 180" ----------------
-	EEPROM_int_write(E_Servo_MaxImp + InputFromSerial0[0]*2, InputFromSerial0[12]);					// (тип int) Серво привод. Величина импульса для поворота в 180*
+	EEPROM.put(E_Servo_MaxImp + InputFromSerial0[0]*2, InputFromSerial0[12]);						// (тип int) Серво привод. Величина импульса для поворота в 180*
 	// ---------------- Ручной\автоматический режим работы мотора ----------------
 	if(InputFromSerial0[13] == 0 || InputFromSerial0[13] == 1){										// Можно вводить только 1 или 2
 		EEPROM.update(E_ManualModeModule + InputFromSerial0[0], InputFromSerial0[13]);				// Стандартный или ручной режим конфигурирования модуля
@@ -181,11 +182,11 @@ void WriteDataConfigExecModule(){
 	if(InputFromSerial0[14] == InputFromSerial0[15]){												// Если ввели два одинаковых значения
 		InputFromSerial0[15] = 0;
 	}
-	if(31 <= InputFromSerial0[14] && InputFromSerial0[14] <= 39){									// Разрешенные значения с 31-го по 39-й
+	if(PORT_INPUT_D_PIN_1 <= InputFromSerial0[14] && InputFromSerial0[14] <= PORT_INPUT_D_PIN_9){	// Разрешенные значения с 41-го по 49-й
 		CleaningDuplicatedPorts(InputFromSerial0[14]);												// Защита чтобы один и тот же порт не был добавлен разным модулям
 		EEPROM.update(E_LowSwitchPortModule + InputFromSerial0[0], InputFromSerial0[14]);			// Адреса портов для концевиков модулей
 	}
-	if(31 <= InputFromSerial0[14] && InputFromSerial0[15] <= 39){									// Разрешенные значения с 20-го по 24-й	
+	if(PORT_INPUT_D_PIN_1 <= InputFromSerial0[14] && InputFromSerial0[15] <= PORT_INPUT_D_PIN_9){	// Разрешенные значения с 41-го по 49-й	
 		CleaningDuplicatedPorts(InputFromSerial0[15]);												// Защита чтобы один и тот же порт не был добавлен разным модулям
 		EEPROM.update(E_HighSwitchPortModule + InputFromSerial0[0], InputFromSerial0[15]);			// Адреса портов для концевиков модулей
 	}
@@ -194,6 +195,7 @@ void WriteDataConfigExecModule(){
 		EEPROM.update(E_TypeHighSwitchModule + InputFromSerial0[0], InputFromSerial0[16]);
 	}
 	
+	Serial.println();
 	Serial.print(F("Settings of the module '")); Serial.print(InputFromSerial0[0]); Serial.println(F("' is updated"));
 }
 
@@ -211,7 +213,7 @@ void RecievedConfigExecModule(){
 		}
 	}
 	
-	if(1 <= InputFromSerial0[0] && InputFromSerial0[0] <= QuantityExecModule || InputFromSerial0[0] == 255){
+	if(1 <= InputFromSerial0[0] && InputFromSerial0[0] <= QUANTITY_EXEC_MODULES || InputFromSerial0[0] == 255){
 		if (flag){
 			if(InputFromSerial0[0] != 255){
 				WriteDataConfigExecModule();				// Сохраняем конфигурацию
@@ -226,7 +228,7 @@ void RecievedConfigExecModule(){
 						Serial.println();
 					}
 					else{												// Выводим полную инфу для отладки
-						for(byte Module = 1; Module <= QuantityExecModule; Module ++){
+						for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){
 							Serial.print(F("m "));
 							InputFromSerial0[0] = Module;
 							SentConfigModuleExtApp();
@@ -239,7 +241,7 @@ void RecievedConfigExecModule(){
 						SentConfigModuleUART();
 					}
 					else{												// Выводим полную инфу для отладки
-						for(byte Module = 1; Module <= QuantityExecModule; Module ++){
+						for(byte Module = 1; Module <= QUANTITY_EXEC_MODULES; Module ++){
 							InputFromSerial0[0] = Module;
 							SentConfigModuleUART();
 						}
@@ -248,9 +250,6 @@ void RecievedConfigExecModule(){
 			}
 		}
 	}
-// 	for (byte i=0; i<sizeof(InputFromSerial0)/sizeof(int); i++){			// Затираем массив после работы
-// 		InputFromSerial0[i] = 0;
-// 	}
 	CleanInputFromSerial0();
 	recievedFlag_config_module = false;
 	flag = false;

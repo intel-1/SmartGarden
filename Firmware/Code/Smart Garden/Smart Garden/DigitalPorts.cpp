@@ -17,9 +17,8 @@ void ViewStateAllSwitch(){				// Ф-ция вывода в консоль сос
 	while(StateSwitch){
 		delay(800);
 		for(byte i = 31; i <= 39; i ++ ){
-			Serial.print(StatusSwitchPorts[i - 30]);
+			Serial.print(StatusSwitchPorts[i - 40]);
 			Serial.print(F(" "));
-			//Serial.print(ReadInputDigitalPorts(i, false)); Serial.print(F(" "));
 			if(i == 39){
 				Serial.println();
 			}
@@ -30,31 +29,31 @@ void ViewStateAllSwitch(){				// Ф-ция вывода в консоль сос
 
 void ViewNameInputDigitalPorts(byte Port){
 	switch(Port){
-		case 31:
+		case 41:
 			Serial.print(F("INPUT_DIGITAL_PIN_1"));
 			break;
-		case 32:
+		case 42:
 			Serial.print(F("INPUT_DIGITAL_PIN_2"));
 			break;
-		case 33:
+		case 43:
 			Serial.print(F("INPUT_DIGITAL_PIN_3"));
 			break;
-		case 34:
+		case 44:
 			Serial.print(F("INPUT_DIGITAL_PIN_4"));
 			break;
-		case 35:
+		case 45:
 			Serial.print(F("INPUT_DIGITAL_PIN_5"));
 			break;
-		case 36:
+		case 46:
 			Serial.print(F("INPUT_DIGITAL_PIN_6"));
 			break;
-		case 37:
+		case 47:
 			Serial.print(F("INPUT_DIGITAL_PIN_7"));
 			break;
-		case 38:
+		case 48:
 			Serial.print(F("INPUT_DIGITAL_PIN_8"));
 			break;
-		case 39:
+		case 49:
 			Serial.print(F("INPUT_DIGITAL_PIN_9"));
 			break;
 		default:
@@ -65,55 +64,55 @@ void ViewNameInputDigitalPorts(byte Port){
 
 boolean ReadInputDigitalPorts(byte Port){
 	switch(Port){
-		case 31:
+		case 41:
 			if(!(PINB & (1 << INPUT_D_PIN_1))){				// Если на порту '0'
 				return true;
 			}
 			else return false;
 			break;
-		case 32:
+		case 42:
 			if(!(PINB & (1 << INPUT_D_PIN_2))){
 				return true;
 			}
 			else return false;
 			break;
-		case 33:
+		case 43:
 			if(!(PINB & (1 << INPUT_D_PIN_3))){
 				return true;
 			}
 			else return false;
 			break;
-		case 34:
+		case 44:
 			if(!(PINJ & (1 << INPUT_D_PIN_4))){
 				return true;
 			}
 			else return false;
 			break;
-		case 35:
-			/*if(!(PINJ & (1 << INPUT_D_PIN_5))){
+		case 45:
+			if(!(PINB & (1 << INPUT_D_PIN_5))){
 				return true;
 			}
-			else return false;*/
+			else return false;
 			break;
-		case 36:
+		case 46:
 			if(!(PINJ & (1 << INPUT_D_PIN_6))){
 				return true;
 			}
 			else return false;
 			break;
-		case 37:
+		case 47:
 			if(!(PINJ & (1 << INPUT_D_PIN_7))){
 				return true;
 			}
 			else return false;
 			break;
-		case 38:
+		case 48:
 			if(!(PINJ & (1 << INPUT_D_PIN_8))){
 				return true;
 			}
 			else return false;
 			break;
-		case 39:
+		case 49:
 			if(!(PINJ & (1 << INPUT_D_PIN_9))){
 				return true;
 			}
@@ -125,501 +124,587 @@ boolean ReadInputDigitalPorts(byte Port){
 }
 
 
-byte DigitalPort(byte NumberPort, byte Level, byte State){
+
+byte DigitalPort(byte NumberPort, byte Level, byte State, bool Log){
 /*
 	NumberPort - номер порта 
 	Level - уровень который нужно выставить:
-									0 - выключить порт
-									1 - включить порт
+									DIGITAL_PORT_OFF	- выключить порт
+									DIGITAL_PORT_ON		- включить порт
 	State - как работать с ф-цией:
-									1 - выводить в консоль названия портов
-									2 - включать\выключать порт
-									3 - возвращать номер порта в Arduino формате
-									4 - считать состояние порта
+									DIGITAL_PORT_RETURN_NAME_PORT			- выводить в консоль названия портов
+									DIGITAL_PORT_SWITCH_PORT				- включать\выключать порт
+									DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT	- возвращать номер порта в Arduino формате
+									DIGITAL_PORT_READ_STATE_PORT			- считать состояние порта
 */
 	
 	StateDigitalPorts[NumberPort - 1] = Level;				// Сохраняем состояние порта в массив
 	switch(NumberPort){
 		// ============== External Digital Pins ==============
-		case 1:
+		case PORT_EXT_PIN_1:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_1"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_1_on();
 					}
 					else {
 						EXT_PIN_1_off();
 					}
 					break;
-				case 3:
-					return 13;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 6;
 					break;
 			}
 			break;
-		case 2:
+		case PORT_EXT_PIN_2:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_2"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_2_on();
 					}
 					else {
 						EXT_PIN_2_off();
 					}
 					break;
-				case 3:
-					return 6;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 5;
 					break;
 			}
 			break;
-		case 3:
+		case PORT_EXT_PIN_3:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_3"));
 					}
 					break;
-				case 2:
-					if(Level == 1){EXT_PIN_3_on();}
-					else {EXT_PIN_3_off();}
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_3_on();
+					}
+					else {
+						EXT_PIN_3_off();
+						}
 					break;
-				case 3:
-					return 10;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 0;
 					break;
 			}
 			break;
-		case 5:
+		case PORT_EXT_PIN_4:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_4"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_4_on();
 					}
 					else {
 						EXT_PIN_4_off();
 					}
 					break;
-				case 3:
-					return 4;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 0;
 					break;
 			}
 			break;
-		case 4:
+		case PORT_EXT_PIN_5:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_5"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_5_on();
 					}
 					else {
 						EXT_PIN_5_off();
 					}
 					break;
-				case 3:
-					return A7;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 8;
 					break;
 			}
 			break;
-		case 6:
+		case PORT_EXT_PIN_6:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_6"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_6_on();
 					}
 					else {
 						EXT_PIN_6_off();
 					}
 					break;
-				case 3:
-					return A8;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 7;
 					break;
 			}
 			break;
-		case 7:
+		case PORT_EXT_PIN_7:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_7"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_7_on();
 					}
 					else {
 						EXT_PIN_7_off();
 					}
 					break;
-				case 3:
-					return 8;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 67;
 					break;
 			}
 			break;
-		case 8:
+		case PORT_EXT_PIN_8:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_8"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_8_on();
 					}
 					else {
 						EXT_PIN_8_off();
 					}
 					break;
-				case 3:
-					return A9;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 63;
 					break;
 			}
 			break;
-		case 9:
+		case PORT_EXT_PIN_9:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("EXT_PIN_9"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						EXT_PIN_9_on();
 					}
 					else {
 						EXT_PIN_9_off();
 					}
 					break;
-				case 3:
-					return A9;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 64;
 					break;
 			}
-			Serial.print(F("Port isn't connected"));
 			break;
-		case 10:
+		case PORT_EXT_PIN_10:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("EXT_RUN_STEPPER"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("EXT_PIN_10"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						EXT_PIN_10_off();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_10_on();
 					}
 					else {
 						EXT_PIN_10_off();
 					}
 					break;
-				case 3:
-					return A0;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 4;
 					break;
 			}
 			break;
-		
-		// ============== Output Digital Pins ==============
-		case 11:
+		case PORT_EXT_PIN_11:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("EXT_PIN_11"));
+					}
+					break;
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_11_on();
+					}
+					else {
+						EXT_PIN_11_off();
+					}
+					break;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A9;
+					break;
+			}
+			break;
+		case PORT_EXT_PIN_12:
+			switch(State){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("EXT_PIN_12"));
+					}
+					break;
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_12_on();
+					}
+					else {
+						EXT_PIN_12_off();
+					}
+					break;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 65;
+					break;
+			}
+			break;
+		case PORT_EXT_PIN_13:
+			switch(State){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("EXT_PIN_13"));
+					}
+					break;
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_13_on();
+					}
+					else {
+						EXT_PIN_13_off();
+					}
+					break;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 60;
+					break;
+			}
+			break;
+		case PORT_EXT_PIN_14:
+			switch(State){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("EXT_PIN_14"));
+					}
+					break;
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						EXT_PIN_14_on();
+					}
+					else {
+						EXT_PIN_14_off();
+					}
+					break;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return 66;
+					break;
+			}
+			break;
+			
+		
+		// =====================================================================
+		// ======================== Output Digital Pins ========================
+		// =====================================================================
+		case PORT_GPIO_1:
+			switch(State){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-1"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO1_on();
 					}
 					else {
 						GPIO1_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 32;
 					break;
 			}
 			break;
-		case 12:
+		case PORT_GPIO_2:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-2"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO2_on();
 					}
 					else {
 						GPIO2_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 31;
 					break;
 			}
 			break;
-		case 13:
+		case PORT_GPIO_3:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-3"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO3_on();
 					}
 					else {
 						GPIO3_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 39;
 					break;
 			}
 			break;
-		case 14:
+		case PORT_GPIO_4:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-4"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO4_on();
 					}
 					else {
 						GPIO4_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 29;
 					break;
 			}
 			break;
-		case 15:
+		case PORT_GPIO_5:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-5"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO5_on();
 					}
 					else {
 						GPIO5_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 25;
 					break;
 			}
 			break;
-		case 16:
+		case PORT_GPIO_6:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-6"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO6_on();
 					}
 					else {
 						GPIO6_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 26;
 					break;
 			}
 			break;
-		case 17:
+		case PORT_GPIO_7:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-7"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO7_on();
 					}
 					else {
 						GPIO7_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 24;
 					break;
 			}
 			break;
-		case 18:
+		case PORT_GPIO_8:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
 						Serial.print(F("GPIO-8"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
 						GPIO8_on();
 					}
 					else {
 						GPIO8_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 23;
 					break;
 			}
 			break;
 			
 		// ============== Analog Input Pins ==============
-		case 20:							
+		case PORT_INPUT_GPIO_P1:							
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Analog S1"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P1"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						INPUT_A_S1_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P1_on();
 					}
 					else {
-						INPUT_A_S1_off();
+						INPUT_GPIO_P1_off();
 					}
 					break;
-				case 3:
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
 					return 9;
 					break;
 			}
 			break;
-		case 21:
+		case PORT_INPUT_GPIO_P2:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Analog S2"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P2"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						INPUT_A_S2_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P2_on();
 					}
 					else {
-						INPUT_A_S2_off();
+						INPUT_GPIO_P2_off();
 					}
 					break;
-				case 3:
-					return 8;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A0;
 					break;
 			}
 			break;
-		case 22:
+		case PORT_INPUT_GPIO_P3:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Analog S3"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P3"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						INPUT_A_S3_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P3_on();
 					}
 					else {
-						INPUT_A_S3_off();
+						INPUT_GPIO_P3_off();
 					}
 					break;
-				case 3:
-					return 60;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A1;
 					break;
 			}
 			break;
-		case 23:
+		case PORT_INPUT_GPIO_P4:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Analog S4"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P4"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						INPUT_A_S4_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P4_on();
 					}
 					else {
-						INPUT_A_S4_off();
+						INPUT_GPIO_P4_off();
 					}
 					break;
-				case 3:
-					return 57;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A6;
 					break;
 			}
 			break;
-		case 24:
+		case PORT_INPUT_GPIO_P5:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Analog S5"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P5"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						INPUT_A_S5_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P5_on();
 					}
 					else {
-						INPUT_A_S5_off();
+						INPUT_GPIO_P5_off();
 					}
 					break;
-				case 3:
-					return 58;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A3;
 					break;
 			}
 			break;
-		// ENABLE пин концевика
-		case 40:
+		case PORT_INPUT_GPIO_P6:
 			switch(State){
-				case 1:
-					if (OUTPUT_LEVEL_UART_SENSOR){
-						Serial.print(F("Enable Stepper Port"));
+				case DIGITAL_PORT_RETURN_NAME_PORT:
+					if (OUTPUT_LEVEL_UART_SENSOR || Log){
+						Serial.print(F("Input GPIO P6"));
 					}
 					break;
-				case 2:
-					if(Level == 1){
-						STEPPER_on();
+				case DIGITAL_PORT_SWITCH_PORT:
+					if(Level == DIGITAL_PORT_ON){
+						INPUT_GPIO_P6_on();
 					}
 					else {
-						STEPPER_off();
+						INPUT_GPIO_P6_off();
 					}
 					break;
-				case 3:
-					return 58;
+				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+					return A4;
 					break;
 			}
 			break;
@@ -632,341 +717,294 @@ byte DigitalPort(byte NumberPort, byte Level, byte State){
 		}
 	}
 }
-
-
-byte ViewNameDigitalPort(byte NumberPort, byte TypeView){
-/*
-	NumberPort - номер порта 
-	TypeView - в каком виде выводить имя:
-									1 - в человеческом виде
-									2 - в Arduino формате
-*/
-	
-	switch(NumberPort){
-		// ============== External Digital Pins ==============
-		case 1:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_1"));
-					break;
-				case 2:
-					return 13;
-					break;
-			}
-			break;
-		case 2:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_2"));
-					break;
-				case 2:
-					return 6;
-					break;
-			}
-			break;
-		case 3:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_3"));
-					break;
-				case 2:
-					return 10;
-					break;
-			}
-			break;
-		case 5:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_4"));
-					break;
-				case 2:
-					return 4;
-					break;
-			}
-			break;
-		case 4:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_5"));
-					break;
-				case 2:
-					return A7;
-					break;
-			}
-			break;
-		case 6:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_6"));
-					break;
-				case 2:
-					return A8;
-					break;
-			}
-			break;
-		case 7:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_7"));
-					break;
-				case 2:
-					return 8;
-					break;
-			}
-			break;
-		case 8:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_8"));
-					break;
-				case 2:
-					return A9;
-					break;
-			}
-			break;
-		case 9:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_PIN_9"));
-					break;
-				case 2:
-					return A9;
-					break;
-			}
-			Serial.print(F("Port isn't connected"));
-			break;
-		case 10:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("EXT_RUN_STEPPER"));
-					break;
-				case 2:
-					return A0;
-					break;
-			}
-			break;
-		
-		// ============== Output Digital Pins ==============
-		case 11:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-1"));
-					break;
-				case 2:
-					return 32;
-					break;
-			}
-			break;
-		case 12:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-2"));
-					break;
-				case 2:
-					return 31;
-					break;
-			}
-			break;
-		case 13:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-3"));
-					break;
-				case 2:
-					return 39;
-					break;
-			}
-			break;
-		case 14:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-4"));
-					break;
-				case 2:
-					return 29;
-					break;
-			}
-			break;
-		case 15:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-5"));
-					break;
-				case 2:
-					return 25;
-					break;
-			}
-			break;
-		case 16:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-6"));
-					break;
-				case 2:
-					return 26;
-					break;
-			}
-			break;
-		case 17:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-7"));
-					break;
-				case 2:
-					return 24;
-					break;
-			}
-			break;
-		case 18:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("GPIO-8"));
-					break;
-				case 2:
-					return 23;
-					break;
-			}
-			break;
-			
-		// ============== Analog Input Pins ==============
-		case 20:							
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Analog S1"));
-					break;
-				case 2:
-					return 9;
-					break;
-			}
-			break;
-		case 21:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Analog S2"));
-					break;
-				case 3:
-					return 8;
-					break;
-			}
-			break;
-		case 22:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Analog S3"));
-					break;
-				case 3:
-					return 60;
-					break;
-			}
-			break;
-		case 23:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Analog S4"));
-					break;
-				case 3:
-					return 57;
-					break;
-			}
-			break;
-		case 24:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Analog S5"));
-					break;
-				case 2:
-					return 58;
-					break;
-			}
-			break;
-		// ENABLE пин концевика
-		case 40:
-			switch(TypeView){
-				case 1:
-					Serial.print(F("Enable Stepper Port"));
-					break;
-				case 2:
-					return 58;
-					break;
-			}
-			break;
-		default:
-			if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
-				if(TypeView != 3){			// Если не запрошен вывод номера порта в Arduino формате
+// 
+// 
+// byte ViewNameDigitalPort(byte NumberPort, byte TypeView){
+// /*
+// 	NumberPort - номер порта 
+// 	TypeView - в каком виде выводить имя:
+// 									1 - в человеческом виде
+// 									3 - в Arduino формате
+// */
+// 	
+// 	switch(NumberPort){
+// 		// ============== External Digital Pins ==============
+// 		case DIGITAL_PORT_RETURN_NAME_PORT:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_1"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 6;
+// 					break;
+// 			}
+// 			break;
+// 		case 2:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_2"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 5;
+// 					break;
+// 			}
+// 			break;
+// 		case 3:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_3"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return -;
+// 					break;
+// 			}
+// 			break;
+// 		case 4:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_4"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return -;
+// 					break;
+// 			}
+// 			break;
+// 		case 5:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_5"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 8;
+// 					break;
+// 			}
+// 			break;
+// 		case 6:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_6"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 7;
+// 					break;
+// 			}
+// 			break;
+// 		case 7:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_7"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 67;
+// 					break;
+// 			}
+// 			break;
+// 		case 8:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_8"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 63;
+// 					break;
+// 			}
+// 			break;
+// 		case 9:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_9"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 64;
+// 					break;
+// 			}
+// 			break;
+// 			
+// 		case 10:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_10"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 4;
+// 					break;
+// 			}
+// 		break;	
+// 		case 12:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_12"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 65;
+// 					break;
+// 			}
+// 		break;
+// 		case 13:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_13"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 60;
+// 					break;
+// 			}
+// 		break;
+// 		case 14:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("EXT_PIN_14"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 66;
+// 					break;
+// 			}
+// 		break;
+// 
+// 		
+// 		// ============== Output Digital Pins ==============
+// 		case 21:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-1"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 32;
+// 					break;
+// 			}
+// 			break;
+// 		case 22:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-2"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 31;
+// 					break;
+// 			}
+// 			break;
+// 		case 23:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-3"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 39;
+// 					break;
+// 			}
+// 			break;
+// 		case 24:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-4"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 29;
+// 					break;
+// 			}
+// 			break;
+// 		case 25:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-5"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 25;
+// 					break;
+// 			}
+// 			break;
+// 		case 26:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-6"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 26;
+// 					break;
+// 			}
+// 			break;
+// 		case 27:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-7"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 24;
+// 					break;
+// 			}
+// 			break;
+// 		case 28:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("GPIO-8"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 23;
+// 					break;
+// 			}
+// 			break;
+// 			
+// 		// ============== Analog Input Pins ==============
+// 		case 20:							
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("Analog S1"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 9;
+// 					break;
+// 			}
+// 			break;
+// 		case 21:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("Analog S2"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 8;
+// 					break;
+// 			}
+// 			break;
+// 		case 22:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("Analog S3"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 60;
+// 					break;
+// 			}
+// 			break;
+// 		case 23:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("Analog S4"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 57;
+// 					break;
+// 			}
+// 			break;
+// 		case 24:
+// 			switch(TypeView){
+// 				case DIGITAL_PORT_RETURN_NAME_PORT:
+// 					Serial.print(F("Analog S5"));
+// 					break;
+// 				case DIGITAL_PORT_RETURN_ARDUINO_NAME_PORT:
+// 					return 58;
+// 					break;
+// 			}
+// 			break;
+// 		default:
+// 			if(OUTPUT_LEVEL_UART_MODULE_BESIDES_SETUP){
+// 				if(TypeView != 3){			// Если не запрошен вывод номера порта в Arduino формате
 // 					Serial.println();
 // 					Serial.println(F("\t\t\tThe port isn't configured"));
-				}
-			}
-			return 255;
-	}
-	if(TypeView == 4){
-		Serial.println();
-	}
-}
-
-
-
-/*
-
-boolean ReadInputDigitalPorts(byte Port, boolean ViewName){
-	switch(Port){
-		case 31:
-			if(!(PINB & (1 << INPUT_D_PIN_1))){				// Если на порту '0'
-				return true;
-			}
-			else return false;
-			break;
-		case 32:
-			if(!(PINB & (1 << INPUT_D_PIN_2))){
-				return true;
-			}
-			else return false;
-			break;
-		case 33:
-			if(!(PINB & (1 << INPUT_D_PIN_3))){
-				return true;
-			}
-			else return false;
-			break;
-		case 34:
-			if(!(PINJ & (1 << INPUT_D_PIN_4))){
-				return true;
-			}
-			else return false;
-			break;
-		case 35:
-//			if(!(PINJ & (1 << INPUT_D_PIN_5))){
-//				return true;
-//			}
-//			else return false;
-// 			break;
-		case 36:
-			if(!(PINJ & (1 << INPUT_D_PIN_6))){
-				return true;
-			}
-			else return false;
-			break;
-		case 37:
-			if(!(PINJ & (1 << INPUT_D_PIN_7))){
-				return true;
-			}
-			else return false;
-			break;
-		case 38:
-			if(!(PINJ & (1 << INPUT_D_PIN_8))){
-				return true;
-			}
-			else return false;
-			break;
-		case 39:
-			if(!(PINJ & (1 << INPUT_D_PIN_9))){
-				return true;
-			}
-			else return false;
-			break;
-		default:
-			return false;
-	}
-}
-
-*/
+// 				}
+// 			}
+// 			return 255;
+// 	}
+// 	if(TypeView == 4){
+// 		Serial.println();
+// 	}
+// }

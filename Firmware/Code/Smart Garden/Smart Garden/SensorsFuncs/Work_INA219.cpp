@@ -9,6 +9,7 @@
 
 
 Adafruit_INA219 ina219;
+Adafruit_INA219 ina219_int(ADDRESS_INPUT_INA);
 
 
 void CalculateINA219(byte NumberSensor, byte TypeDataSensor){

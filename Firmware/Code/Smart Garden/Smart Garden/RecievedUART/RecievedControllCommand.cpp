@@ -42,7 +42,7 @@ void RerecievedControllCommand(){
 							}
 							else LevelDigitalPort = 0;
 						
-							DigitalPort(EEPROM.read(E_PortExecModule + InputFromSerial0[1]), LevelDigitalPort, 2);		
+							DigitalPort(EEPROM.read(E_PortExecModule + InputFromSerial0[1]), LevelDigitalPort, DIGITAL_PORT_SWITCH_PORT, NO_LOG_TO_UART);		
 							break;
 						case 5:											// Коллекторный мотор
 							break;

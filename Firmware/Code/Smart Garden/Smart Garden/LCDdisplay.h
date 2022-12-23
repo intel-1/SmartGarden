@@ -6,9 +6,25 @@
 #include <Arduino.h>
 
 
-
-
 extern LiquidCrystal_I2C lcd;
+
+
+
+#define LCD_ICON_NOT_SIM 8
+
+#define LCD_SCREEN_REFRESH_DELAY true
+#define LCD_NO_SCREEN_REFRESH_DELAY false
+
+#define LCD_ALLOW_OTPUT_ON_SCREEN true
+#define LCD_NO_OTPUT_ON_SCREEN false
+
+#define LCD_UPDATE_SCREEN 1
+#define LCD_CONCLUSION_SCREEN 0
+
+#define LCD_SCREEN_MAIN 1
+#define LCD_SCREEN_MANAGEMENT 2
+#define LCD_SCREEN_CONFIG 3
+
 
 extern char buffer[16];
 extern byte EnableKey;
@@ -22,7 +38,7 @@ void UpdateMenu();
 
 void WriteToLCD(String Text, byte line, byte Position, bool Delay);
 void ViewSignalLevel(byte Level);
-void Clean_LCD(byte line);
+void Clean_LCD(byte line, byte StartSymbol);
 
 void WindowMenu(byte NumberMenu, byte Update); 
 

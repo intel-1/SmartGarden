@@ -10,18 +10,29 @@
 #include "LCDdisplay.h"
 
 
-String Link_LogWebServer;
-String Link_LogDataWebServer;
+String Link_LogWebServer = "";
+String Link_LogDataWebServer = "";
 
-uint8_t BalanceStringLen = 22;										// Количество символов от начала строки которые нужно переслать в смс сообщении при получении USSD ответа о балансе
+String GPRS_APN_NAME = "";
+String GPRS_APN_USER = "";
+String GPRS_APN_PASSWORD = "";
+
+String GSM_CODE_BALANCE = "";
+
+String GSM_GET_Tab_1 = "-- ";
+String GSM_GET_Tab_2 = "---- ";
+
 String RingPhone = "";
-String GSM_Tean_Name[10] = "";
-byte TurnOfMessagesGSM[ExtentOfTurn][QuantityParametersInMessage];	// Очередь СМС сообщений (максимально 10 исходящих сообщений)
+
+String AllowPhone[4];													
+
+byte TurnOfMessagesGSM[ExtentOfTurn][QuantityParametersInMessage];		// Очередь СМС сообщений (максимально 10 исходящих сообщений)
+
 
 struct StructGPRSConnection StateGSM;
 
-	
-void WriteToQueueGSM(struct MessageQueueGSM Par){
+
+void Write_To_Queue_GSM(struct MessageQueueGSM Par){
 	for(byte Place = 0; Place < ExtentOfTurn; Place ++){				// Проходим по всем ячейчам очереди сообщений
 		if(TurnOfMessagesGSM[Place][0] == 0){							// Когда найдена свободная
 			TurnOfMessagesGSM[Place][0] = 1;							// Помечаем занятой строку очереди
@@ -55,6 +66,12 @@ void WriteToQueueGSM(struct MessageQueueGSM Par){
 // ==================================== Включение\выключание GSM модуля ====================================
 // =========================================================================================================
 void Power_GSM(byte _State){
+	/*
+		_State - что выполнять:	
+								RESET	- перезагрузку модуля
+								OFF		- выключение питания
+								ON		- включение питания
+	*/
 	switch(_State){
 		case RESET:						// Перезагрузка модуля
 			gsm_vcc_off();
@@ -68,7 +85,7 @@ void Power_GSM(byte _State){
 			break;
 		case ON:						// Включение питания
 			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("Inclusion VCC...OK"));
+				Serial.println(F("Power on VCC...OK"));
 			}
 			gsm_vcc_on();				// Включение DC-DC
 			gsm_pwr_key();				// Включение самого модуля
@@ -81,8 +98,8 @@ void Power_GSM(byte _State){
 // =========================================================================================================
 // =========================================== Инициализация GSM ===========================================
 // =========================================================================================================
-void InitializingGSM(){
-	wdt_reset();
+void Initializing_GSM(bool _out_to_lcd){
+	//wdt_reset();
 	String _GSMATs[] = {								// Массив АТ команд инициализации GSM
 						//(F("ATE0V0+CMEE=1;&W")),		// Для рабочего режима (выключены Эхо, уменьшен уровель логирования)
 						(F("ATE0")),					// Выключаем эхо
@@ -95,77 +112,116 @@ void InitializingGSM(){
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("================= Start initializing GSM module  ================="));
 	}
-	if(ControllerSetup){
-		WriteToLCD(String(F("- AT: ")), LCD_LINE_4, LCD_START_SYMBOL_2, false);
+	if(_out_to_lcd){
+		WriteToLCD(String(F("- AT: ")), LCD_LINE_4, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
 	}
 	for (byte i = 0; i < sizeof(_GSMATs) / sizeof(_GSMATs[0]); i++) {
-		wdt_reset();
- 		if(ControllerSetup){
- 			WriteToLCD(String(F("*")), LCD_LINE_4, LCD_START_SYMBOL_8 + i, false);
+ 		if(_out_to_lcd){
+ 			WriteToLCD(String(F("*")), LCD_LINE_4, LCD_START_SYMBOL_8 + i, LCD_NO_SCREEN_REFRESH_DELAY);
  		}
-		sendATCommand(_GSMATs[i], true, true);					// Отправляем АТ команду, ждем ответ и выводим ответ в Serial
+		send_AT_Command(_GSMATs[i], GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);					// Отправляем АТ команду, ждем ответ и выводим ответ в Serial
 	}
-	if(ControllerSetup){
-		WriteToLCD(String(F("OK")), LCD_LINE_4, LCD_START_SYMBOL_19, false);
+	// ----------------------------------------------------------------------------------------
+	byte Exit = 1;
+	while(Exit <= 6){																			// Максимальное время ожидания регистрации 10 сек
+		if(Check_Registration_GSM(ON, LCD_ALLOW_OTPUT_ON_SCREEN) == GSM_REGISTERED){			// Если GSM модуль зарегистрирован в сети
+			Exit = 6;
+		}
+		Exit++;		
+		_delay_ms(1000);
 	}
+	// ----------------------------------------------------------------------------------------
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("We resolve sleep mode...OK"));
 	}
-	Serial3.println(F("AT+CSCLK=1"));							// Разрешаем спящий режим
+	Serial3.println(F("AT+CSCLK=1"));								// Разрешаем спящий режим
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("================= Initializing complete ================="));
 	}
-	gsm_dtr_on();												// Усыпляем модуль
+	gsm_dtr_on();													// Усыпляем модуль
 }
 
 
 // ======================================================================================================
 // ========================================= Инициализация GPRS =========================================
 // ======================================================================================================
-void InitializingGPRS(){
-	String _GPRS_ATs[] = {															// массив АТ команд инициализации GPRS
-							(F("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"")),				// Установка настроек подключения
-							(F("AT+SAPBR=3,1,\"APN\",\"internet.beeline.ru\"")),	// Имя APN точки доступа
-							(F("AT+SAPBR=3,1,\"USER\",\"beeline\"")),				// Имя пользователя
-							(F("AT+SAPBR=3,1,\"PWD\",\"beeline\"")),				// Пароль
-							(F("AT+SAPBR=1,1")),									// Установка GPRS соединения
-							(F("AT+HTTPINIT")),										// Инициализация http сервиса
+void Initializing_GPRS(){
+	String _GPRS_ATs[] = {																// массив АТ команд инициализации GPRS
+							(F("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"")),					// Установка настроек подключения
+							("AT+SAPBR=3,1,\"APN\",\"") + GPRS_APN_NAME + ("\""),		// Имя APN точки доступа
+							("AT+SAPBR=3,1,\"USER\",\"") + GPRS_APN_USER + ("\""),		// Имя пользователя
+							("AT+SAPBR=3,1,\"PWD\",\"") + GPRS_APN_PASSWORD + ("\""),	// Пароль							
+							(F("AT+SAPBR=1,1")),										// Установка GPRS соединения
+							(F("AT+HTTPINIT")),											// Инициализация http сервиса
 	};
 	String _Word;
 	if(OUTPUT_LEVEL_UART_GSM){
 		Serial.println(F("============= Start GPRS ============="));
 	}
 	if(ControllerSetup){
-		WriteToLCD(String(F("- AT: ")), LCD_LINE_3, LCD_START_SYMBOL_2, false);
-		WriteToLCD(String(F("                    ")), LCD_LINE_4, LCD_START_SYMBOL_1, false);
+		WriteToLCD(String(F("- AT: ")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
+		WriteToLCD(String(F("                    ")), LCD_LINE_4, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	}
 	for (byte i = 0; i < sizeof(_GPRS_ATs) / sizeof(_GPRS_ATs[0]); i++) {
 		wdt_reset();
 		if(ControllerSetup){
-			WriteToLCD(String(F("*")), LCD_LINE_3, LCD_START_SYMBOL_8 + i, false);
+			WriteToLCD(String(F("*")), LCD_LINE_3, LCD_START_SYMBOL_8 + i, LCD_NO_SCREEN_REFRESH_DELAY);
 		}
-		_Word = sendATCommand(_GPRS_ATs[i], YES, YES);					// Отправляем АТ команду, ждем, получаем и выводим ответ в Serial
+		_Word = send_AT_Command(_GPRS_ATs[i], GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);// Отправляем АТ команду, ждем, получаем и выводим ответ в Serial
 		byte TimerCommand = 1;
-		while(TimerCommand <= 4){										// Максимальное кол-во отправок команды
-			if(_Word.lastIndexOf(F("OK")) != -1){						// Если ответ "OK"
-				TimerCommand = 5;										// Останавливаем выполнение цикла while
+		while(TimerCommand <= 4){														// Максимальное кол-во отправок команды
+			if(_Word.lastIndexOf(F("OK")) != -1){										// Если ответ "OK"
+				TimerCommand = 5;														// Останавливаем выполнение цикла while
 				goto end_while;
 			}
 			else{
-				_Word = sendATCommand(_GPRS_ATs[i], YES, NO);			// Повторно отправляем команду
+				_Word = send_AT_Command(_GPRS_ATs[i], GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);			// Повторно отправляем команду
 				TimerCommand ++;
 			}
 		}
 		end_while: ;
 	}
 	if(ControllerSetup){
-		WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, true);
-	}
-	CheckConnectionGPRS();												// Проверяем подключение
-	if(ControllerSetup){
-		WriteToLCD(String(F("- IP: ")), LCD_LINE_4, LCD_START_SYMBOL_2, false);
-		WriteToLCD(StateGSM.IP_GPRS, LCD_LINE_4, LCD_START_SYMBOL_7, true);
+		WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, LCD_SCREEN_REFRESH_DELAY);
 		
+	}
+	Check_Connection_GPRS(ON);															// Проверяем подключение
+	if(ControllerSetup){
+		WriteToLCD(String(F("- IP: ")), LCD_LINE_4, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
+		WriteToLCD(StateGSM.IP_GPRS, LCD_LINE_4, LCD_START_SYMBOL_7, LCD_SCREEN_REFRESH_DELAY);
+	}
+}
+
+
+// ======================================================================================================
+// ========================================= Подключение к GPRS =========================================
+// ======================================================================================================
+void Connecting_GPRS(bool _out_to_lcd){
+	if(EEPROM.read(E_AllowGPRS) == ON){							// Если разрешена работа GPRS
+		if(ControllerSetup){									// Если контроллер в режиме запуска, то сразу подключаемся к GPRS.
+			// Проверку подключения к GSM провели в цикле его инициализации
+			if(StateGSM.Code_Connect_GSM == 1){					// Если зарегистрирован в сети
+				if(_out_to_lcd){
+					WriteToLCD(String(F("=== Connect GPRS ===")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
+					Clean_LCD(LCD_LINE_3, LCD_START_SYMBOL_1);
+					Clean_LCD(LCD_LINE_4, LCD_START_SYMBOL_1);
+				}
+				Initializing_GPRS();								// Инициализируем GPRS
+			}
+		}
+		else{														// Если контроллера в режиме обычной работы, то нужно перед иницализацией приверить подключение GSM
+			byte a = 1;
+			while(a <= 5){																	// Максимальное время ожидания регистрации GSM (5 сек)
+				if(Check_Registration_GSM(ON, LCD_NO_OTPUT_ON_SCREEN) == GSM_REGISTERED){	// Если GSM модуль зарегистрирован в сети
+					//_delay_ms(50);
+					Initializing_GPRS();							// Инициализируем GPRS
+					break;
+				}
+				a++;
+				_delay_ms(1000);
+			}
+		}
+		Check_Connection_GPRS(GSM_NO_OUTPUT_TO_SERIAL);				// Проверяем подключиление к GPRS
 	}
 }
 
@@ -173,21 +229,18 @@ void InitializingGPRS(){
 // =========================================================================================================
 // ======================= Функция ожидания ответа и возврата полученного результата =======================
 // =========================================================================================================
-String waitResponse(bool _logView) {
+String wait_Response(bool _logView) {
 	String _resp = "";															// Переменная для хранения результата
 	long _timeout = millis() + EEPROM.read(E_MaximumTimeResponseGSM) * 1000;	// Переменная для отслеживания таймаута (10 секунд)
 	while (!Serial3.available() && millis() < _timeout){						// Ждем ответа 10 секунд и обнуляем собаку чтобы не перезагрузить контроллер,
 		wdt_reset();															// сбрасываем собаку чтобы она не сбросила контроллер во время ожидания
-	};
-	//delay(1000);																// если пришел ответ или наступил таймаут, то...
+	}	
 	if (Serial3.available()) {													// Если есть, что считывать
 		_resp = Serial3.readString();											// считываем и запоминаем
 	}
 	else {																		// Если пришел таймаут, то
-		if(_logView){
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("Timeout..."));								// ... оповещаем об этом и
-			}
+		if(OUTPUT_LEVEL_UART_GSM && _logView){
+			Serial.println(F("Timeout..."));									// ... оповещаем об этом и
 		}
 	}
 	return _resp;																// ... возвращаем результат. Пусто, если проблемма
@@ -197,19 +250,25 @@ String waitResponse(bool _logView) {
 // ========================================================================================================
 // ==================================== Отправка AT команды GSM модулю ====================================
 // ========================================================================================================
-String sendATCommand(String _Command, bool _waiting, bool _logView) {
+String send_AT_Command(String _Command, bool _waiting, bool _logView) {
+	/*
+		_Command	- команда
+		_waiting	- требуется или нет дождаться ответа от модуля
+		_LogView	- выводить или нет сообщение в UART. Системная переменная, никак не настраивается в отличии от OUTPUT_LEVEL_UART_GSM
+	*/
 	wdt_reset();
 	String _resp = "";											// Переменная для хранения результата
 	if(OUTPUT_LEVEL_UART_GSM){
 		if(_logView){
-			Serial.println(_Command);								// Дублируем команду в монитор порта
+			Serial.println(_Command);							// Дублируем команду в UART
 		}
 	}
-	Serial3.println(_Command);										// Отправляем команду модулю
+	Serial3.println(_Command);									// Отправляем команду модулю
+
 	if (_waiting) {												// Если необходимо дождаться ответа...
-		_resp = waitResponse(_logView);							// ... ждем, когда будет передан ответ
+		_resp = wait_Response(_logView);						// ... ждем, когда будет передан ответ
 		//Если Echo Mode выключен (ATE0), то эти 3 строки можно закомментировать
-		if (_resp.startsWith(_Command)) {							// Убираем из ответа дублирующуюся команду
+		if (_resp.startsWith(_Command)) {						// Убираем из ответа дублирующуюся команду
 			_resp = _resp.substring(_resp.indexOf("\r", _Command.length()) + 2);
 		}
 	}
@@ -225,36 +284,34 @@ String sendATCommand(String _Command, bool _waiting, bool _logView) {
 // =========================================================================================================
 // ============================================= Отправка SMS ==============================================
 // =========================================================================================================
-void SendSMS(String _Text, byte _Level) {	
+void Send_SMS(String _Text, byte _Level) {	
 	/*
 		Text - текст сообщения
 		PhoneNumber - номер телефона получателя
 		Level - уровень важности сообщения. От этого зависит кому отправлять СМС
-	*/
-	
-	CheckRegistrationGSM(false);			// Проверяем регистрацию в сети
-	
-	if(StateGSM.GSM_Registered){			// и если зарегистрирован
+	*/	
+	if(StateGSM.GSM_Registered){				// и если зарегистрирован
 		String Phone;
 		switch(_Level){
-			case 0:							// info — обычные сообщения
+			case GSM_INFO_SMS:					// info — обычные сообщения
 				//Phone = PhoneNumber;
 				Phone = (F("+79139045925"));
 				break;
-			case 1:							// Ответ на входящее СМС
+			case GSM_ANSWER_SMS:				// Ответ на входящее СМС
 				Phone = RingPhone;
 				break;
-			case 2:							// debug — Подробная информация для отладки			
+			case GSM_DEBUG_SMS:					// debug — Подробная информация для отладки			
 				break;
-			case 3:							// warning — Исключительные случаи, но не ошибки
+			case GSM_WARNING_SMS:				// warning — Исключительные случаи, но не ошибки
 				//Phone = NumberForWarningSMS[0];
-				break;
-			case 4:							// error — Ошибки исполнения, не требующие сиюминутного вмешательства
 				Phone = (F("+79139045925"));
 				break;
-			case 5:							// critical — Критические состояния
+			case GSM_ERROR_SMS:					// error — Ошибки исполнения, не требующие сиюминутного вмешательства
+				Phone = (F("+79139045925"));
 				break;
-			case 6:							// emergency — Система не работает
+			case GSM_CRITICAL_SMS:				// critical — Критические состояния
+				break;
+			case GSM_EMERGENCY_SMS:				// emergency — Система не работает
 				break;
 		}
 		//gsm_dtr_off();								// Взбадриваем модуль
@@ -274,47 +331,51 @@ void SendSMS(String _Text, byte _Level) {
 // =====================================================================================================
 // ======================================= Отправка GET запроса ========================================
 // =====================================================================================================
-void SendGETrequest(String Text){
+void Send_GET_request(String _Text, bool _waiting, bool _LogView, byte _Request_Type){
+	/*
+		_Text			- Текст запроса
+		_waiting		- Требуется или нет дождаться ответа от модуля
+		_LogView		- Выводить или нет сообщение в UART. Системная переменная, никак не настраивается в отличии от OUTPUT_LEVEL_UART_GSM
+		_Request_Type	- Тип запроса
+	*/
 	bool ResendingGET = false;
-	byte ResendCounterResendingGET = 2;			// Счетчик повторных отправок Get запросов (2 шт)
+	byte ResendCounterResendingGET = 2;															// Счетчик повторных отправок Get запросов (2 шт)
 	wdt_reset();
-	if(EEPROM.read(E_AllowGPRS) == ON){								// Если разрешена работа GPRS
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.print(F("Sending a GET request: "));
+	if(EEPROM.read(E_AllowGPRS) == ON /*&& StateGSM.GPRS_Connect*/){								// Если разрешена работа GPRS и соединение установлено
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			switch(_Request_Type){
+				case GET_VALUE_REQUEST:
+					Serial.print(F("Sending a GET value sensor's request: "));
+					break;
+				case GET_LOG_REQUEST:
+					Serial.print(F("Sending a GET log request: "));
+					break;
+			}
 		}
-		sendATCommand(F("AT+HTTPPARA=\"CID\",1"), true, false);		// Установка CID параметра для http сессии
-		SentGET:													// Метка для повторной отправки GET запроса
-		String Answer = sendATCommand(Text, true, false);			// Шлем сам запрос и ждем ответ		
-		if(Answer.lastIndexOf(F("OK")) != -1){						// Если запрос успешно отправлен, модуль вернул ответ "ОК"
-			StateGSM.Error_Sent_GET = false;						// Снимаем флаг возможной ошибки
-			if(OUTPUT_LEVEL_UART_GSM){
+		send_AT_Command(F("AT+HTTPPARA=\"CID\",1"), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);// Установка CID параметра для http сессии
+		SentGET:																					// Метка для повторной отправки GET запроса
+		String Answer = send_AT_Command(_Text, _waiting, GSM_NO_OUTPUT_TO_SERIAL);					// Шлем сам запрос и ждем ответ		
+		if(Answer.lastIndexOf(F("OK")) != -1){														// Если запрос успешно отправлен, модуль вернул ответ "ОК"
+			StateGSM.Error_Sent_GET = false;														// Снимаем флаг возможной ошибки
+			if(OUTPUT_LEVEL_UART_GSM && _LogView){
 				Serial.println(F("OK"));
 			}
-			// ========================= Проверяем ответ от сервера ==========================================
-// 			String Response = waitResponse(ON);						// Ждем ответ от Web сервера
-// 			if(OUTPUT_LEVEL_UART_GSM){
-// 				Serial.println(Response);
-// 			}
-// 			if (Response.indexOf(F("+HTTPACTION")) > -1) {			// Ответ на GET запрос
-// 				
-// 				Answer_check_GET(Response, ON);						// Проверяем ответ и выводим лог в Serial
-// 			}
 		}
 		else{														// и если не отправлен
 			StateGSM.Error_Sent_GET = true;							// Поднимаем флаг ошибки
 			ResendingGET = true;									// Флаг чтобы повторного отправить GET
-			if(OUTPUT_LEVEL_UART_GSM){
+			if(OUTPUT_LEVEL_UART_GSM && _LogView){
 				Serial.println(F("ERROR"));
 			}
 		}
 		if(ResendCounterResendingGET == 2 && ResendingGET){			// Переводим код на метку для повторной отправки
-			if(OUTPUT_LEVEL_UART_GSM){
+			if(OUTPUT_LEVEL_UART_GSM && _LogView){
 				Serial.print(F("\tResending a GET request: "));
 			}
 			ResendCounterResendingGET --;
 			goto SentGET;
 		}
-		sendATCommand(F("AT+HTTPACTION=0"), true, false);			// Закрытие http сессии
+		send_AT_Command(F("AT+HTTPACTION=0"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);			// Закрытие http сессии
 	}
 }
 
@@ -322,164 +383,187 @@ void SendGETrequest(String Text){
 // ========================================================================================================
 // ================================ Проверка готовности SIM-карты (AT+CPIN?) ==============================
 // ========================================================================================================
-bool SIM_card_readiness_check(){
+byte SIM_card_readiness_check(byte _Logview){
 	bool _State = false;
-	String Return = sendATCommand(F("AT+CPIN?"), true, false);		// Запрос статуса SIM карты
-	
-	if(Return.lastIndexOf(F("+CPIN")) != -1){						// Если вернулся правильный ответ, а не какой нибудь мусор
-		if(Return.lastIndexOf(F("READY")) != -1){					// Если SIM карта готова
-			_State = true;										
+	String _ANSWER[] = {							// массив ответов на команду
+							(F("READY")),			// MT is not pending for any password
+							(F("SIM	PIN")),			// MT is waiting SIM PIN to be given
+							(F("SIM PUK")),			// MT is waiting for SIM PUK to be given
+							(F("PH_SIM PIN")),		// ME is waiting for phone to SIM card (antitheft)
+							(F("PH_SIM PUK")),		// ME is waiting for SIM PUK (antitheft)
+							(F("SIM PIN2")),		// PIN2, e.g. for editing the FDN book possible only if preceding Command was acknowledged with +CME ERROR: 17
+							(F("SIM PUK2")),		// Possible only if preceding Command was acknowledged with error +CME ERROR: 18
+	};
+	String Return = send_AT_Command(F("AT+CPIN?"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);		// Запрос статуса SIM карты
+	if(_Logview){
+		Clean_LCD(LCD_LINE_3, LCD_START_SYMBOL_1);
+		WriteToLCD(String(F("- SIM card:")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
+	}
+	if(Return.lastIndexOf(F("+CPIN")) != -1){										// Если вернулся правильный ответ, а не какой нибудь мусор
+		for (byte Pos = 0; Pos < sizeof(_ANSWER) / sizeof(_ANSWER[0]); Pos++) {		// Проходим по всему массиву ответов
+			wdt_reset();
+			if(Return.lastIndexOf(_ANSWER[Pos]) != -1){								// Если нашли совпадение			
+				switch(Pos){
+					case GSM_SIM_READY:												// Если SIM карта готова (ответ "READY")					
+						WriteToLCD(String(F("READY")), LCD_LINE_3, LCD_START_SYMBOL_16, LCD_SCREEN_REFRESH_DELAY);
+						goto StopCheck;
+					case GSM_SIM_PIN:
+						WriteToLCD(String(F("PIN")), LCD_LINE_3, LCD_START_SYMBOL_18, LCD_SCREEN_REFRESH_DELAY);
+						goto StopCheck;
+					case GSM_SIM_PUK:
+						WriteToLCD(String(F("PUK")), LCD_LINE_3, LCD_START_SYMBOL_18, LCD_SCREEN_REFRESH_DELAY);
+						goto StopCheck;
+					case GSM_PH_SIM_PIN:
+					
+						goto StopCheck;
+					case GSM_PH_SIM_PUK:
+					
+						goto StopCheck;
+					case GSM_SIM_PIN2:
+					
+						goto StopCheck;
+					case GSM_SIM_PUK2:
+					
+						goto StopCheck;
+				}
+				_State = Pos;
+			}
 		}
 	}	
+	StopCheck:
 	return _State;
-	/*
-	Test Command: AT+CPIN=?
-	READY		MT is not pending for any password
-	SIM	PIN		MT is waiting SIM PIN to be given
-	SIM PUK		MT is waiting for SIM PUK to be given
-	PH_SIM PIN	ME is waiting for phone to SIM card (antitheft)
-	PH_SIM PUK	ME is waiting for SIM PUK (antitheft)
-	SIM PIN2	PIN2, e.g. for editing the FDN book possible only if preceding Command was acknowledged with +CME ERROR: 17
-	SIM PUK2	Possible only if preceding Command was acknowledged with error +CME ERROR: 18.*/
 }
 
 
 // ========================================================================================================
 // =================================== Уровень сигнала GSM сети (AT+CSQ) ==================================
 // ========================================================================================================
-byte SignalLevel(bool _LogView){
-	int _Level = 99;
-	String _Return = sendATCommand(F("AT+CSQ"), true, false);		// Запрос уровня, обязательно дожидаемся ответа
-	
-	if(_Return.lastIndexOf(F("+CSQ")) != -1){						// Если получили правильный ответ
-		_Return = _Return.substring(7,9);							// Убираем лишние символы
-		_Level = _Return.toInt();									// Возвращает уровень сигнала
+void Signal_Level(bool _LogView, bool _Perform_Measurement){
+	/*
+		_LogView				- выводить или нет сообщение в UART. Системная переменная, никак не настраивается в отличии от OUTPUT_LEVEL_UART_GSM
+		_Perform_Measurement	- нужно измерить уровень сигнала или только вывести его уровень в UART
+		
+	// Проверка уровня сигнала. Первая цифра — уровень сигнала <rssi>:
+	// 0			- 115 dBm or меньше					- Превосходно
+	// 1			- 111 dBm							- Отлично
+	// 2…30 -110…	- 54 dBm							- ОК
+	// 31			- 52 dBm or больше					- Плохо
+	// 99			- не известно или не обнаруживается	- Нет
+	*/
+
+	if(OUTPUT_LEVEL_UART_GSM && _LogView || ControllerSetup){
+		Serial.print(F("Уровень сигнала GSM: "));
 	}
-	if(_LogView){
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.print(F("Уровень сигнала: "));
+		
+	int _Level = 99;
+	
+	if(_Perform_Measurement){																		// Если запросили измерение уровня
+		String _Return = send_AT_Command(F("AT+CSQ"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Запрос уровня, обязательно дожидаемся ответа
+		if(_Return.lastIndexOf(F("+CSQ")) != -1){													// Если получили правильный ответ
+			_Return = _Return.substring(7,9);														// Убираем лишние символы
+			_Level = _Return.toInt();																// Возвращает уровень сигнала
 		}
+	}
+	else {
+		_Level = StateGSM.GSM_Signal_Level;															// default значение. Сделано только для вывода значения с описанием без измерения
 	}
 	if(_Level == 0){
 		StateGSM.GSM_Signal_Level = 115;
-		if(_LogView){
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("115 dBm и меньше"));
-			}
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.println(F("-115 dBm и меньше"));
 		}
 		goto Stop;
 	}
 	else if(_Level == 1){
 		StateGSM.GSM_Signal_Level = 111;
-		if(_LogView){
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("111 dBm"));
-			}
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.println(F("-111 dBm"));
 		}
 		goto Stop;
 	}
-	else if(2 <= _Level <= 30){
-		if(_LogView){
-			StateGSM.GSM_Signal_Level = map(_Level, 2, 30, 109, 53);
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.print(map(_Level, 2, 30, 109, 53));
-				Serial.println(F(" dBm"));
-			}
+	else if(2 <= _Level && _Level <= 30){
+		StateGSM.GSM_Signal_Level = map(_Level, 2, 30, 110, 54);
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.print(F("-"));
+			Serial.print(StateGSM.GSM_Signal_Level);
+			Serial.println(F(" dBm"));
 		}
 		goto Stop;
 	}
 	else if(_Level == 31){
 		StateGSM.GSM_Signal_Level = 52;
-		if(_LogView){
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("52 dBm и сильнее"));
-			}
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.println(F("-52 dBm и сильнее"));
 		}
 		goto Stop;
 	}
 	else if(_Level == 99){
 		StateGSM.GSM_Signal_Level = 99;
-		if(_LogView){
-			if(OUTPUT_LEVEL_UART_GSM){
-				Serial.println(F("нет сигнала"));
-			}
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.println(F("нет сигнала"));
 		}
 		goto Stop;
 	}
+	Serial.println(F("Неизвестно"));
 	Stop:
-	return _Level;
+	
+	if(LightLCDEnable || ControllerSetup){				// Если включена подсветка
+		ViewSignalLevel(StateGSM.GSM_Signal_Level);		// Обновляем значек на LCD экране
+	}
 }
-
-
-// Проверка уровня сигнала. Первая цифра — уровень сигнала <rssi>:
-// 0 — 115 dBm or меньше					Превосходно
-// 1 -111 dBm								Отлично
-// 2…30 -110… -54 dBm						ОК
-// 31 -52 dBm or больше						Плохо
-// 99 — не известно или не обнаруживается	Нет
-
 
 
 // ========================================================================================================
 // ===================== Проверка готовности модуля. Отправка и проверка команды "AT" =====================
 // ========================================================================================================
-byte Check_Readiness_Module(boolean _LogView){					 
-	
+byte Check_Readiness_GSM_Module(boolean _LogView, bool _out_to_lcd){					 
 	if(ControllerSetup){
-		WriteToLCD(String(F("- Readiness:      ")), LCD_LINE_3, LCD_START_SYMBOL_2, false);
+		WriteToLCD(String(F("- Readiness:      ")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
 	}
 	
-	if(_LogView){
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.print(F("Состояние GSM модуля (\"AT\"): "));
-		}
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
+		Serial.print(F("Состояние GSM модуля (\"AT\"): "));
 	}
-	String _Response[] = {	(F("NOT INSERTED")),								// Готов
+	String _Response[] = {	(F("NOT INSERTED")),								// Нет SIM карты
 							(F("OK"))};											// Зарегистрирован в сети
 	
-	String _Error = sendATCommand(F("AT"), true, false);						// Отправляем комманду, ждем ответ, но в Serial его не выводим
-	for(byte Pos = 0; Pos < sizeof(_Response) / sizeof(_Response[0]); Pos ++){	// Ищем в списке возможных ответов
-		if(_Error.lastIndexOf(_Response[Pos]) != -1){							// И если нашли совпадение
+	String _Error = send_AT_Command(F("AT"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Отправляем комманду, ждем ответ, но в Serial его не выводим
+	
+	for(byte Pos = 0; Pos < sizeof(_Response) / sizeof(_Response[0]); Pos ++){				// Ищем в списке возможных ответов
+		if(_Error.lastIndexOf(_Response[Pos]) != -1){										// И если нашли совпадение
+			StateGSM.State_GSM_Module = Pos;
 			switch(Pos){
-				case 0:															// Нет SIM карты
-					if(ControllerSetup){
-						WriteToLCD(String(F("Not SIM")), LCD_LINE_3, LCD_START_SYMBOL_14, true);
+				case GSM_MODULE_NOT_SIM_CARD:														// Нет SIM карты
+					if(_out_to_lcd){
+						lcd.setCursor(LCD_START_SYMBOL_20, LCD_LINE_1);
+						lcd.print(char(LCD_ICON_NOT_SIM));
+						WriteToLCD(String(F("Not SIM")), LCD_LINE_3, LCD_START_SYMBOL_14, LCD_SCREEN_REFRESH_DELAY);
 					}
-					if(_LogView){
-						if(OUTPUT_LEVEL_UART_GSM){
-							Serial.print(F("Нет SIM карты"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.print(F("Нет SIM карты"));
 					}
-					Pos = 2;
-					StateGSM.State_GSM_Module = 0;
-					break;
-				case 1:															// Готов
-					if(ControllerSetup){
-						WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, true);
+					goto Exit;
+				case GSM_MODULE_READY:														// Готов
+					if(_out_to_lcd){
+						WriteToLCD(String(F("OK")), LCD_LINE_3, LCD_START_SYMBOL_19, LCD_SCREEN_REFRESH_DELAY);
 					}
-					if(_LogView){
-						if(OUTPUT_LEVEL_UART_GSM){
-							Serial.println(F("OK"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("OK"));
 					}
-					Pos = 2;
-					StateGSM.State_GSM_Module = 1;
-					break;
-				default:														// Неизвестно
-					if(ControllerSetup){
-						WriteToLCD(String(F("Unknown")), LCD_LINE_3, LCD_START_SYMBOL_14, true);
-					}
-					if(_LogView){
-						if(OUTPUT_LEVEL_UART_GSM){
-							Serial.println(F("Неизвестно"));
-						}
-					}
-					Pos = 2;
-					StateGSM.State_GSM_Module = 50;
-					StateGSM.GSM_Registered = false;
+					goto Exit;
 			}
 		}
+		if(Pos == sizeof(_Response) / sizeof(_Response[0]) - 1){							// Прошлись по всем возможным ответам и не нашли совпадения
+			if(_out_to_lcd){
+				WriteToLCD(String(F("Unknown")), LCD_LINE_3, LCD_START_SYMBOL_14, LCD_SCREEN_REFRESH_DELAY);
+			}
+			if(OUTPUT_LEVEL_UART_GSM && _LogView){
+				Serial.println(F("Неизвестно"));
+			}
+			StateGSM.State_GSM_Module = GSM_MODULE_UNKNOWN;
+		}
 	}
+	Exit:
 	return StateGSM.State_GSM_Module;
 }
 
@@ -487,16 +571,14 @@ byte Check_Readiness_Module(boolean _LogView){
 // ========================================================================================================
 // =================== Проверка зарегистрировался или нет модуль в сети GSM (AT+CREG?) ====================
 // ========================================================================================================
-bool CheckRegistrationGSM(bool _LogView){				
+byte Check_Registration_GSM(bool _LogView, bool _out_to_lcd){				
 	/*
 		Ф-ция возвращает только true или false. 
 		Остальные состояния можно посмотреть в переменной StateGSM.Code_Connect_GSM
 	*/
 	
-	if(_LogView){
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.print(F("Состояние GSM: "));
-		}
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
+		Serial.print(F("Состояние GSM: "));
 	}
 	
 	String _Response[] = {	(F("+CREG: 0,0")),				// Не зарегистрирован в сети
@@ -505,63 +587,65 @@ bool CheckRegistrationGSM(bool _LogView){
 							(F("+CREG: 0,3")),				// Регистрация отклонена
 							(F("+CREG: 0,4"))};				// Неизвестно
 	
-	String _Error = sendATCommand(F("AT+CREG?"), true, false);					// Отправляем команду, ждем ответ, но в Serial его не выводим
-	
+	String _Error = send_AT_Command(F("AT+CREG?"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Отправляем команду, ждем ответ, но в Serial его не выводим
+	//_Error = _Response[3];
+	StateGSM.GSM_Registered = false;											// default состояние
+	if(_out_to_lcd){
+		Clean_LCD(LCD_LINE_4, LCD_START_SYMBOL_4);
+		WriteToLCD(String(F("- ")), LCD_LINE_4, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
+	}
 	for(byte Pos = 0; Pos < sizeof(_Error) / sizeof(_Error[0]); Pos ++){		// Ищем в списке возможных ответов
 		if(_Error.lastIndexOf(_Response[Pos]) != -1){							// И если нашли совпадение
-			if(OUTPUT_LEVEL_UART_GSM){
-				switch(Pos){
-					case 0:
-						if(_LogView){
-							if(OUTPUT_LEVEL_UART_GSM){
-								Serial.print(F("Не зарегистрирован в сети: "));
-								Serial.println(F("Нет поиска сети"));
-							}
-						}
-						StateGSM.GSM_Registered = false;
-						goto StopCheck;
-					case 1:
-						if(_LogView){
-							if(OUTPUT_LEVEL_UART_GSM){
-								Serial.println(F("Зарегистрирован в сети"));
-							}
-						}
-						StateGSM.GSM_Registered = true;
-						goto StopCheck;
-					case 2:
-						if(_LogView){
-							if(OUTPUT_LEVEL_UART_GSM){
-								Serial.println(F("Поиск сети"));
-							}
-						}
-						StateGSM.GSM_Registered = false;
-						goto StopCheck;
-					case 3:
-						if(_LogView){
-							if(OUTPUT_LEVEL_UART_GSM){
-								Serial.println(F("Регистрация отклонена"));
-							}
-						}
-						StateGSM.GSM_Registered = false;
-						goto StopCheck;
-					case 4:
-						if(_LogView){
-							if(OUTPUT_LEVEL_UART_GSM){
-								Serial.println(F("Неизвестно"));
-							}
-						}
-						StateGSM.GSM_Registered = false;
-						goto StopCheck;
-				}
-			}
 			StateGSM.Code_Connect_GSM = Pos;
+			switch(Pos){
+				case GSM_NO_FIND_NETWORK:
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.print(F("Не зарегистрирован в сети: "));
+						Serial.println(F("Нет поиска сети"));
+					}
+					if(_out_to_lcd){
+						WriteToLCD(String(F("No find network ")), LCD_LINE_4, LCD_START_SYMBOL_4, LCD_SCREEN_REFRESH_DELAY);
+					}
+					goto StopCheck;
+				case GSM_REGISTERED:
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Зарегистрирован в сети"));
+					}
+					if(_out_to_lcd){
+						WriteToLCD(String(F("Registration OK ")), LCD_LINE_4, LCD_START_SYMBOL_4, LCD_SCREEN_REFRESH_DELAY);
+					}
+					StateGSM.GSM_Registered = true;
+					goto StopCheck;
+				case GSM_FINDING_NETWORK:
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Поиск сети"));
+					}
+					if(_out_to_lcd){
+						WriteToLCD(String(F("Finding network ")), LCD_LINE_4, LCD_START_SYMBOL_4, LCD_SCREEN_REFRESH_DELAY);
+					}
+					goto StopCheck;
+				case GSM_REGISTRED_REJECTED:
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Регистрация отклонена"));
+					}
+					if(_out_to_lcd){
+						WriteToLCD(String(F("Registr rejected")), LCD_LINE_4, LCD_START_SYMBOL_4, LCD_SCREEN_REFRESH_DELAY);
+					}
+					goto StopCheck;
+				case GSM_REGISTERED_UNKNOWN:
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Неизвестно"));
+					}
+					if(_out_to_lcd){
+						WriteToLCD(String(F("Unknown         ")), LCD_LINE_4, LCD_START_SYMBOL_4, LCD_SCREEN_REFRESH_DELAY);
+					}
+					goto StopCheck;
+			}
 		}
-	}
+	}	
 	
-	if(_LogView){
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.println();
-		}
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
+		Serial.println();
 	}
 	StateGSM.GSM_Registered = false;
 	// -------------------------------
@@ -569,24 +653,48 @@ bool CheckRegistrationGSM(bool _LogView){
 	// -------------------------------
 	if(OUTPUT_LEVEL_UART_GSM){}
 	gsm_dtr_on();											// Усыпляем модуль
-	return StateGSM.GSM_Registered;							// Возвращаем только true или false. Остальные состояния можно поглядеть в StateGSM.Code_Connect_GSM
+	return StateGSM.Code_Connect_GSM;						// Возвращаем только true или false. Остальные состояния можно поглядеть в StateGSM.Code_Connect_GSM
 }
 
 
 // =========================================================================================================
-// ========================================== Очистка очереди СМС ==========================================
+// ========================================== Очистка всех СМС ==========================================
 // =========================================================================================================
-void clearsms() {
-	Serial3.println(F("AT+CMGD=4"));
+void Clear_SMS(byte Type){
+	switch(Type){
+		case DEL_READ:						// Удалить все прочитанные SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL READ\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+		case DEL_UNREAD:					// Удалить все непрочитанные SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL UNREAD\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+		case DEL_SENT:						// Удалить все отправленные SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL SENT\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+		case DEL_UNSENT:					// Удалить все неотправленные SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL UNSENT\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+		case DEL_INBOX:						// Удалить все полученные SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL INBOX\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+		case DEL_ALL:						// Удалить все SMS
+			send_AT_Command(F("AT+CMGDA=\"DEL ALL\""), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+			break;
+	}
+	//sendATCommand(F("AT+CMGD=4"), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+								
+	//sendATCommand(F("AT+CMGL=\"ALL\",1"), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+	
 }
 	
 
 // =========================================================================================================
 // =========================================================================================================
 // =========================================================================================================
-boolean CheckPhone(String _Line) {				// Выборка всех телефонов из списка
-	for (byte i = 0; i < CountPhone; i++) {
-		if (_Line.indexOf(AllowPhone[i]) > -1) {
+boolean Check_Phone(String _Line) {					// Выборка всех телефонов из списка
+	for (byte i = 0; i <= ARRAY_SIZE(AllowPhone)/*3*//*CountPhone*/; i++) {
+		//Serial.print("CountPhone: "); Serial.println(AllowPhone[i]);
+		if(_Line.lastIndexOf(AllowPhone[i]) != -1){				// И если нашли совпадение
 			RingPhone = AllowPhone[i];
 			if(OUTPUT_LEVEL_UART_GSM){
 				Serial.println("Phone: " + RingPhone);
@@ -598,6 +706,18 @@ boolean CheckPhone(String _Line) {				// Выборка всех телефон�
 }
 
 
+// =========================================================================================================
+// ======================================== Проверка баланса SIM карты =====================================
+// =========================================================================================================
+float Card_Balance_Check(String Text){	
+	Text.remove(1,17);
+ 	Text.remove(Text.length()-8);
+ 	Text.trim();
+	
+	return Text.toFloat();							// Возвращаем полученное число
+}
+
+
 // ========================================================================================================
 // ============================= Проверка ответа от Web сервера на GET запрос =============================
 // ========================================================================================================
@@ -605,10 +725,8 @@ void Answer_check_GET(String _Text, bool _LogView){
 	
 	StateGSM.Code_Error_Sent_GET = 255;				// default ошибка "100"
 	
-	if(OUTPUT_LEVEL_UART_GSM){
-		if(_LogView){
-			Serial.print(F("Response from WEB server: "));
-		}
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
+		Serial.print(F("Response from WEB server: "));
 	}
 
 	String _Response[] = {	(F("404")),				// Страница не найдена
@@ -621,43 +739,33 @@ void Answer_check_GET(String _Text, bool _LogView){
 			switch(Pos){
 				case 0:
 					StateGSM.Code_Error_Sent_GET = 404;
-					if(OUTPUT_LEVEL_UART_GSM){
-						if(_LogView){
-							Serial.println(F("Page not found"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Page not found"));
 					}
 					goto StopCheck;
 				case 1:
 					StateGSM.Code_Error_Sent_GET = 200;
-					if(OUTPUT_LEVEL_UART_GSM){
-						if(_LogView){
-							Serial.println(F("OK"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("OK"));
 					}
 					goto StopCheck;
 				case 2:
 					StateGSM.Code_Error_Sent_GET = 603;
-					if(OUTPUT_LEVEL_UART_GSM){
-						if(_LogView){
-							Serial.println(F("Server not available"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Server not available"));
 					}
 					goto StopCheck;
 				case 3:
 					StateGSM.Code_Error_Sent_GET = 408;
-					if(OUTPUT_LEVEL_UART_GSM){
-						if(_LogView){
-							Serial.println(F("Request Timeout"));
-						}
+					if(OUTPUT_LEVEL_UART_GSM && _LogView){
+						Serial.println(F("Request Timeout"));
 					}
 					goto StopCheck;
 			}
 		}
 	}
-	if(OUTPUT_LEVEL_UART_GSM){
-		if(_LogView){
-			Serial.println(F("Неизвестно"));
-		}
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
+		Serial.println(F("Неизвестно"));
 	}
 	// -------------------------------
 	StopCheck:
@@ -667,37 +775,13 @@ void Answer_check_GET(String _Text, bool _LogView){
 
 
 // ======================================================================================================
-// ======================================================================================================
-// ======================================================================================================
-void _ViewErrorConnectGPRS(byte _ErrorConnectGPRS, byte _lang){
-	switch(_ErrorConnectGPRS){
-		case 0:
-			Serial.print(F("The connection is established"/*"Соединение устанавливается"*/));
-			break;
-		case 1:
-			Serial.print(F("GPRS is connected"/*"GPRS подключен"*/));
-			break;
-		case 2:
-			Serial.print(F("The connection is closed"/*"Соединение закрывается"*/));
-			break;
-		case 3:
-			Serial.print(F("No connection"/*"Нет соединения"*/));
-			break;
-		case 4:
-			Serial.print(F("No data from GSM module"/*"Нет данных от GSM модуля"*/));
-			break;
-	}
-}
-
-
-// ======================================================================================================
 // ===================================== Проверка регистрации GPRS ======================================
 // ======================================================================================================
-bool CheckConnectionGPRS(){
+bool Check_Connection_GPRS(bool _LogView){
 	StateGSM.GPRS_Connect = false;				// Сбрасываем флаг подключения
 	StateGSM.IP_GPRS = "0";
 	
-	if(OUTPUT_LEVEL_UART_GSM){
+	if(OUTPUT_LEVEL_UART_GSM && _LogView){
 		Serial.print(F("State GPRS Connection: "));
 	}
 	String Response[] = {	(F("1,0")),			// Соединение устанавливается
@@ -705,7 +789,7 @@ bool CheckConnectionGPRS(){
 							(F("1,2")),			// Соединение закрывается
 							(F("1,3"))};		// Нет соединения
 	
-	String Error = StateGSM.IP_GPRS = sendATCommand(F("AT+SAPBR=2,1"), true, false);	// Узнаем параметры соединения
+	String Error = StateGSM.IP_GPRS = send_AT_Command(F("AT+SAPBR=2,1"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Узнаем параметры соединения
 	
 	if(Error.lastIndexOf(F("+SAPBR")) != -1){				// Проверяем правильность ответа, что он именно на наш запрос
 		
@@ -718,29 +802,46 @@ bool CheckConnectionGPRS(){
 		
 		for(byte Pos = 0; Pos <= sizeof(Response) / sizeof(Response[0]); Pos ++){	// Ищем в списке возможных ответов
 			if(Error.lastIndexOf(Response[Pos]) != -1){								// И если нашли совпадение
-				StateGSM.Code_Connect_GPRS = Pos;									// Сохраняем код GPRS соединения
+				StateGSM.Code_Connect_GPRS = Pos;									// Сохраняем код GPRS соединения				
 				switch(Pos){
-					case 1:															// Если соединение установлено (ответ "+SAPBR: 1,1")
-						if(OUTPUT_LEVEL_UART_GSM){
+					case GPRS_CONNECTION_IS_ESTABLISHED:
+						if(OUTPUT_LEVEL_UART_GSM && _LogView){
+							Serial.println(F("Installed"));
+						}
+						break;
+					case GPRS_CONNECTION_ESTABLISHED:								// Если соединение установлено (ответ "+SAPBR: 1,1")
+						if(OUTPUT_LEVEL_UART_GSM && _LogView){
 							Serial.print(F("Established ("));
 							Serial.print(StateGSM.IP_GPRS);
 							Serial.println(F(")"));
-							Serial.println(F("=============================================="));
 						}
-						StateGSM.GPRS_Connect = true;		// Поднимаем флаг. Сделано для удобства
+						StateGSM.GPRS_Connect = true;								// Поднимаем флаг. Сделано для удобства
 						break;
-					}
-					Pos = 4;								// Увеличиваем счетчик чтобы прекратить выполнение цикла
+					case GPRS_CONNECTION_CLOSED:
+						if(OUTPUT_LEVEL_UART_GSM && _LogView){
+							Serial.println(F("Closed"));
+						}
+						break;
+					case GPRS_NO_CONNECTED:
+						if(OUTPUT_LEVEL_UART_GSM && _LogView){
+							Serial.println(F("No connection"));
+						}
+						break;
+				}
+				if(OUTPUT_LEVEL_UART_GSM && _LogView){
+					Serial.println(F("=============================================="));
+				}
+				//Pos = /*4*/sizeof(Response) / sizeof(Response[0]) + 1;	// Увеличиваем счетчик чтобы прекратить выполнение цикла
 			}
-			if(Pos == 3){									// Если перебрали все ответы и не нашли совпадение, то считаем что модуль ничего не ответил
-				StateGSM.GPRS_Connect = false;
-				StateGSM.Code_Connect_GPRS = 4;				// Поднимаем ошибку "4"
+			if(Pos == ARRAY_SIZE(Response)/*sizeof(Response) / sizeof(Response[0])*//*3*/){		// Если перебрали все ответы и не нашли совпадение, то считаем что модуль ничего не ответил
+				//StateGSM.GPRS_Connect = false;
+				StateGSM.Code_Connect_GPRS = GPRS_UNKNOWN;				// Поднимаем ошибку "GPRS_UNKNOWN"
 			}
 		}
 	}
 	else{ 
-		if(OUTPUT_LEVEL_UART_GSM){
-			Serial.println();								// Простой перевод строки если нет ответа. Сделано для красоты
+		if(OUTPUT_LEVEL_UART_GSM && _LogView){
+			Serial.println();											// Простой перевод строки если нет ответа. Сделано для красоты
 		}
 	}
 	return StateGSM.GPRS_Connect;
@@ -751,55 +852,39 @@ bool CheckConnectionGPRS(){
 // =========================================================================================================
 // ================================== Обработка комманд полученных по СМС ==================================
 // =========================================================================================================
-void MasterSMS(String _Line) {
+void Master_SMS(String _Line) {
 	wdt_reset();
-	#define DelayTime 500
+	//#define DelayTime 500
 	_Line.toLowerCase();								// Преобразовываем строку в нижний регистр
 	// ======================================== Перезагрузка контроллера =========================================
-	if ((_Line.indexOf(F("reset")) > -1)) {
+	if ((_Line.indexOf(F("reboot_mc")) > -1)) {
 		EEPROM.update(E_RebutingFromGSM, 1);		// Поднимаем флаг что контроллер отправлен в перезагрузку
 		resetFunc();								// reset
-	}
-	// ======================================== Перезагрузка GPRS ================================================
-	if ((_Line.indexOf(F("gprs_rst")) > -1)) {
-		EEPROM.write(E_AllowGPRS, 1);				// Разрешаем работу GPRS
-		Serial3.println(F("AT+SAPBR=0,1"));			// Разрываем GPRS соединение
-		delay(50);
-		InitializingGPRS();
-	}
-	// ======================================= Включение GPRS ====================================================
-	if ((_Line.indexOf(F("gprs_on")) > -1)) {
-		EEPROM.write(E_AllowGPRS, 1);				// Разрешаем работу GPRS
-		delay(50);
-		InitializingGPRS();							// Повторно инициализируем GPRS
-	}
-	// ====================================== Выключение GPRS ====================================================
-	if ((_Line.indexOf(F("gprs_off")) > -1)) {
-		EEPROM.write(E_AllowGPRS, 0);				// Запрещаем работу GPRS
-		Serial3.println(F("AT+SAPBR=0,1"));			// Разрываем GPRS соединение
 	}
 	// ===========================================================================================================
 	if ((_Line.indexOf(F("status")) > -1)) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("Status"));
 		}
-		SendSMS(String	(F("Temp_Box: "))	+ RealValueSensors[SENSOR_0][VALUE_1]	+	(F(", ")) +
+		Send_SMS(String	(F("Temp_Box: "))	+ RealValueSensors[SENSOR_0][VALUE_1]	+	(F(", ")) +
 						(F("Temp_UP: "))	+ RealValueSensors[SENSOR_8][VALUE_1]	+	(F(", ")) +
 						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_5][VALUE_1]	+	(F(", ")) +
 						(F("Temp_Left: "))	+ RealValueSensors[SENSOR_7][VALUE_1]	+	(F(", ")) +
 						(F("Temp_Right: ")) + RealValueSensors[SENSOR_2][VALUE_1]	+	(F(", ")) +
-						(F("VCC: ")) + VCC, 4);
+						(F("Ti: "))			+ Ti 									+	(F(", ")) + 
+						(F("VCC: "))		+ VCC, 
+																GSM_ANSWER_SMS);
 	}
 	// ===========================================================================================================
 	if ((_Line.indexOf(F("temp")) > -1)) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("temp"));
 		}
-		SendSMS(String	(F("Temp_UP: "))	+ RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
-						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_3][VALUE_1] + (F(", ")) , 1);
+		Send_SMS(String	(F("Temp_UP: "))	+ RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
+						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_3][VALUE_1] + (F(", ")) , 
+																GSM_ANSWER_SMS);
 	}
 	RingPhone = "";								// Очищаем номер автора смс
-	clearsms();									// Очищаем очередь входящих СМС
 	gsm_dtr_on();								// Усыпляем модуль
 }
 
@@ -807,47 +892,64 @@ void MasterSMS(String _Line) {
 // =========================================================================================================
 // =========================================================================================================
 // =========================================================================================================
-void serial3ISR(){
+void serial3_ISR(){
 	wdt_reset();
+	bool View_Input_Line = true;
 	String _val = "";
 	if (Serial3.available()) {
 		while (Serial3.available()) {
-			_val += char(Serial3.read());
-			delay(20);
-		}
-		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
-			_val.trim();
-			Serial.println();
-			Serial.print(F("GSM input: ")); Serial.println(_val);
-			Serial.println();
+			_val = Serial3.readString();
 		}
 		// =========================================================================================================
 		if (_val.indexOf(F("+CMTI")) > -1) {			// Пришло СМС сообщение
-			if (CheckPhone(_val)) {					// Если СМС от разрешенного абонента
+ 			_val.remove(0,12);
+			
+			String _Line = F("AT+CMGR=");
+			_Line += _val;
+			_Line += F(",0");
+			
+//			Serial.print("_Line: "); Serial.println(_Line);
+
+			//sendATCommand(F("AT+CMGR=") + _val + F(",1") , GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL);
+			
+			//Serial.print(sendATCommand(_Line, GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL));
+			//sendATCommand(_Line, GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);
+
+			if (Check_Phone(_val)) {						// Если СМС от разрешенного абонента
 				Serial3.println(F("СМС_1"));
-				MasterSMS(_val);						// Запускаем проверку его содержимого
+				Master_SMS(_val);							// Запускаем проверку его содержимого
+			}
+			Clear_SMS(DEL_ALL);								// Очищаем очередь входящих СМС
+		}
+		// =========================================================================================================
+		if (_val.indexOf(F("+CLIP")) > -1) {				// Пришел звонок
+			Serial3.println(F("ATH0"));
+// 			if (CheckPhone(_val)) {							// Если звонок от разрешенного абонента
+// 				Serial3.println(F("ATH0"));
+// 			}
+// 			else {
+// 				Serial3.println(F("ATH0"));
+// 			}
+		}
+		// =========================================================================================================
+		if (_val.indexOf(F("+HTTPACTION:")) > -1) {			// Пришел ответ от Web сервера на отправку GET
+			View_Input_Line = false;
+			Answer_check_GET(_val, GSM_NO_OUTPUT_TO_SERIAL);
+		}
+		// =========================================================================================================
+		if (_val.indexOf(F("+CUSD:")) > -1) {				// Пришло уведомление о USSD-ответе
+			View_Input_Line = false;
+			if (_val.indexOf(F("\"")) > -1) {				// Если ответ содержит кавычки, значит есть сообщение (предохранитель от "пустых" USSD-ответов)
+				StateGSM.Balance = Card_Balance_Check(_val);
 			}
 		}
 		// =========================================================================================================
-		if (_val.indexOf(F("+CLIP")) > -1) {			// Пришел звонок
-			if (CheckPhone(_val)) {					// Если звонок от разрешенного абонента
-				Serial3.println(F("ATH0"));
-			}
-			else {
-				Serial3.println(F("ATH0"));
-			}
-		}
-		// =========================================================================================================
-		if (_val.indexOf(F("+HTTPACTION:")) > -1) {		// Пришел ответ от Web сервера на отправку GET
-			Answer_check_GET(_val, ON);
-		}
-		// =========================================================================================================
-		if (_val.indexOf(F("+CUSD:")) > -1) {		// Пришло уведомление о USSD-ответе
-			if (_val.indexOf(F("\"")) > -1) {		// Если ответ содержит кавычки, значит есть сообщение (предохранитель от "пустых" USSD-ответов)
-				delay(1000);
-			}
+		if(View_Input_Line){
 			if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
-				Serial3.println(F("AT+CUSD=0"));
+				_val.trim();
+				Serial.println();
+				Serial.print(F("GSM input: ")); Serial.println(_val);
+				Serial.println();
 			}
 		}
 	}

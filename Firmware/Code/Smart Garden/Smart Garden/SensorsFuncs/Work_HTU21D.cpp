@@ -27,7 +27,7 @@ float ReadValue(byte _DataType){
 float Value(byte _NumberSensor, byte _DataType){
 	byte _QuantityRead = EEPROM.read(E_QuantityReadSensors + _NumberSensor);
 	
-	byte _QuantitySummValue = 0;
+	byte _QuantitySummValue = 1;
 	float _BufferValue;
 	while(_QuantitySummValue <= _QuantityRead){
 		_BufferValue += ReadValue(_DataType);								// Опрашиваем датчик
@@ -51,7 +51,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Temp"));Serial.println(F("...done"));
 			}
 			_BufferValue = Value(_NumberSensor, TEMP_VALUE);
-			if(_BufferValue != 255){										// Если показания верные							
+			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)							
 				RealValueSensors[_NumberSensor][VALUE_1] = _BufferValue;
 				SensorsError[_NumberSensor][VALUE_1] = 0;
 				if (OUTPUT_LEVEL_UART_SENSOR){
@@ -70,7 +70,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Humm"));
 			}
 			_BufferValue = Value(_NumberSensor, HUMM_VALUE);
-			if(_BufferValue != 255){										// Если показания верные
+			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
 				RealValueSensors[_NumberSensor][VALUE_2] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
@@ -81,7 +81,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...error"));
 				}
-				SensorsError[_NumberSensor][VALUE_2] = 1;			// Иначе поднимаем флаг ошибочности данных
+				SensorsError[_NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
 			}
 			break;
 		case HUMM_AND_TEMP_VALUE:		
@@ -89,7 +89,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Temp"));
 			}
 			_BufferValue = Value(_NumberSensor, TEMP_VALUE);
-			if(_BufferValue != 255){								// Если показания верные
+			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)
 				SensorsError[_NumberSensor][VALUE_1] = 0;
 				RealValueSensors[_NumberSensor][VALUE_1] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
@@ -97,7 +97,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				}
 			}
 			else{
-				SensorsError[_NumberSensor][VALUE_1] = 1;			// Иначе поднимаем флаг ошибочности данных
+				SensorsError[_NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...error"));
 				}
@@ -107,7 +107,7 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Humm"));
 			}
 			_BufferValue = Value(_NumberSensor, HUMM_VALUE);
-			if(_BufferValue != 255){								// Если показания верные
+			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
@@ -118,11 +118,11 @@ void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...error"));
 				}
-				SensorsError[_NumberSensor][VALUE_2] = 1;			// Иначе поднимаем флаг ошибочности данных
+				SensorsError[_NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
 			}
 			break;
 	}
-	ControllPort(_NumberSensor, 0);									// Выключаем управление Controll портом
+	ControllPort(_NumberSensor, 0);											// Выключаем управление Controll портом
 }
 
 
