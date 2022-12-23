@@ -1,4 +1,4 @@
-﻿
+﻿// Привет добрый друг
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
