@@ -38,6 +38,8 @@ byte NumberUARTPort;						// Номер Serial порта чтобы отлич�
 typedef void (*do_reboot_t)(void);
 const do_reboot_t do_reboot = (do_reboot_t)((FLASHEND-1023)>>1);
 
+void(* resetFunc) (void) = 0; // Reset MC function
+
 
 void jmp_bootloader() {
 	cli();
@@ -260,7 +262,7 @@ void ProcessingDataFromSerial(){
 		RecievedDate();
 	}
 	// ================================= Конфигурация контроллера ===========================================
-	if (recievedFlag_config_controller) {														
+	if (recievedFlag_config_controller) {											
 		RecievedConfigController();
 	}
 	// ================================ Настройки исполнительных модулей ====================================
@@ -289,13 +291,15 @@ void ProcessingDataFromSerial(){
 						Serial.println();
 						if(InputFromSerial0[1] == 1){
 							Serial.println(F("Включен режим конфигурирования"));
-							jmp_bootloader();
+							//jmp_bootloader();
 							//Reboot();	
+							//resetFunc();
 						}
 						else{ 
 							Serial.println(F("Режим конфигурирования выключен"));
 							//Reboot();
-							jmp_bootloader();
+							//jmp_bootloader();
+							//resetFunc();
 						}
 					}
 					break;

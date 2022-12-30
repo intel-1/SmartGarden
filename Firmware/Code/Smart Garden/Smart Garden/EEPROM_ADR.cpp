@@ -125,13 +125,13 @@ void cleanEEPROM(byte ThatClean){
 			Serial.println(F("Config`s exec modules on EEPROM is clean"));
 			break;
 		case 5:											// Очистка настроек контроллера
-			for (int i = 20; i < 100; i++){
+			for (int i = 1; i < 100; i++){
 				EEPROM.update(i, 0);
 			}
 			Serial.println(F("Config`s controller on EEPROM is clean"));
 			break;
 		case 6:											// Полная очистка EEPROM	
-			for (int i = 10; i < 4096; i++){
+			for (int i = 1; i < 4096; i++){
 				EEPROM.update(i, 0);
 			}
 			Serial.println(F("EEPROM is clean"));

@@ -36,7 +36,7 @@
 #define LM75_CONF_OS_F_QUE 3
 
 class LM75 {
-    int address;
+    byte address;
     word float2regdata (float);
     float regdata2float (word);
     word _register16 (byte);

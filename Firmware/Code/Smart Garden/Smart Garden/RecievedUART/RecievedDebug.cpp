@@ -73,7 +73,6 @@ void RecievedDebug(){
 				break;
 			case 6:									// Перезагрузка контроллера
 				Serial.println(F("===== Перезагрузка ====="));
-				while(1);				
 				jmp_bootloader();					
 				break;
 			case 7:									// Перевод контроллера в ручной режим

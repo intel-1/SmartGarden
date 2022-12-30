@@ -18,7 +18,7 @@ extern boolean ControllerSetup;			// Для обозначения стадии 
 extern byte LOGING_TO_SERIAL;
 extern char NameSensor[17][20];			// Всего датчиков 16 шт, но счет для удобства идет с единицы.
 // ======================================================================
-#define ADDRESS_INPUT_LM75 0x4c			// Адрес встроенного датчика температуры LM75
+#define ADDRESS_INPUT_LM75 0x48			// Адрес встроенного датчика температуры LM75
 #define ADDRESS_INPUT_LCD 0x3f			// Адрес LCD экрана
 #define ADDRESS_INPUT_INA 0x44			// Адрес распаяного ina219
 #define ADDRESS_INPUT_EEPROM 0x50		// Адрес распаянной EEPROM AT24C32
@@ -60,6 +60,7 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define OFF 0
 #define NO 0
 #define RESET 2
+#define SLEEP 2
 // ======================================================================
 #define LCD_LINE_1 0
 #define LCD_LINE_2 1
@@ -307,6 +308,6 @@ void STEPPER_VCC_off();
 
 
 // ============== Выставление всех портов на выход ============
-void ControllAllPortsOutput();
+void Config_All_Ports_To_Input();
 
 #endif

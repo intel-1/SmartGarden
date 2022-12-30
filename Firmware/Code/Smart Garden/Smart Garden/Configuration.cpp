@@ -389,29 +389,24 @@ void STEPPER_VCC_off(){
 }
 
 
-void ControllAllPortsOutput(){
-	DDRG &= ~_BV(PG0);
-	DDRG &= ~_BV(PG1);
-	DDRG &= ~_BV(PG2);
-	DDRG &= ~_BV(PG3);
-	DDRG &= ~_BV(PG4);
-	DDRG &= ~_BV(PG5);
+void Config_All_Ports_To_Input(){
+	DDRA &= ~_BV(PA0);
+	DDRA &= ~_BV(PA1);
+	DDRA &= ~_BV(PA2);
+	DDRA &= ~_BV(PA3);
+	DDRA &= ~_BV(PA4);
+	DDRA &= ~_BV(PA5);
+	DDRA &= ~_BV(PA6);
+	DDRA &= ~_BV(PA7);
 	
-	DDRL &= ~_BV(PL0);
-	DDRL &= ~_BV(PL1);
-	DDRL &= ~_BV(PL2);
-	DDRL &= ~_BV(PL3);
-	DDRL &= ~_BV(PL4);
-	DDRL &= ~_BV(PL5);
-	DDRL &= ~_BV(PL6);
-	DDRL &= ~_BV(PL7);
-	
-	DDRD &= ~_BV(PD2);
-	DDRD &= ~_BV(PD3);
-	DDRD &= ~_BV(PD4);
-	DDRD &= ~_BV(PD5);
-	DDRD &= ~_BV(PD6);
-	DDRD &= ~_BV(PD7);
+	DDRB &= ~_BV(PB0);
+	DDRB &= ~_BV(PB1);
+	DDRB &= ~_BV(PB2);
+	DDRB &= ~_BV(PB3);
+	DDRB &= ~_BV(PB4);
+	DDRB &= ~_BV(PB5);
+	DDRB &= ~_BV(PB6);
+	DDRB &= ~_BV(PB7);
 	
 	DDRC &= ~_BV(PC0);
 	DDRC &= ~_BV(PC1);
@@ -421,21 +416,24 @@ void ControllAllPortsOutput(){
 	DDRC &= ~_BV(PC5);
 	DDRC &= ~_BV(PC6);
 	DDRC &= ~_BV(PC7);
-
-	DDRA &= ~_BV(PA0);
-	DDRA &= ~_BV(PA1);
-	DDRA &= ~_BV(PA2);
-	DDRA &= ~_BV(PA3);
-	DDRA &= ~_BV(PA4);
-	DDRA &= ~_BV(PA5);
-	DDRA &= ~_BV(PA6);
-
-	DDRJ &= ~_BV(PJ2);
-	DDRJ &= ~_BV(PJ3);
-	DDRJ &= ~_BV(PJ4);
-	DDRJ &= ~_BV(PJ5);
-	DDRJ &= ~_BV(PJ6);
-	DDRJ &= ~_BV(PJ7);
+	
+	DDRD &= ~_BV(PD0);
+	DDRD &= ~_BV(PD1);
+	DDRD &= ~_BV(PD2);
+	DDRD &= ~_BV(PD3);
+	DDRD &= ~_BV(PD4);
+	DDRD &= ~_BV(PD5);
+	DDRD &= ~_BV(PD6);
+	DDRD &= ~_BV(PD7);
+	
+	DDRE &= ~_BV(PE0);
+	DDRE &= ~_BV(PE1);
+	DDRE &= ~_BV(PE2);
+	DDRE &= ~_BV(PE3);
+	DDRE &= ~_BV(PE4);
+	DDRE &= ~_BV(PE5);
+	DDRE &= ~_BV(PE6);
+	DDRE &= ~_BV(PE7);
 	
 	DDRF &= ~_BV(PF0);
 	DDRF &= ~_BV(PF1);
@@ -446,23 +444,12 @@ void ControllAllPortsOutput(){
 	DDRF &= ~_BV(PF6);
 	DDRF &= ~_BV(PF7);
 	
-	DDRK &= ~_BV(PK0);
-	DDRK &= ~_BV(PK1);
-	DDRK &= ~_BV(PK2);
-	DDRK &= ~_BV(PK3);
-	DDRK &= ~_BV(PK4);
-	DDRK &= ~_BV(PK5);
-	DDRK &= ~_BV(PK6);
-	DDRK &= ~_BV(PK7);
-
-	DDRE &= ~_BV(PE0);
-	DDRE &= ~_BV(PE1);
-	DDRE &= ~_BV(PE2);
-	DDRE &= ~_BV(PE3);
-	DDRE &= ~_BV(PE4);
-	DDRE &= ~_BV(PE5);
-	DDRE &= ~_BV(PE6);
-	DDRE &= ~_BV(PE7);
+	DDRG &= ~_BV(PG0);
+	DDRG &= ~_BV(PG1);
+	DDRG &= ~_BV(PG2);
+	DDRG &= ~_BV(PG3);
+	DDRG &= ~_BV(PG4);
+	DDRG &= ~_BV(PG5);
 	
 	DDRH &= ~_BV(PH0);
 	DDRH &= ~_BV(PH1);
@@ -473,8 +460,30 @@ void ControllAllPortsOutput(){
 	DDRH &= ~_BV(PH7);
 	DDRH &= ~_BV(PH7);
 	
-	DDRB &= ~_BV(PB4);
-	DDRB &= ~_BV(PB5);
-	DDRB &= ~_BV(PB6);
-	DDRB &= ~_BV(PB7);
+	DDRJ &= ~_BV(PJ0);
+	DDRJ &= ~_BV(PJ1);
+	DDRJ &= ~_BV(PJ2);
+	DDRJ &= ~_BV(PJ3);
+	DDRJ &= ~_BV(PJ4);
+	DDRJ &= ~_BV(PJ5);
+	DDRJ &= ~_BV(PJ6);
+	DDRJ &= ~_BV(PJ7);
+	
+	DDRK &= ~_BV(PK0);
+	DDRK &= ~_BV(PK1);
+	DDRK &= ~_BV(PK2);
+	DDRK &= ~_BV(PK3);
+	DDRK &= ~_BV(PK4);
+	DDRK &= ~_BV(PK5);
+	DDRK &= ~_BV(PK6);
+	DDRK &= ~_BV(PK7);
+
+	DDRL &= ~_BV(PL0);
+	DDRL &= ~_BV(PL1);
+	DDRL &= ~_BV(PL2);
+	DDRL &= ~_BV(PL3);
+	DDRL &= ~_BV(PL4);
+	DDRL &= ~_BV(PL5);
+	DDRL &= ~_BV(PL6);
+	DDRL &= ~_BV(PL7);	
 }

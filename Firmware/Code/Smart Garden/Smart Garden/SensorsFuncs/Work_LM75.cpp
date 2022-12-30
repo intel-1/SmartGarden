@@ -1,91 +1,65 @@
 #include <Arduino.h>
 
 #include "Work_LM75.h"
-//#include "../lib/LM75.h"
-
 #include "../Configuration.h"
 #include "../Sensors.h"
+#include "../ShareFunction.h"
 
 
 
 
-#define LM75_OS_F_QUE_1 00
-#define LM75_OS_F_QUE_2 01
-#define LM75_OS_F_QUE_3 10
-#define LM75_OS_F_QUE_6 11
 
-#define LM75_OS_POL_ACTIVE_HIGH 1
-#define LM75_OS_POL_ACTIVE_LOW 0
+word float2regdata (float temp){
+	// First multiply by 8 and coerce to integer to get +/- whole numbers
+	// Then coerce to word and bitshift 5 to fill out MSB
+	return (word)((int)(temp * 8) << 5);
+}
 
-#define LM75_OS_COMP_INT_COMPARATOR 0
-#define LM75_OS_COMP_INT_INTERUP 1
-
-#define LM75_SHUTDOWN_NORMAL 0
-#define LM75_SHUTDOWN_SHUTDOWN 1
-
-
-
-
-void LM75_Config_CONF(byte Address, byte SHUTDOWN, byte OS_COMP_INT, byte OS_POL){
-	Wire.beginTransmission(Address);
-	Wire.write(0x01);					// conf reg
-	Wire.write(0b00000000);				// data 00000000
-	Wire.endTransmission();
+float LM75_regdata2float (word regdata){
+	return ((float)(int)regdata / 32) / 8;
 }
 
 
-void LM75_Thyst(byte Address, byte Value){
-	Wire.beginTransmission(Address);
-	Wire.write(0x02);
-	Wire.write((int(Value*2)) >> 1);
-	Wire.write((int(Value*2) & 1) << 7);
-	Wire.endTransmission();
+float LM75_temp (byte Address){
+	return LM75_regdata2float(I2C_read_register16_bit(LM75_TEMP_REGISTER, Address));
 }
 
 
-void LM75_Tos(byte Address, byte Value){
-	Wire.beginTransmission(Address);
-	Wire.write(0x03);
-	Wire.write((int(EEPROM.read(Value)*2)) >> 1);
-	Wire.write((int(EEPROM.read(Value)*2) & 1) << 7);
-	Wire.endTransmission();
+// ============================== OS port ==============================
+byte LM75_Read_Conf_OS (byte Address){
+	return I2C_read_register8_bit(LM75_CONF_REGISTER, Address);
+}
+
+void LM75_Write_Conf_OS (byte Value, byte Address){
+	I2C_write_register8_bit(LM75_CONF_REGISTER, Value, Address);
 }
 
 
-void Configuration_LM75(byte _Address, byte _Thyst, byte _Tos){
-	LM75_Config_CONF(_Address, 0, 0, 0);
-	LM75_Thyst(_Address, _Thyst);
-	LM75_Tos(_Address, _Tos);
+// ================================ TOS ================================
+float LM75_Read_tos_byte (byte Address){
+	return LM75_regdata2float(I2C_read_register16_bit(LM75_TOS_REGISTER, Address));
+}
+
+void LM75_Write_tos_byte (float Value, byte Address){
+	I2C_write_register16_bit(LM75_TOS_REGISTER, float2regdata(Value), Address);
 }
 
 
-float lm75(byte Address){
-	/// TEMP REG
-	Wire.beginTransmission(Address);
-	Wire.write(0x00); // temp reg
-	Wire.endTransmission();
-	Wire.requestFrom(Address, 2);
-	while(Wire.available() < 2);
-	float value = (((Wire.read() << 8) | Wire.read()) >> 5)*0.125 ;
-	return value;
+// =============================== THYST ===============================
+float LM75_Read_thyst_byte (byte Address){
+	return LM75_regdata2float(I2C_read_register16_bit(LM75_THYST_REGISTER, Address));
+}
+
+void LM75_Write_thyst_byte (float Value, byte Address){
+	I2C_write_register16_bit(LM75_THYST_REGISTER, float2regdata(Value), Address);
 }
 
 
-float ReadValueLM75(byte _NumberSensor, byte _Address){
-	byte _QuantityRead = EEPROM.read(E_QuantityReadSensors + _NumberSensor);;
-	
-	byte _QuantitySummValue = 1;
-	float _BufferValue;
-	
-	if(_Address == ADDRESS_INPUT_LM75){
-		_BufferValue = lm75(_Address);
-	}
-	else{
-		while(_QuantitySummValue <= _QuantityRead){
-			_BufferValue += lm75(_Address);								// Опрашиваем датчик
-			_QuantitySummValue ++;
-			_delay_ms(50);
-		}
-	}
-	return _BufferValue / _QuantitySummValue;
+/*
+boolean LM75_shutdown (byte Address){
+	return LM75_conf() & 0x01;
 }
+
+void LM75_shutdown (boolean val, byte Address){
+	LM75_conf(val << LM75_CONF_SHUTDOWN);
+}*/

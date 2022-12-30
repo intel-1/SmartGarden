@@ -66,6 +66,7 @@ void View_DataEEPROM();						// Вывод в Serial ошибок из EEPROM
 #define E_ModeController 79						// Ручной\Автоматический\Конфигурирования !!!!!!!! Не понятно нужно или нет !!!!!!!!
 #define E_WorkSIM800 80							// Режим питания SIM800 (0 - всегда выключен, 1 - всегда включен, 2 - включать по требованию)
 //#define E_PWRKEYSIM800 81						// Хер знает для чего!!!!!!!! Возможно нужно удалить
+#define E_GSM_STATE_MIN_VCC 81					// Что делать с GSM модулем есть питание контроллера ниже минимального (0 - выключен, 1 - включен)
 #define E_ConfigPowerBluetooth 82				// Режим подачи питания на Bluetooth модуль
 #define E_BluetoothTimeOff 83					// (тип int) Время отключения модуля при бездействии (сек). Работает только если E_ConfigPowerBluetooth выставлен в "2" 
 #define E_MaximumTimeResponseGSM 85				// Максимальное время ожидания ответа от модуля

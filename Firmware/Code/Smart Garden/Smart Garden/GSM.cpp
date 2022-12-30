@@ -338,44 +338,46 @@ void Send_GET_request(String _Text, bool _waiting, bool _LogView, byte _Request_
 		_LogView		- Выводить или нет сообщение в UART. Системная переменная, никак не настраивается в отличии от OUTPUT_LEVEL_UART_GSM
 		_Request_Type	- Тип запроса
 	*/
-	bool ResendingGET = false;
-	byte ResendCounterResendingGET = 2;															// Счетчик повторных отправок Get запросов (2 шт)
-	wdt_reset();
-	if(EEPROM.read(E_AllowGPRS) == ON /*&& StateGSM.GPRS_Connect*/){								// Если разрешена работа GPRS и соединение установлено
-		if(OUTPUT_LEVEL_UART_GSM && _LogView){
-			switch(_Request_Type){
-				case GET_VALUE_REQUEST:
-					Serial.print(F("Sending a GET value sensor's request: "));
-					break;
-				case GET_LOG_REQUEST:
-					Serial.print(F("Sending a GET log request: "));
-					break;
-			}
-		}
-		send_AT_Command(F("AT+HTTPPARA=\"CID\",1"), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);// Установка CID параметра для http сессии
-		SentGET:																					// Метка для повторной отправки GET запроса
-		String Answer = send_AT_Command(_Text, _waiting, GSM_NO_OUTPUT_TO_SERIAL);					// Шлем сам запрос и ждем ответ		
-		if(Answer.lastIndexOf(F("OK")) != -1){														// Если запрос успешно отправлен, модуль вернул ответ "ОК"
-			StateGSM.Error_Sent_GET = false;														// Снимаем флаг возможной ошибки
+	if(StateGSM.GPRS_Connect){
+		bool ResendingGET = false;
+		byte ResendCounterResendingGET = 2;																// Счетчик повторных отправок Get запросов (2 шт)
+		wdt_reset();
+		if(EEPROM.read(E_AllowGPRS) == ON /*&& StateGSM.GPRS_Connect*/){								// Если разрешена работа GPRS и соединение установлено
 			if(OUTPUT_LEVEL_UART_GSM && _LogView){
-				Serial.println(F("OK"));
+				switch(_Request_Type){
+					case GET_VALUE_REQUEST:
+						Serial.print(F("Sending a GET value sensor's request: "));
+						break;
+					case GET_LOG_REQUEST:
+						Serial.print(F("Sending a GET log request: "));
+						break;
+				}
 			}
-		}
-		else{														// и если не отправлен
-			StateGSM.Error_Sent_GET = true;							// Поднимаем флаг ошибки
-			ResendingGET = true;									// Флаг чтобы повторного отправить GET
-			if(OUTPUT_LEVEL_UART_GSM && _LogView){
-				Serial.println(F("ERROR"));
+			send_AT_Command(F("AT+HTTPPARA=\"CID\",1"), GSM_NO_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);// Установка CID параметра для http сессии
+			SentGET:																					// Метка для повторной отправки GET запроса
+			String Answer = send_AT_Command(_Text, _waiting, GSM_NO_OUTPUT_TO_SERIAL);					// Шлем сам запрос и ждем ответ		
+			if(Answer.lastIndexOf(F("OK")) != -1){														// Если запрос успешно отправлен, модуль вернул ответ "ОК"
+				StateGSM.Error_Sent_GET = false;														// Снимаем флаг возможной ошибки
+				if(OUTPUT_LEVEL_UART_GSM && _LogView){
+					Serial.println(F("OK"));
+				}
 			}
-		}
-		if(ResendCounterResendingGET == 2 && ResendingGET){			// Переводим код на метку для повторной отправки
-			if(OUTPUT_LEVEL_UART_GSM && _LogView){
-				Serial.print(F("\tResending a GET request: "));
+			else{														// и если не отправлен
+				StateGSM.Error_Sent_GET = true;							// Поднимаем флаг ошибки
+				ResendingGET = true;									// Флаг чтобы повторного отправить GET
+				if(OUTPUT_LEVEL_UART_GSM && _LogView){
+					Serial.println(F("ERROR"));
+				}
 			}
-			ResendCounterResendingGET --;
-			goto SentGET;
+			if(ResendCounterResendingGET == 2 && ResendingGET){			// Переводим код на метку для повторной отправки
+				if(OUTPUT_LEVEL_UART_GSM && _LogView){
+					Serial.print(F("\tResending a GET request: "));
+				}
+				ResendCounterResendingGET --;
+				goto SentGET;
+			}
+			send_AT_Command(F("AT+HTTPACTION=0"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);			// Закрытие http сессии
 		}
-		send_AT_Command(F("AT+HTTPACTION=0"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);			// Закрытие http сессии
 	}
 }
 
@@ -527,13 +529,14 @@ byte Check_Readiness_GSM_Module(boolean _LogView, bool _out_to_lcd){
 	String _Response[] = {	(F("NOT INSERTED")),								// Нет SIM карты
 							(F("OK"))};											// Зарегистрирован в сети
 	
-	String _Error = send_AT_Command(F("AT"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Отправляем комманду, ждем ответ, но в Serial его не выводим
+	String _Error = send_AT_Command(F("AT"), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL);	// Отправляем команду, ждем ответ, но в Serial его не выводим
+	
 	
 	for(byte Pos = 0; Pos < sizeof(_Response) / sizeof(_Response[0]); Pos ++){				// Ищем в списке возможных ответов
 		if(_Error.lastIndexOf(_Response[Pos]) != -1){										// И если нашли совпадение
 			StateGSM.State_GSM_Module = Pos;
 			switch(Pos){
-				case GSM_MODULE_NOT_SIM_CARD:														// Нет SIM карты
+				case GSM_MODULE_NOT_SIM_CARD:												// Нет SIM карты
 					if(_out_to_lcd){
 						lcd.setCursor(LCD_START_SYMBOL_20, LCD_LINE_1);
 						lcd.print(char(LCD_ICON_NOT_SIM));
