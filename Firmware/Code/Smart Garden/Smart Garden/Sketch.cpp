@@ -1,4 +1,4 @@
-﻿// Привет добрый друг
+﻿
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
@@ -213,27 +213,6 @@ void WDT_state(bool ViewLog){												// Вывод причины перез
 	}
 }
 
-void Dimension_VCC(){	
-	VCC = ina219_int.getBusVoltage_V() + (ina219_int.getShuntVoltage_mV() / 1000);
-}
-
-
-void Start_Init_GSM(){
-	Serial.println(F("========== Start initialization GSM =========="));
-	WriteToLCD(String(F("== Init GSM module =")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
-	Power_GSM(ON);																		// Включение питания на модуля
-	_delay_ms(3000);																	// Задержка чтобы модуль успел нормально запуститься
-	Signal_Level(GSM_OUTPUT_TO_SERIAL, GSM_PERFORM_MEASUREMENT);						// Проверка уровеня сигнала сети и вывод его на экран
-	if(Check_Readiness_GSM_Module(ON, LCD_ALLOW_OTPUT_ON_SCREEN) == GSM_MODULE_READY){	// Проверка готовности модуля (вывод лог в Serial) и если готов (вернул единицу)
-		if(SIM_card_readiness_check(ON) == GSM_SIM_READY){								// Проверка SIM карты и вывод на LCD экран
-			Initializing_GSM(LCD_ALLOW_OTPUT_ON_SCREEN);								// то инициализация GSM
-			Connecting_GPRS(LCD_ALLOW_OTPUT_ON_SCREEN);									// Подключение к GPRS и проверка подключения
-		}
-	}
-
-	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("============================")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
-	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Running controller...")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
-}
 
 
 void setup() {
@@ -256,8 +235,10 @@ void setup() {
 	
 	WDT_state(OFF);							// Выводим причину перезапуска контроллера
 	
+	//CfCalcDC = (float(EEPROM_int_read(E_CfCalcDC)) / 100) / 1023 * EEPROM.read(E_InputVCC);		// Поправочный коэфициент для вычисления VCC
+	//VCC = RealValueADC[15] * CfCalcDC;															// Вычисляем напряжение питания
+	VCC = ina219_int.getBusVoltage_V() + (ina219_int.getShuntVoltage_mV() / 1000) + 1;
 	
-	// ====================================================================================
 	Link_LogWebServer		= F("http://net.uniscan.biz/LogsController.php/?Type=1");
 	Link_LogDataWebServer	= F("http://net.uniscan.biz/ValueSensors.php/?Type=1");
 	
@@ -290,8 +271,9 @@ void setup() {
 			time.begin();									// Инициализация RTC
 			time.period(60);								// Период опроса 60 сек
 			Serial.println(F("done"));
-			
-				
+	
+	Configuration_LM75(ADDRESS_INPUT_LM75, EEPROM.read(E_INT_LM75_THYST), EEPROM.read(E_INT_LM75_TOS));		// Настраиваем встроенный датчик температуры LM75
+	
 	
 	Serial.println();
 	Serial.println(F("===================================================="));
@@ -319,53 +301,44 @@ void setup() {
 
 	// ===================================================================================================================================
 	// =================================================== Измерение напряжения питания ==================================================
-	// ===================================================================================================================================	
+	// ===================================================================================================================================
 	WriteToLCD(String(F("Input VCC")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	Serial.print(F("Input VCC: "));
-	Dimension_VCC();											// Измерение напряжения
 	Serial.print(VCC);
-	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){			// Напряжение питания выше минимального
+	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){										// Напряжение питания ниже минимального
 		WriteToLCD(String(F("...OK")), LCD_LINE_2, LCD_START_SYMBOL_10, LCD_SCREEN_REFRESH_DELAY);
-		Serial.println(F("...OK"));
-		if(EEPROM.read(E_ControllVCC) == true){					// Если включено контролирование VCC
-			Low_Input_VCC = false;
-		}
+		Serial.println(F("OK"));
+		Low_Input_VCC = false;
 	}
 	else{
 		WriteToLCD(String(F("...LOW")), LCD_LINE_2, LCD_START_SYMBOL_10, LCD_NO_SCREEN_REFRESH_DELAY);
 		WriteToLCD(String(F("...No start GSM   ")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
 		WriteToLCD(String(F("...No Exec modules ")), LCD_LINE_4, LCD_START_SYMBOL_2, LCD_SCREEN_REFRESH_DELAY);
-		Serial.println(F("...LOW"));
-		if(EEPROM.read(E_ControllVCC) == true){					// Если включено контролирование VCC
-			Low_Input_VCC = true;								// Поднимаем флаг низкого напряжения питания
-		}
+		Serial.println(F("LOW"));
+		Low_Input_VCC = true;																// Поднимаем флаг низкого напряжения питания
 		StatusLED(LED_ERROR_VCC);													
 	}
 
 
 	// ===================================================================================================================================
-	// ======================================= Включение и настройка внутреннего термостата в LM75 =======================================
+	// =========================================== Включение, инициализация GSM модуля и GPRS ============================================
 	// ===================================================================================================================================
-	if(EEPROM.read(E_ControllVCC) == true){									// Если включено контролирование VCC
-		if(!Low_Input_VCC){													// Если напряжение питания в норме
-			Configuration_LM75(ADDRESS_INPUT_LM75, EEPROM.read(E_INT_LM75_THYST), EEPROM.read(E_INT_LM75_TOS));		// Настраиваем встроенный датчик температуры LM75
+ 	if(EEPROM.read(E_WorkSIM800) == ON && !Low_Input_VCC){									// Если модуль настроен на постоянную работу и напряжение питания в норме
+		Serial.println(F("========== Start initialization GSM =========="));
+		WriteToLCD(String(F("== Init GSM module =")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
+		Power_GSM(ON);																		// Включение питания на модуля
+		_delay_ms(3000);																	// Задержка чтобы модуль успел нормально запуститься
+		Signal_Level(GSM_OUTPUT_TO_SERIAL, GSM_PERFORM_MEASUREMENT);						// Проверка уровеня сигнала сети и вывод его на экран
+		if(Check_Readiness_GSM_Module(ON, LCD_ALLOW_OTPUT_ON_SCREEN) == GSM_MODULE_READY){	// Проверка готовности модуля (вывод лог в Serial) и если готов (вернул единицу)
+			if(SIM_card_readiness_check(ON) == GSM_SIM_READY){								// Проверка SIM карты и вывод на LCD экран			
+				Initializing_GSM(LCD_ALLOW_OTPUT_ON_SCREEN);								// то инициализация GSM
+				Connecting_GPRS(LCD_ALLOW_OTPUT_ON_SCREEN);									// Подключение к GPRS и проверка подключения
+			}			
 		}
 	}
 	
-
-	// ===================================================================================================================================
-	// =========================================== Включение, инициализация GSM модуля и GPRS ============================================
-	// ===================================================================================================================================
- 	if(EEPROM.read(E_WorkSIM800) == ON){							// Если модуль настроен на постоянную работу
-		if(!Low_Input_VCC){											// Если напряжение питания в норме
-			Start_Init_GSM();
-		}
-		else{
-			if(1 <= EEPROM.read(E_GSM_STATE_MIN_VCC) <= 2){			// Если настроена работа GSM при понижении питания контроллера (работает или сон)
-				Start_Init_GSM();
-			}
-		}
-	}
+	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("============================")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Running controller...")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 	
 	
 	// ===================================================================================================================================
@@ -408,7 +381,7 @@ void setup() {
 			NameSensor[Sensor-1][i] = EEPROM.read(E_NameSensor + (Sensor - 1) * 20 + i);			
 		}
 	}	
-
+	//while(1);
 	
 	// ===================================================================================================================================
 	// ========== Инициализация всех исполнительных модулей (возврящение их в нули или восстановление значений до перезагрузки) ==========
@@ -694,10 +667,12 @@ void loop() {
 	// =============================================================================================================================
 	// ========================================= Управление напряжением питания ====================================================
 	// =============================================================================================================================
-	Dimension_VCC();							// Измерение напряжения питания
+	float BusVoltage = ina219_int.getBusVoltage_V();
+	float ShuntVoltage = ina219_int.getShuntVoltage_mV();
+	VCC = BusVoltage + (ShuntVoltage / 1000) + 1;
 
-	if(EEPROM.read(E_ControllVCC) == 1){		// Если включено контролирование VCC
-		ManagementVCC();						// Проверяем напряжение питания
+	if(EEPROM.read(E_ControllVCC) == 1){				// Если включено контролирование VCC
+		ManagementVCC();								// Проверяем напряжение питания
 	}
 	
 	

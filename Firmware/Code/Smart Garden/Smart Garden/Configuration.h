@@ -60,7 +60,6 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define OFF 0
 #define NO 0
 #define RESET 2
-#define SLEEP 2
 // ======================================================================
 #define LCD_LINE_1 0
 #define LCD_LINE_2 1

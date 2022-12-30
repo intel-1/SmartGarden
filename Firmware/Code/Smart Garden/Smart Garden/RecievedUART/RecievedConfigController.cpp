@@ -26,55 +26,37 @@ void RecievedConfigController(){
 	
 	if (flag){
 		EEPROM.update(E_ControllVCC, InputFromSerial0[1]);							// Контролировать или нет напряжение питания
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.update(E_MinInputVCC, InputFromSerial0[2]);							// Минимальное напряжение питания		
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.update(E_SentSMSorStartController, InputFromSerial0[3]);				// Отправлять или нет СМС о старте контроллера (Да\Нет, 1\0)
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[4] || InputFromSerial0[4] <= 5){					// Разрешенное значение 0-5
 			EEPROM.write(E_LOGING_TO_SERIAL, InputFromSerial0[4]);					// Уровень логирования в Serial
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[5] || InputFromSerial0[5] <= 3){					// Разрешенное значение 0-3
 			EEPROM.update(E_ENABLE_LOGING_TO_SD, InputFromSerial0[5]);				// Глобальная настройка. Писать на SD карту или нет.
 		}
-		// -----------------------------------------------------------------------------------------------
+		//EEPROM.update(E_InputVCC, InputFromSerial0[6]);							// Напряжение питания подаваемое на контроллер контроллера (5 или 12 вольт)
+		//EEPROM.put(E_CfCalcDC, InputFromSerial0[7]);								// (тип int) Поправочный коэффициент делителя напряжения питания контроллера
+		//CfCalcDC = (float(InputFromSerial0[6]) / 100) / 1023 * InputFromSerial0[7];	// Правим текущий поправочнй коэффициент
 		//EEPROM.update(E_ModeController, InputFromSerial0[8]);						// Автоматический\ручной режим работы контроллера
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.update(E_ConfigPowerBluetooth, InputFromSerial0[9]);					// Режим подачи питания на Bluetooth модуль
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.put(E_BluetoothTimeOff, InputFromSerial0[10]);						// (тип int) Время отключения Bluetooth модуля при бездействии (сек)
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.put(E_LoopLCDLightTime, InputFromSerial0[11]);						// Интервал выключения подсветки экрана
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.put(E_LoopSensorTime, InputFromSerial0[12]);							// Интервал измерения показаний датчиков
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.put(E_LoopWriteValueSensorOnSD, InputFromSerial0[13]);				// Интервал логирования данных на карту памяти
-		// -----------------------------------------------------------------------------------------------
 		EEPROM.put(E_LoopChannelRun, InputFromSerial0[14]);							// Интервал включения управления группами
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[15] || InputFromSerial0[15] <= 3 || InputFromSerial0[15] == 13){	// Разрешенные значения 0-3 или 23
 			EEPROM.update(E_ReactToMinVCC, InputFromSerial0[15]);					// Реакция на понижение напряжения питания
 		}
-		// -----------------------------------------------------------------------------------------------
-		if(0 <= InputFromSerial0[16] || InputFromSerial0[16] <= 1){					// Разрешенное значение 0-1
-			EEPROM.update(E_GSM_STATE_MIN_VCC, InputFromSerial0[16]);				// Что делать с GSM модулем есть питание контроллера ниже минимального (0 - выключен, 1 - включен)
-		}
-		else EEPROM.update(E_GSM_STATE_MIN_VCC, 1);									// По умолчанию "1"
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[17] || InputFromSerial0[17] <= 254){				// Разрешенные значения 0-254
 			EEPROM.update(E_ResetTimeGSM, InputFromSerial0[17]);					// Время перезагрузки модуля
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(1 <= InputFromSerial0[18] || InputFromSerial0[18] <= 10){				// Разрешенные значения 1-10
 			EEPROM.update(E_MaximumTimeResponseGSM, InputFromSerial0[18]);			// Максимальное время ожидания ответа от модуля
 		}
-		else EEPROM.update(E_MaximumTimeResponseGSM, 10);							// По умолчанию "10"
-		// -----------------------------------------------------------------------------------------------
+		else EEPROM.update(E_MaximumTimeResponseGSM, 10);							// default значение "10"
 		if(0 <= InputFromSerial0[19] || InputFromSerial0[19] <= 254){				// Разрешенные значения 0-254
 			EEPROM.update(E_IntervalCheckRegistrationGSM, InputFromSerial0[19]);	// Интервал проверки регистрации GSM
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[20] || InputFromSerial0[20] <= 2){					// Разрешенное значение 0-2
 			EEPROM.write(E_WorkSIM800, InputFromSerial0[20]);						// Режим питания SIM800
 			if(InputFromSerial0[20] == 1){
@@ -82,29 +64,23 @@ void RecievedConfigController(){
 			}
 			else gsm_vcc_off(); 
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[21] || InputFromSerial0[21] <= 1){					// Разрешенное значение 0-1
 			EEPROM.write(E_AllowGPRS, InputFromSerial0[21]);						// Режим работы GPRS
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[22] || InputFromSerial0[22] <= 1){					// Разрешенное значение 0-1
 			EEPROM.update(E_Mode_OS_INT_LM75, InputFromSerial0[22]);				// Режим работы встроенное выходного порта
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[23] || InputFromSerial0[23] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_TOS, InputFromSerial0[23]);					// Значение бита TOS встроенного LM75
 			LM75_Tos(ADDRESS_INPUT_LM75, InputFromSerial0[23]);						// Обновляем данные в датчике температуры
 		}
-		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[24] || InputFromSerial0[24] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_THYST, InputFromSerial0[24]);					// Значение бита Thyst встроенного LM75
 			LM75_Thyst(ADDRESS_INPUT_LM75, InputFromSerial0[24]);					// Обновляем данные в датчике температуры
-		}	
-		// -----------------------------------------------------------------------------------------------	
+		}		
 		for(byte i = 0; i <= 18; i ++){
 			EEPROM.write(E_NameController + i, InputFromSerial0[25 + i]);			// Имя контроллера
 		}
-		// -----------------------------------------------------------------------------------------------
 		Serial.println();
 		Serial.println(F("Конфигурация обновлена"/*"Data config in EEPROM is updated"*/));
 	}
@@ -236,23 +212,10 @@ void RecievedConfigController(){
 							default:
 								Serial.println();
 						}
-						Serial.print(F("\tСостояние при снижении VCC контроллера: ")); Serial.print(EEPROM.read(E_GSM_STATE_MIN_VCC));
-						switch(EEPROM.read(E_GSM_STATE_MIN_VCC)){
-							case ON:
-								Serial.println(F("Включен"));
-								break;
-							case OFF:
-								Serial.println(F("Выключение"));
-								break;
-							case SLEEP:
-								Serial.println(F("Сон"));
-								break;
-							default:
-								Serial.println();
-						}
 						break;
 					default:
 						Serial.println();
+				
 				}
 				// ============================================================================
 				Serial.println(F("Интервалы запуска ф-ций:"));			
@@ -278,9 +241,9 @@ void RecievedConfigController(){
 				Serial.println(F("========================================"));
 				break;
 			case 1:
-				Serial.print(F("c 0"));											Serial.print(F(" "));		// Служебный байт
-				Serial.print(EEPROM.read(E_ControllVCC));						Serial.print(F(" "));		// Контролировать или нет напряжение питания контроллера (если нет, то оно просто измеряется и выводится у UART и LCD)
-				Serial.print(EEPROM.read(E_MinInputVCC));						Serial.print(F(" "));		// Минимальное напряжение питания (используется если контролируется)
+				Serial.print(F("c 0 "));
+				Serial.print(EEPROM.read(E_ControllVCC));						Serial.print(F(" "));	
+				Serial.print(EEPROM.read(E_MinInputVCC));						Serial.print(F(" "));		// Минимальное напряжение питания
 				Serial.print(EEPROM.read(E_SentSMSorStartController));			Serial.print(F(" "));		// Отправлять или нет СМС о старте контроллера
 				Serial.print(EEPROM.read(E_LOGING_TO_SERIAL));					Serial.print(F(" "));		// Уровень логиравания в терминал
 				Serial.print(EEPROM.read(E_ENABLE_LOGING_TO_SD));				Serial.print(F(" "));		// Уровень логирования на SD карту (0 - молчать, 1 - только ошибки, 2 - только данные, 3 - все)
@@ -294,7 +257,7 @@ void RecievedConfigController(){
 				Serial.print(EEPROM_int_read(E_LoopWriteValueSensorOnSD));		Serial.print(F(" "));
 				Serial.print(EEPROM_int_read(E_LoopChannelRun));				Serial.print(F(" "));
 				Serial.print(EEPROM.read(E_ReactToMinVCC));						Serial.print(F(" "));		
-				Serial.print(EEPROM.read(E_GSM_STATE_MIN_VCC));					Serial.print(F(" "));		// Что делать с GSM модулем есть питание контроллера ниже минимального (0 - выключен, 1 - включен)
+				Serial.print(F("0"));											Serial.print(F(" "));		// Зарезервированый блок
 				Serial.print(EEPROM.read(E_ResetTimeGSM));						Serial.print(F(" "));		// Время перезагрузки модуля
 				Serial.print(EEPROM.read(E_MaximumTimeResponseGSM));			Serial.print(F(" "));		// Максимальное время ожидания ответа от модуля
 				Serial.print(EEPROM.read(E_IntervalCheckRegistrationGSM));		Serial.print(F(" "));		// Интервал проверки регистрации GSM
