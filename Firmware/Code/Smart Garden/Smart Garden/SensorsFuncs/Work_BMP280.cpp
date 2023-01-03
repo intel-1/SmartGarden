@@ -46,7 +46,7 @@ void ProcessingErrors(float Value, byte SGB, byte NumberSensor){
 			break;
 	}
 	if(Send){
-		Send_SMS(String(F("Error of reading ")) + Text + String(F(" on sensor ")) + NameSensor[NumberSensor], GSM_ERROR_SMS);
+		//Send_SMS(String(F("Error of reading ")) + Text + String(F(" on sensor ")) + NameSensor[NumberSensor], GSM_ERROR_SMS);
 	}
 }
 

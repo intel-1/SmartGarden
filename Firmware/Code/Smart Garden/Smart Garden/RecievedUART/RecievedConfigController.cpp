@@ -41,7 +41,7 @@ void RecievedConfigController(){
 			EEPROM.update(E_ENABLE_LOGING_TO_SD, InputFromSerial0[5]);				// Глобальная настройка. Писать на SD карту или нет.
 		}
 		// -----------------------------------------------------------------------------------------------
-		//EEPROM.update(E_ModeController, InputFromSerial0[8]);						// Автоматический\ручной режим работы контроллера
+		EEPROM.update(E_ModeController, InputFromSerial0[8]);						// Автоматический\ручной\Конфигурирования режим работы контроллера
 		// -----------------------------------------------------------------------------------------------
 		EEPROM.update(E_ConfigPowerBluetooth, InputFromSerial0[9]);					// Режим подачи питания на Bluetooth модуль
 		// -----------------------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ void RecievedConfigController(){
 		}
 		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[20] || InputFromSerial0[20] <= 2){					// Разрешенное значение 0-2
-			EEPROM.write(E_WorkSIM800, InputFromSerial0[20]);						// Режим питания SIM800
+			EEPROM.write(E_WORK_SIM800, InputFromSerial0[20]);						// Режим питания SIM800
 			if(InputFromSerial0[20] == 1){
 				gsm_vcc_on();
 			}
@@ -95,16 +95,18 @@ void RecievedConfigController(){
 		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[23] || InputFromSerial0[23] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_TOS, InputFromSerial0[23]);					// Значение бита TOS встроенного LM75
-			//LM75_Config_tos_byte(InputFromSerial0[23], ADDRESS_INPUT_LM75);			// Обновляем данные в датчике температуры
 		}
 		// -----------------------------------------------------------------------------------------------
 		if(0 <= InputFromSerial0[24] || InputFromSerial0[24] <= 254){				// Разрешенное значение 0-254
 			EEPROM.update(E_INT_LM75_THYST, InputFromSerial0[24]);					// Значение бита Thyst встроенного LM75
-			//LM75_Config_thyst_byte(InputFromSerial0[24], ADDRESS_INPUT_LM75);		// Обновляем данные в датчике температуры
 		}	
 		// -----------------------------------------------------------------------------------------------	
+		if(0 <= InputFromSerial0[25] || InputFromSerial0[25] <= 1){					// Разрешенное значение 0-1
+			EEPROM.update(E_STATE_TERMOSTAT_INT_LM75, InputFromSerial0[25]);
+		}
+		// -----------------------------------------------------------------------------------------------
 		for(byte i = 0; i <= 18; i ++){
-			EEPROM.update(E_NameController + i, InputFromSerial0[25 + i]);			// Имя контроллера
+			EEPROM.update(E_NameController + i, InputFromSerial0[26 + i]);			// Имя контроллера
 		}
 		// -----------------------------------------------------------------------------------------------
 		Serial.println();
@@ -148,7 +150,7 @@ void RecievedConfigController(){
 							break;
 						case REACTION_ERORR_VCC_SEND_SMS:
 							Serial.print(F("Отправлять СМС"));
-							if(EEPROM.read(E_WorkSIM800) == ON){								// Если GSM модуль настроен на постоянную работу
+							if(EEPROM.read(E_WORK_SIM800) == ON){								// Если GSM модуль настроен на постоянную работу
 								Serial.println();
 							}
 							else Serial.println(F(" (GSM модуль отключен)"));							
@@ -162,13 +164,13 @@ void RecievedConfigController(){
 							break;
 						case REACTION_ERORR_VCC_SEND_GET:
 							Serial.print(F("Отправлять GET запрос"));
-							if(EEPROM.read(E_WorkSIM800) == ON){								// Если GSM модуль настроен на постоянную работу
+							if(EEPROM.read(E_WORK_SIM800) == ON){								// Если GSM модуль настроен на постоянную работу
 								Serial.println();
 							}
 							else Serial.println(F(" (GSM модуль отключен)"));
 						case REACTION_ERORR_VCC_SEND_SMS_AND_GET:
 							Serial.print(F("Отправлять СМС и GET запрос"));
-							if(EEPROM.read(E_WorkSIM800) == ON){								// Если GSM модуль настроен на постоянную работу
+							if(EEPROM.read(E_WORK_SIM800) == ON){								// Если GSM модуль настроен на постоянную работу
 								Serial.println();
 							}
 							else Serial.println(F(" (GSM модуль отключен)"));
@@ -178,7 +180,7 @@ void RecievedConfigController(){
 					}
 				}
 				// ============================================================================
-				if(EEPROM.read(E_WorkSIM800) == ON){									// Если GSM модуль настроен на постоянную работу
+				if(EEPROM.read(E_WORK_SIM800) == ON){									// Если GSM модуль настроен на постоянную работу
 					Serial.print(F("Отправка СМС о старте контроллера: ")); 
 					switch(EEPROM.read(E_SentSMSorStartController)){
 						case 0:
@@ -220,7 +222,7 @@ void RecievedConfigController(){
 				}
 				// ============================================================================
 				Serial.print(F("GSM модуль: "));
-				switch(EEPROM.read(E_WorkSIM800)){
+				switch(EEPROM.read(E_WORK_SIM800)){
 					case OFF:
 						Serial.println(F("Выключен"));
 						break;
@@ -265,20 +267,30 @@ void RecievedConfigController(){
 				if(EEPROM.read(E_ENABLE_LOGING_TO_SD) == ON){								// Если разрешена запись на SD карту
 					Serial.print(F("\tЦиклическая запись на SD показаний датчиков: "));		Serial.print(EEPROM_int_read(E_LoopWriteValueSensorOnSD));	Serial.println(F(" сек"));
 				}				
-				Serial.println(F("Параметры встроенного датчика температуры:"));
-					Serial.print(F("\tРежим выходного порта: "));							
-					switch(EEPROM.read(E_Mode_OS_INT_LM75)){
+				Serial.print(F("Термостат встроенного датчика температуры: "));
+					switch(EEPROM.read(E_STATE_TERMOSTAT_INT_LM75)){
 						case 0:
-							Serial.println(F("Comparator mode"));
+							Serial.println(F("Выключен. Не используется"));	
 							break;
 						case 1:
-							Serial.println(F("Interrupt mode"));
+							Serial.println(F("Разрешен"));
+							Serial.print(F("\tРежим выходного порта: "));
+							switch(EEPROM.read(E_Mode_OS_INT_LM75)){
+								case 0:
+									Serial.println(F("Comparator mode"));
+									break;
+								case 1:
+									Serial.println(F("Interrupt mode"));
+									break;
+								default:
+									Serial.println(Text_Error_Configuration);
+							}
+							Serial.print(F("\tЗначение Tos: "));	Serial.print(EEPROM.read(E_INT_LM75_TOS));		Serial.println(F("*C"));
+							Serial.print(F("\tЗначение Thyst: "));	Serial.print(EEPROM.read(E_INT_LM75_THYST));	Serial.println(F("*C"));
 							break;
 						default:
-							Serial.println();
-					}
-					Serial.print(F("\tЗначение Tos: "));	Serial.print(EEPROM.read(E_INT_LM75_TOS));		Serial.println(F("*C"));
-					Serial.print(F("\tЗначение Thyst: "));	Serial.print(EEPROM.read(E_INT_LM75_THYST));	Serial.println(F("*C"));
+							Serial.println(Text_Error_Configuration);
+					}					
 				Serial.println(F("========================================"));
 				break;
 			case 1:
@@ -302,11 +314,12 @@ void RecievedConfigController(){
 				Serial.print(EEPROM.read(E_ResetTimeGSM));						Serial.print(F(" "));		// Время перезагрузки модуля
 				Serial.print(EEPROM.read(E_MaximumTimeResponseGSM));			Serial.print(F(" "));		// Максимальное время ожидания ответа от модуля
 				Serial.print(EEPROM.read(E_IntervalCheckRegistrationGSM));		Serial.print(F(" "));		// Интервал проверки регистрации GSM
-				Serial.print(EEPROM.read(E_WorkSIM800));						Serial.print(F(" "));		// Режим питания SIM800
+				Serial.print(EEPROM.read(E_WORK_SIM800));						Serial.print(F(" "));		// Режим питания SIM800
 				Serial.print(EEPROM.read(E_AllowGPRS));							Serial.print(F(" "));		// Разрешение работы GPRS
 				Serial.print(EEPROM.read(E_Mode_OS_INT_LM75));					Serial.print(F(" "));		// Режим работы встроенное выходного порта
 				Serial.print(EEPROM.read(E_INT_LM75_TOS));						Serial.print(F(" "));		// Значение бита TOS встроенного LM75
 				Serial.print(EEPROM.read(E_INT_LM75_THYST));					Serial.print(F(" "));		// Значение бита Thyst встроенного LM75
+				Serial.print(EEPROM.read(E_STATE_TERMOSTAT_INT_LM75));			Serial.print(F(" "));		// Использовать или нет термостат встроенного датчика температуры LM75A
 				for (byte i = 0; i < 19; i++){
 					Serial.print(EEPROM.read(E_NameController + i));
 					Serial.print(F(" "));

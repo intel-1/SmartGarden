@@ -30,6 +30,7 @@ String ReasonWDT = "";						// Причина перезагрузки конт�
 byte Code_Reason_WDT;						// Код причины перезагрузки контроллера или запуска
 boolean SendSMSorStartController = false;	// Флаг отложеной отправки СМС о старте контроллера
 											// Поднимается если GSM не успел зарегистрироваться в сети при старте контроллера
+boolean Configure_Int_LM75 = false;			// Флаг инициализировался или нет термостат встроенного датчика температуры LM75A
 
 
 void ADC_init(){
@@ -235,6 +236,12 @@ void Start_Init_GSM(){
 }
 
 
+void Init_Termostat_Interrupt_LM75A(){
+	LM75_Write_Conf_OS(EEPROM.read(E_Mode_OS_INT_LM75), ADDRESS_INPUT_LM75);
+	LM75_Write_thyst_byte(EEPROM.read(E_INT_LM75_THYST), ADDRESS_INPUT_LM75);
+	LM75_Write_tos_byte(EEPROM.read(E_INT_LM75_TOS), ADDRESS_INPUT_LM75);
+}
+
 
 
 
@@ -303,19 +310,23 @@ void setup() {
 			
 					
 	
-/*	boolean ConfigModeController = false;
-	while(EEPROM.read(E_ConfigModeController) == 1){	// Если контроллер в режиме конфигурирования
-		if(!ConfigModeController){
+	boolean ConfigController = false;
+	while(EEPROM.read(E_ModeController) == CONTROLLER_CONFIGURATION_MODE){	// Если контроллер в режиме конфигурирования
+		if(!ConfigController){
 			Serial.println(F("Контроллер запущен в режиме конфигурирования"));
-			WriteToLCD(String(F("Controller in   ")), LCD_SCREEN_REFRESH_DELAY);
-			WriteToLCD(String(F("config. mode    ")), LCD_NO_SCREEN_REFRESH_DELAY);
+			WriteToLCD(String(F("Controller in   ")), LCD_LINE_2, LCD_START_SYMBOL_5, LCD_SCREEN_REFRESH_DELAY);
+			WriteToLCD(String(F(" configuration mode ")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
 			status_led_red_on();
 			status_led_blue_on();
 			status_led_green_on();
-			ConfigModeController = true;
+			ConfigController = true;
 		}
-	}*/
-	status_led_red_off();								// Гасим все статусные светодиоды
+	}
+
+	// ===================================================================================================================================
+	// ================================================== Гасим все статусные светодиоды =================================================
+	// ===================================================================================================================================
+	status_led_red_off();								
 	status_led_blue_off();
 	status_led_green_off();
 	
@@ -349,45 +360,57 @@ void setup() {
 	// ===================================================================================================================================
 	// ==================================== Включение и настройка термостата внутреннего датчика LM75 ====================================
 	// ===================================================================================================================================
-	boolean Configure_Int_LM75 = false;
-	Serial.println(F("Настройка термостата встроенного датчика LM75: "));
-	if(EEPROM.read(E_ControllVCC) == true){									// Если включено контролирование VCC
-		if(!Low_Input_VCC){													// Если напряжение питания в норме
-			LM75_Write_Conf_OS(EEPROM.read(E_Mode_OS_INT_LM75), ADDRESS_INPUT_LM75);
-			LM75_Write_thyst_byte(EEPROM.read(E_INT_LM75_THYST), ADDRESS_INPUT_LM75);
-			LM75_Write_tos_byte(EEPROM.read(E_INT_LM75_TOS), ADDRESS_INPUT_LM75);
-			Configure_Int_LM75 = true;
-		}
-		else Serial.println(F("Отключено. Низкое VCC"));
-	}
-	else{
-		LM75_Write_Conf_OS(EEPROM.read(E_Mode_OS_INT_LM75), ADDRESS_INPUT_LM75);
-		LM75_Write_thyst_byte(EEPROM.read(E_INT_LM75_THYST), ADDRESS_INPUT_LM75);
-		LM75_Write_tos_byte(EEPROM.read(E_INT_LM75_TOS), ADDRESS_INPUT_LM75);
-		Configure_Int_LM75 = true;
-	}
+	Serial.print(F("Настройка термостата встроенного датчика LM75: "));
+	switch(EEPROM.read(E_STATE_TERMOSTAT_INT_LM75)){
+		case 0:
+			Serial.println(F("Выключен. Не используется"));
+			break;
+		case 1:		
+			if(EEPROM.read(E_ControllVCC) == true){									// Если включено контролирование VCC
+				if(!Low_Input_VCC){													// Если напряжение питания в норме
+					Serial.println(F("Включен"));
+					Init_Termostat_Interrupt_LM75A();
+					Configure_Int_LM75 = true;
+				}
+				else{ 
+					Serial.println(F("Отключено. Низкое VCC контроллера"));
+					LM75_Write_Conf_OS(0, ADDRESS_INPUT_LM75);						// default значение
+					LM75_Write_thyst_byte(90, ADDRESS_INPUT_LM75);					// default значение
+					LM75_Write_tos_byte(85, ADDRESS_INPUT_LM75);					// default значение
+				}
+			}
+			else{
+				Serial.println(F("Включен"));
+				Init_Termostat_Interrupt_LM75A();
+				Configure_Int_LM75 = true;
+			}
 	
-	if(Configure_Int_LM75){
-		Serial.print(F("\tРежим выходного порта (OS): "));
-		switch(LM75_Read_Conf_OS(ADDRESS_INPUT_LM75)){
-			case 0:
-				Serial.println(F("Comparator mode"));
-				break;
-			case 1:
-				Serial.println(F("Interrupt mode"));
-				break;
-			default:
-				Serial.println(F("Неизвестно. Ошибка конфигурации"));
-		}
-		Serial.print(F("\tTos: "));		Serial.print(LM75_Read_tos_byte(ADDRESS_INPUT_LM75));	Serial.println(F("*С"));
-		Serial.print(F("\tThyst: "));	Serial.print(LM75_Read_thyst_byte(ADDRESS_INPUT_LM75)); Serial.println(F("*С"));
+			// ============================================================
+			if(Configure_Int_LM75){
+				Serial.print(F("\tРежим выходного порта (OS): "));
+				switch(LM75_Read_Conf_OS(ADDRESS_INPUT_LM75)){
+					case 0:
+						Serial.println(F("Comparator mode"));
+						break;
+					case 1:
+						Serial.println(F("Interrupt mode"));
+						break;
+					default:
+						Serial.println(Text_Error_Configuration);
+				}
+				Serial.print(F("\tTos: "));		Serial.print(LM75_Read_tos_byte(ADDRESS_INPUT_LM75));	Serial.println(F("*С"));
+				Serial.print(F("\tThyst: "));	Serial.print(LM75_Read_thyst_byte(ADDRESS_INPUT_LM75)); Serial.println(F("*С"));
+			}
+			break;
+		default:
+			Serial.println(Text_Error_Configuration);
 	}
 	
 
 	// ===================================================================================================================================
 	// =========================================== Включение, инициализация GSM модуля и GPRS ============================================
 	// ===================================================================================================================================
- 	if(EEPROM.read(E_WorkSIM800) == ON){							// Если модуль настроен на постоянную работу
+ 	if(EEPROM.read(E_WORK_SIM800) == ON){							// Если модуль настроен на постоянную работу
 		if(!Low_Input_VCC){											// Если напряжение питания в норме
 			Start_Init_GSM();
 		}
@@ -433,12 +456,17 @@ void setup() {
 			ConfigSensor(NumberSensor);
 		}
 	}
+	
+	
 	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor++){
 		QuantityCalcSensors.QuantityCalc[Sensor] = 1;											// Обнуляем количество измерений
-		for(byte i = 0; i <= 19; i++){															// Заполняем массив с названиями
-			NameSensor[Sensor-1][i] = EEPROM.read(E_NameSensor + (Sensor - 1) * 20 + i);			
+		String Text_name;
+		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
+ 			char symbol = EEPROM.read((E_NameSensor + Sensor - 1) + i + 20 * (Sensor - 1));
+			Text_name += String(symbol);
 		}
-	}	
+		Name[Sensor] = Text_name;
+	}
 
 	
 	// ===================================================================================================================================
@@ -555,7 +583,18 @@ void setup() {
 // ===================================================================================================================================
 
 
-void loop() {		
+void loop() {	
+	// =============================================================================================================================
+	// ================================ Настройка термостата внутреннего датчика температуры LM75A =================================
+	// =============================================================================================================================
+	if(!Configure_Int_LM75 && EEPROM.read(E_STATE_TERMOSTAT_INT_LM75)){				// Если включен внутренний термостат, но ранее он не инициализировался из-за низкого VCC контроллера
+		if(!Low_Input_VCC){															// Если напряжение питания в норме
+			Init_Termostat_Interrupt_LM75A();
+			Configure_Int_LM75 = true;
+		}
+	}
+					
+						
 	// =============================================================================================================================
 	// =========================================== Проверка работоспособности GSM модуля ===========================================
 	// =============================================================================================================================
@@ -572,7 +611,7 @@ void loop() {
 		}
 	}
 	// ------------------------------------------------
-	if(EEPROM.read(E_WorkSIM800) == ON && !Cyclic_Network_Signal_Strength_Check && !Low_Input_VCC){		// Если модуль настроен на постоянную работу и нет ошибки слабого сигнала сети
+	if(EEPROM.read(E_WORK_SIM800) == ON && !Cyclic_Network_Signal_Strength_Check && !Low_Input_VCC){	// Если модуль настроен на постоянную работу и нет ошибки слабого сигнала сети
 		Signal_Level(GSM_NO_OUTPUT_TO_SERIAL, GSM_PERFORM_MEASUREMENT);									// Только измеряем уровень сигнала сети
 		if(T_second > (LoopCheckRegistrationGSM + EEPROM.read(E_IntervalCheckRegistrationGSM))){		// Интервал проверки регистрации GSM
 			LoopCheckRegistrationGSM = T_second;

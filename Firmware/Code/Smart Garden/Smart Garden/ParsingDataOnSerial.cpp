@@ -283,13 +283,16 @@ void ProcessingDataFromSerial(){
 	}	
 	// =========================== Перевод контроллера в режим конфигурирования =============================
 	if (recievedFlag_ModeConfigurationController) {
-		if(0 <= InputFromSerial0[0] && InputFromSerial0[0] <= 2){						// Разрешенные значения 0, 1 и 2
+		if(0 <= InputFromSerial0[0] && InputFromSerial0[0] <= 2){					// Разрешенные значения 0, 1 и 2
 			switch(InputFromSerial0[0]){		
-				case 0:								// Если получаем параметры
-					if(0 <= InputFromSerial0[1] && InputFromSerial0[1] <= 1){			// Разрешенные значения 0 и 1
-						EEPROM.update(E_ConfigModeController, InputFromSerial0[1]);
+				case 0:																// Если получаем параметры
+					if(	InputFromSerial0[1] == CONTROLLER_AUTOMATIC_MODE || 
+						InputFromSerial0[1] == CONTROLLER_MANUAL_MODE ||
+						InputFromSerial0[1] == CONTROLLER_AUTOMATIC_MODE){			// Разрешенные значения 1, 2 и 3					
+						
+						EEPROM.update(E_ModeController, InputFromSerial0[1]);
 						Serial.println();
-						if(InputFromSerial0[1] == 1){
+						if(InputFromSerial0[1] == CONTROLLER_AUTOMATIC_MODE){
 							Serial.println(F("Включен режим конфигурирования"));
 							//jmp_bootloader();
 							//Reboot();	
@@ -303,12 +306,12 @@ void ProcessingDataFromSerial(){
 						}
 					}
 					break;
-				case 1:								// Если возвращаем в виде байт
-					Serial.print(F("p ")); Serial.print(F("1 ")); Serial.println(EEPROM.read(E_ConfigModeController));
+				case 1:																// Если возвращаем в виде байт
+					Serial.print(F("p ")); Serial.print(F("1 ")); Serial.println(EEPROM.read(E_ModeController));
 					break;
-				case 2:								// Если возвращаяем с описаниями
+				case 2:																// Если возвращаем с описаниями
 					Serial.println();
-					if(EEPROM.read(E_ConfigModeController) == 1){
+					if(EEPROM.read(E_ModeController) == CONTROLLER_AUTOMATIC_MODE){
 						Serial.println(F("Контроллер в режиме конфигурирования"));
 					}
 					else Serial.println(F("Режим конфигурирования выключен"));

@@ -114,7 +114,7 @@ void CalculateDS18B20(byte NumberSensor){
 // 					MessageGSM.PhoneNumber = 0;
 // 					WriteToQueueGSM(MessageGSM);
 					
-					Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_ERROR_SMS);  
+					//Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_ERROR_SMS);  
 					EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);	
 				}
 			}

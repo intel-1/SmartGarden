@@ -38,7 +38,7 @@
   <documentation help="" />
   <offline-documentation help="" />
   <dependencies>
-    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.34.1" />
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.42.0" />
   </dependencies>
 </framework-data>
     </AsfFrameworkConfig>
@@ -74,7 +74,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
       <AvrGccCpp>
-  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega2560"</avrgcc.common.Device>
+  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\gcc\dev\atmega2560"</avrgcc.common.Device>
   <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
   <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
   <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
@@ -100,7 +100,8 @@
       <Value>%24(ProjectDir)\..\ArduinoCore\include</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\core</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\variants\mega</Value>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcc.compiler.directories.IncludePaths>
   <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
@@ -130,7 +131,8 @@
       <Value>%24(ProjectDir)\..\ArduinoCore\include</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\core</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\variants\mega</Value>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcccpp.compiler.directories.IncludePaths>
   <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
@@ -144,7 +146,8 @@
   <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
   <avrgcccpp.assembler.general.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcccpp.assembler.general.IncludePaths>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
@@ -154,7 +157,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
       <AvrGccCpp>
-  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\gcc\dev\atmega2560"</avrgcc.common.Device>
+  <avrgcc.common.Device>-mmcu=atmega2560 -B "%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\gcc\dev\atmega2560"</avrgcc.common.Device>
   <avrgcc.common.optimization.RelaxBranches>True</avrgcc.common.optimization.RelaxBranches>
   <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
   <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
@@ -180,7 +183,8 @@
       <Value>%24(ProjectDir)\..\ArduinoCore\include</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\core</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\variants\mega</Value>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcc.compiler.directories.IncludePaths>
   <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
@@ -210,7 +214,8 @@
       <Value>%24(ProjectDir)\..\ArduinoCore\include</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\core</Value>
       <Value>%24(ProjectDir)\..\ArduinoCore\include\variants\mega</Value>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcccpp.compiler.directories.IncludePaths>
   <avrgcccpp.compiler.optimization.level>Optimize for size (-Os)</avrgcccpp.compiler.optimization.level>
@@ -224,7 +229,8 @@
   <avrgcccpp.linker.miscellaneous.LinkerFlags>-Os</avrgcccpp.linker.miscellaneous.LinkerFlags>
   <avrgcccpp.assembler.general.IncludePaths>
     <ListValues>
-      <Value>%24(PackRepoDir)\atmel\ATmega_DFP\1.2.209\include</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\1.7.374\include\</Value>
+      <Value>%24(PackRepoDir)\Atmel\ATmega_DFP\2.0.401\include\</Value>
     </ListValues>
   </avrgcccpp.assembler.general.IncludePaths>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>

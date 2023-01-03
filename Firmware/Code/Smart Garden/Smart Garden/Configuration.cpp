@@ -7,12 +7,13 @@
 char VersionFirmware[] = "firmware 2.0.3";
 char Short_VersionFirmware[] = "ver. 2.0.3";
 char TextOfStartController[] = "Controller is started";
+char Text_Error_Configuration[] = "Ошибка конфигурации";
 
 
 boolean ControllerSetup;					// Для обозначения стадии загрузки контроллера (Setup)
 byte LOGING_TO_SERIAL;
-char NameSensor[QUANTITY_SENSORS + 1][20];	// Максимум 16 датчиков по 20 символов (в названии) максимум, счет идет с единицы
-
+//char NameSensor[QUANTITY_SENSORS + 1][20];	// Максимум 16 датчиков по 20 символу (в названии) максимум, счет идет с единицы
+String Name[17];
 
 // ============= Ф-ции для проверки портов =================
 boolean AllowAnalogPort(byte Port){
