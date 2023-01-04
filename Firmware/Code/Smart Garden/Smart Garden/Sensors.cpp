@@ -56,25 +56,12 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	maxLongValue[VALUE_3] = 0;
 	
 	for(byte NumberSensor = 1; NumberSensor < QUANTITY_SENSORS; NumberSensor++){				// Ищем самое длинное название датчика
-		byte BufferLongName/* = strlen(NameSensor[NumberSensor])*/;
-// 		String Text_name;
-// 		for(byte i = 0; i <= 20; i++){
-// 			Text_name += String(NameSensor[NumberSensor][i]);
-// 		}
-// 		Serial.println("Text_name: " + Text_name);
+		//byte BufferLongName = strlen(NameSensor[NumberSensor]);
+		//BufferLongName = BufferLongName - 1;
 		
-		String Text_name = Name[NumberSensor];
-		//BufferLongName = strlen(Text_name);
-		
-
-		
-		
-		Serial.println("Name_name: " + Name[NumberSensor]);
-		Serial.println("Size name: " + BufferLongName);
-		
- 		if(BufferLongName > maxLongName){
- 			maxLongName = BufferLongName;
- 		}
+//  		if(BufferLongName > maxLongName){
+//  			maxLongName = BufferLongName;
+//  		}
 		
 		for(byte Value = 0; Value < 3; Value ++){
 			byte BufferLongValue = ViewMaxLongValue(NumberSensor, Value);
@@ -87,25 +74,25 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	Serial.println(F("   Название   |  Статус  |  Измеренные показания  | Ошибки"));
 	Serial.println(F("---------------------------------------------------------"));
 	
-	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor++){
-		//Serial.print(NameSensor[Sensor]);
-		byte LongLines = 11/*strlen(NameSensor[Sensor])*/;
-		//Serial.print("Long " + LongLines);
-		if(LongLines <= maxLongName){
-			byte Space = maxLongName - LongLines;
-			for(byte i = 1; i <= Space; i++){
-				Serial.print(F(" "));
-			}
-
-//			for(byte i = 1; 20 <= Space; i++){
-// 			while (LongLines <= 20){
-// 				LongLines ++;
+	for(byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor++){
+		Serial.print(NameSensor[NumberSensor]);
+		byte LongLines = strlen(NameSensor[NumberSensor]);
+		LongLines = LongLines - 1;
+		//Serial.print(" "); Serial.print(LongLines);
+// 		if(LongLines <= maxLongName){
+// 			byte Space = maxLongName - LongLines;
+// 			for(byte i = 1; i <= Space; i++){
 // 				Serial.print(F(" "));
 // 			}
- 		}
 
-		Serial.print(F("   "));		
-		switch(EEPROM.read(E_StatusSensor + Sensor)){
+		if(LongLines == 255) LongLines = 0;
+		while (LongLines <= 16){
+			LongLines ++;
+			Serial.print(F(" "));
+		}
+
+		Serial.print(F(" "));		
+		switch(EEPROM.read(E_StatusSensor + NumberSensor)){
 			case 0:
 				Serial.print(F("ВЫКЛ"));
 				break;
@@ -113,25 +100,25 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 				Serial.print(F("ВКЛ "));
 				break;
 		}
-		Serial.print(F("   "));		
+		Serial.print(F("     "));		
 					
 		for(byte Value = 0; Value < 3; Value++){
 			if(Value == 0){
-				Serial.print(F("  ")); Serial.print(RealValueSensors[Sensor][Value]); 
+				Serial.print(F("  ")); Serial.print(RealValueSensors[NumberSensor][Value]); 
 			}
 			else{
-				LongLinesValue = ViewMaxLongValue(Sensor, Value - 1);
+				LongLinesValue = ViewMaxLongValue(NumberSensor, Value - 1);
 				if(LongLinesValue < maxLongValue[Value - 1]){
 					byte SpaceValue = maxLongValue[Value - 1] - LongLinesValue;
 					for(byte i = 1; i <= SpaceValue; i++){
 						Serial.print(F(" "));
 					}	
 				}
-				Serial.print(F("  ")); Serial.print(RealValueSensors[Sensor][Value]); 
+				Serial.print(F("  ")); Serial.print(RealValueSensors[NumberSensor][Value]); 
 			}
 		}
 		Serial.print(F("  "));
-		LongLinesValue = ViewMaxLongValue(Sensor, VALUE_3);
+		LongLinesValue = ViewMaxLongValue(NumberSensor, VALUE_3);
 		if(LongLinesValue < maxLongValue[VALUE_3]){
 			byte SpaceValue = maxLongValue[VALUE_3] - LongLinesValue;
 			for(byte i = 1; i <= SpaceValue; i++){
@@ -139,7 +126,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 			}
 		}
 		for(byte Value = 0; Value < 3; Value++){
-			Serial.print(F(" ")); Serial.print(SensorsError[Sensor][Value]);
+			Serial.print(F(" ")); Serial.print(SensorsError[NumberSensor][Value]);
 		}
 		Serial.println();
 	}

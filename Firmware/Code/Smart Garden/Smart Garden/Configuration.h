@@ -23,8 +23,9 @@ extern char Text_Error_Configuration[];
 // ======================================================================
 extern boolean ControllerSetup;			// Для обозначения стадии загрузки контроллера (Setup)
 extern byte LOGING_TO_SERIAL;
-//extern char NameSensor[17][20];			// Всего датчиков 16 шт, но счет для удобства идет с единицы.
-extern String Name[17];
+extern char NameSensor[17][20];			// Всего датчиков 16 шт, но счет для удобства идет с единицы.
+//extern String Name[17];
+//extern char Name[17];
 // ======================================================================
 #define ADDRESS_INPUT_LM75 0x48			// Адрес встроенного датчика температуры LM75
 #define ADDRESS_INPUT_LCD 0x3f			// Адрес LCD экрана

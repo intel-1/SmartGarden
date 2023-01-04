@@ -350,9 +350,15 @@ void WriteConfigSensors(){																// Сохранение данных �
 	}
 	// --------------------- Имя датчика ---------------------
 	for(byte i = 0; i < 19; i ++){
+		char str1[1];
 		EEPROM.update((E_NameSensor + INPUT_BYTE_NUMBER_SENSOR-1)+i+20*(INPUT_BYTE_NUMBER_SENSOR-1), InputFromSerial0[25 + i]);
-		//NameSensor[INPUT_BYTE_NUMBER_SENSOR][i] = InputFromSerial0[25 + i];			// Сразу пишем имя в массив чтобы не надо было ребутить контроллер
-		Name[INPUT_BYTE_NUMBER_SENSOR] += String(InputFromSerial0[25 + i]);
+		NameSensor[INPUT_BYTE_NUMBER_SENSOR][i] = InputFromSerial0[25 + i];			// Сразу пишем имя в массив чтобы не надо было ребутить контроллер
+		//Name[INPUT_BYTE_NUMBER_SENSOR] += String(InputFromSerial0[25 + i]);
+		
+// 		str1[1] = InputFromSerial0[25 + i];
+// 		char str2[] = "world";
+// 		strcat(Name[INPUT_BYTE_NUMBER_SENSOR], str1);
+		
 	}
 	// ----------------- Наименование датчика ----------------
 	if(1 <= INPUT_BYTE_TYPE_A_SENSOR && INPUT_BYTE_TYPE_A_SENSOR <= 12){				// Разрешенные значения от 1 до 12-и

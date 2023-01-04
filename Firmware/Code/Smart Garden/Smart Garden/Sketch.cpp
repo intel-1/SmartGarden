@@ -458,14 +458,18 @@ void setup() {
 	}
 	
 	
-	for(byte Sensor = 1; Sensor <= QUANTITY_SENSORS; Sensor++){
-		QuantityCalcSensors.QuantityCalc[Sensor] = 1;											// Обнуляем количество измерений
+	for(byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor++){
+		QuantityCalcSensors.QuantityCalc[NumberSensor] = 1;										// Обнуляем количество измерений
 		String Text_name;
-		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
- 			char symbol = EEPROM.read((E_NameSensor + Sensor - 1) + i + 20 * (Sensor - 1));
-			Text_name += String(symbol);
-		}
-		Name[Sensor] = Text_name;
+// 		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
+//  			char symbol = EEPROM.read((E_NameSensor + Sensor - 1) + i + 20 * (Sensor - 1));
+// 			Text_name += String(symbol);
+// 		}
+// 		Name[Sensor] = Text_name;
+
+ 		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
+  			NameSensor[NumberSensor][i]= EEPROM.read((E_NameSensor + NumberSensor - 1) + i + 20 * (NumberSensor - 1));
+ 		}
 	}
 
 	
