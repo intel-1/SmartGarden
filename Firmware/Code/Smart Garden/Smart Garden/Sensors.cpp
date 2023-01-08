@@ -45,6 +45,97 @@ byte ViewMaxLongValue(byte NameSensor, int Value){
 }
 
 
+void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte TypeValue){
+	String Text = "";
+	boolean Send = false;
+	switch(TypeMeasurement){
+		case S_DS18B20:
+			break;
+		case S_AM2302:
+			break;
+		case S_HTU21D /*|| S_SI7013 || S_SI7020 || S_SI7021 || S_SHT21*/:
+			switch(TypeMeasurement){
+				case TEMP_AIR_VALUE:
+					SensorsError[NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
+					if (OUTPUT_LEVEL_UART_SENSOR){
+						Serial.println(F("...error"));
+					}
+					break;
+				case HUMM_AIR_VALUE:
+					if (OUTPUT_LEVEL_UART_SENSOR){
+						Serial.println(F("...error"));
+					}
+					SensorsError[NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
+					break;
+				case HUMM_AND_TEMP_VALUE:
+					break;
+			}
+			break;	
+		case S_BME280:
+			switch(TypeMeasurement){
+				case TEMP_AIR_VALUE:																// Температура
+					if (TypeValue == -139.98){
+						if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
+							if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){				// Если не отправлялось СМС
+								Send = true;
+								Text = F("temperature");
+								EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 1);
+							}
+						}
+					}
+					else{
+						EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 0);
+					}
+					break;
+				case ATMOSPHERIC_PRESSURE:							// Атмосферное давление
+					if (TypeValue == 905.76){
+						if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
+							if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){				// Если не отправлялось СМС
+								Send = true;
+								Text = F("pressure");
+								EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 1);
+							}
+						}
+					}
+					else{
+						EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 0);
+					}
+					break;
+			}
+			if(Send){
+				//Send_SMS(String(F("Error of reading ")) + Text + String(F(" on sensor ")) + NameSensor[NumberSensor], GSM_ERROR_SMS);
+			}
+			break;	
+		case S_BMP280:
+			break;
+		case S_INA219:
+			break;
+		case S_ANALOG_SENSOR:
+			break;
+		case S_TSL2561:
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("...error"));
+			}
+			SensorsError[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
+			RealValueSensors[NumberSensor][VALUE_2] = 0;			// Обнуляем значение датчика в массиве
+			break;
+		case S_BH1750:
+			SensorsError[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
+			RealValueSensors[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("...error or reading less than zero"));
+			}
+			break;
+		case S_MAX44009:
+			break;
+		case S_LM75:
+			break;
+		case S_INA3221:
+			break;	
+	}
+}
+
+
 void ViewValueAllSensors(){									// Вывод в консоль измеренные значения всех датчиков
 	byte maxLongName = 0;
 	byte maxLongValue[3];
@@ -56,13 +147,6 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 	maxLongValue[VALUE_3] = 0;
 	
 	for(byte NumberSensor = 1; NumberSensor < QUANTITY_SENSORS; NumberSensor++){				// Ищем самое длинное название датчика
-		//byte BufferLongName = strlen(NameSensor[NumberSensor]);
-		//BufferLongName = BufferLongName - 1;
-		
-//  		if(BufferLongName > maxLongName){
-//  			maxLongName = BufferLongName;
-//  		}
-		
 		for(byte Value = 0; Value < 3; Value ++){
 			byte BufferLongValue = ViewMaxLongValue(NumberSensor, Value);
 			if(maxLongValue[Value] < BufferLongValue){
@@ -78,12 +162,6 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 		Serial.print(NameSensor[NumberSensor]);
 		byte LongLines = strlen(NameSensor[NumberSensor]);
 		LongLines = LongLines - 1;
-		//Serial.print(" "); Serial.print(LongLines);
-// 		if(LongLines <= maxLongName){
-// 			byte Space = maxLongName - LongLines;
-// 			for(byte i = 1; i <= Space; i++){
-// 				Serial.print(F(" "));
-// 			}
 
 		if(LongLines == 255) LongLines = 0;
 		while (LongLines <= 16){
@@ -161,31 +239,31 @@ void ReadAnalogPort(byte NumberSensor, byte TypeDataSensor){
 	
 	SensorsError[NumberSensor][0] = 0;										// Сбрасываем возможные ошибки чтения данных
 	switch(EEPROM.read(E_Address_Sensor + (NumberSensor * 10))){	
-		case 20:
+		case PORT_INPUT_GPIO_P1:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement ANALOG_S1")); Serial.println(F("...done"));
 			}
 			ReadValueAnalogPort(NumberSensor, 0);
 			break;
-		case 21:
+		case PORT_INPUT_GPIO_P2:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement ANALOG_S2")); Serial.println(F("...done"));
 			}
 			ReadValueAnalogPort(NumberSensor, 1);
 			break;
-		case 22:
+		case PORT_INPUT_GPIO_P3:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement ANALOG_S3")); Serial.println(F("...done"));
 			}	
 			ReadValueAnalogPort(NumberSensor, 7);		
 			break;
-		case 23:
+		case PORT_INPUT_GPIO_P4:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement ANALOG_S4")); Serial.println(F("...done"));
 			}
 			ReadValueAnalogPort(NumberSensor, 3);
 			break;
-		case 24:
+		case PORT_INPUT_GPIO_P5:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement ANALOG_S5")); Serial.println(F("...done"));
 			}
@@ -205,73 +283,73 @@ void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Опред�
 		TypeDataSensor	- тип данных которые измерить датчик (температуры, влажности воздуха, ....)
 	*/
 	switch (EEPROM.read(E_Type_A_Sensor + NumberSensor)){					// Читаем регистр E_Type_A_Sensor и определяем наименование датчика
-		case 1:							/* - DS18B20 */
+		case S_DS18B20:							/* - DS18B20 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("DS18B20"));
 			}
 			CalculateDS18B20(NumberSensor);
 			break;
-		case 2:									/* AM2302 */
+		case S_AM2302:									/* AM2302 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("AM2302"));
 			}
 			CalculateAM2302(NumberSensor, TypeDataSensor);
 			break;
-		case 3:									/* Si7013, Si7020, Si7021, HTU21D, SHT21 */
+		case S_SI7013:									/* Si7013, Si7020, Si7021, HTU21D, SHT21 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("HTU21D"));
 			}
 			CalculateHTU21D(NumberSensor, TypeDataSensor);
 			break;
-		case 4:									/* BME280 */
+		case S_BME280:									/* BME280 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("BME280"));
 			}
 			CalculateBME280(NumberSensor, TypeDataSensor);
 			break;
-		case 5:									/* BMP280 */
+		case S_BMP280:									/* BMP280 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("BMP280"));
 			}
 			CalculateBMP280(NumberSensor, TypeDataSensor);
 			break;
-		case 6:									/* INA219 */
+		case S_INA219:									/* INA219 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("INA219"));
 			}
 			CalculateINA219(NumberSensor, TypeDataSensor);
 			break;
-		case 7:									/* Аналоговой датчик */
+		case S_ANALOG_SENSOR:									/* Аналоговой датчик */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("Analog Port"));
 			}
 			ReadAnalogPort(NumberSensor, TypeDataSensor);
 			break;
-		case 8:									/* TSL2561 */
+		case S_TSL2561:									/* TSL2561 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("TSL2561"));
 			}
 			CalculateTSL2561(NumberSensor, TypeDataSensor);
 			break;
-		case 9:									/* BH1750 */
+		case S_BH1750:									/* BH1750 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("BH1750"));
 			}
 			CalculateBH1750(NumberSensor, TypeDataSensor);
 			break;
-		case 10:								/* MAX44009 */
+		case S_MAX44009:								/* MAX44009 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("MAX44009"));
 			}
 			CalculateMAX44009(NumberSensor, TypeDataSensor);
 			break;
-		case 11:								/* LM75 */
+		case S_LM75:								/* LM75 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("LM75"));
 			}
 			//CalculateLM75(NumberSensor);
 			break;
-		case 12:								/* INA3221 */
+		case S_INA3221:								/* INA3221 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("INA3221"));
 			}

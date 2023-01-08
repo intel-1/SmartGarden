@@ -15,13 +15,13 @@
 #define GSM_DO_NOT_MEASURE false		// Не выполнять измерения
 
 // Уровни исходящих СМС
-#define GSM_INFO_SMS 0					// info			- Обычные сообщения
-#define GSM_ANSWER_SMS 1				// answer		- Ответ на входящее СМС
-#define GSM_DEBUG_SMS 2					// debug		- Подробная информация для отладки
-#define GSM_WARNING_SMS 3				// warning		- Исключительные случаи, но не ошибки
-#define GSM_ERROR_SMS 4					// error		- Ошибки исполнения, не требующие сиюминутного вмешательства
-#define GSM_CRITICAL_SMS 5				// critical		- Критические состояния
-#define GSM_EMERGENCY_SMS 6				// emergency	- Система не работает
+#define GSM_SMS_INFO 0					// info			- Обычные сообщения
+#define GSM_SMS_ANSWER 1				// answer		- Ответ на входящее СМС
+#define GSM_SMS_DEBUG 2					// debug		- Подробная информация для отладки
+#define GSM_SMS_WARNING 3				// warning		- Исключительные случаи, но не ошибки
+#define GSM_SMS_ERROR 4					// error		- Ошибки исполнения, не требующие сиюминутного вмешательства
+#define GSM_SMS_CRITICAL 5				// critical		- Критические состояния
+#define GSM_SMS_EMERGENCY 6				// emergency	- Система не работает
 
 // Параметры очистки очереди СМС
 #define DEL_READ 1						// Удалить все прочитанные SMS

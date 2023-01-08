@@ -449,7 +449,7 @@ void setup() {
 	WriteToLCD(String(F("Initializing Sensors")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	
 	i2c_scaner(ON);
-	DS18B20_scaner(ON);
+	DS18B20_scaner(SENSORS_SEARCH_TO_UART);
 	Serial.println(F("Initializing Sensors: "));
 	for (byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor ++){
 		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){									//  Если датчик включен 
@@ -460,13 +460,6 @@ void setup() {
 	
 	for(byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor++){
 		QuantityCalcSensors.QuantityCalc[NumberSensor] = 1;										// Обнуляем количество измерений
-		String Text_name;
-// 		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
-//  			char symbol = EEPROM.read((E_NameSensor + Sensor - 1) + i + 20 * (Sensor - 1));
-// 			Text_name += String(symbol);
-// 		}
-// 		Name[Sensor] = Text_name;
-
  		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
   			NameSensor[NumberSensor][i]= EEPROM.read((E_NameSensor + NumberSensor - 1) + i + 20 * (NumberSensor - 1));
  		}
@@ -535,14 +528,14 @@ void setup() {
 	if(EEPROM.read(E_SentSMSorStartController) == ON){							// Если настроена отправка СМС о старте контроллера
 		if(EEPROM.read(E_RebutingFromGSM) == 1){								// Если перезагрузку потребовали по СМС
 			if(StateGSM.GSM_Registered){										// Если GSM модуль зарегистрирован в сети
-				Send_SMS(String (F("Controller is rebooting")), GSM_INFO_SMS);
+				Send_SMS(String (F("Controller is rebooting")), GSM_SMS_INFO);
 				EEPROM.write(E_RebutingFromGSM, 0);
 			}
 			else SendSMSorStartController = true;					// Поднимаем флаг чтобы отправить СМС как будет регистрация
 		}
 		else{														// иначе считаем что был "холодный старт"
 			if(StateGSM.GSM_Registered){							// Если модуль зарегистрирован в сети
-				Send_SMS(TextOfStartController, GSM_INFO_SMS);		// Отправка СМС
+				Send_SMS(TextOfStartController, GSM_SMS_INFO);		// Отправка СМС
 			}
 			else SendSMSorStartController = true;					// Поднимаем флаг чтобы отправить СМС как будет регистрация
 		}
@@ -741,10 +734,10 @@ void loop() {
 	// =============================================================================================================================
 	if(SendSMSorStartController && StateGSM.GSM_Registered){
 		if(EEPROM.read(E_RebutingFromGSM) == 1){
-			Send_SMS(String (F("Controller is rebooting")), GSM_INFO_SMS);
+			Send_SMS(String (F("Controller is rebooting")), GSM_SMS_INFO);
 			EEPROM.update(E_RebutingFromGSM, 0);
 		}
-		else Send_SMS(TextOfStartController, GSM_INFO_SMS);			// Отправка СМС
+		else Send_SMS(TextOfStartController, GSM_SMS_INFO);			// Отправка СМС
 		SendSMSorStartController = false;
 	}
 	

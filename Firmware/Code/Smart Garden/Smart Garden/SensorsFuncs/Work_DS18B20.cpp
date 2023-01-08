@@ -25,6 +25,7 @@ DallasTemperature sensors5(&ds5);
 DallasTemperature sensors6(&ds6);
 
 
+
 void ViewError(){
 	if (OUTPUT_LEVEL_UART_SENSOR){
 		Serial.println(F("...error"));
@@ -114,7 +115,7 @@ void CalculateDS18B20(byte NumberSensor){
 // 					MessageGSM.PhoneNumber = 0;
 // 					WriteToQueueGSM(MessageGSM);
 					
-					//Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_ERROR_SMS);  
+					Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_SMS_ERROR);  
 					EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);	
 				}
 			}
@@ -165,78 +166,60 @@ void CalculateDS18B20(byte NumberSensor){
 }
 
 
-#define TEMPERATURE_PRECISION 12			// Точность измерений в битах (по умолчанию 12)
-
-DeviceAddress deviceAddresses[16];			// Создаем массив для хранения адресов датчиков
 
 
-void printAddress(DeviceAddress deviceAddress, byte Notation, bool ViewLogs){			// Функция вывода идентификатора датчика
-	/*
-		ViewLogs:	0 - вывод данных для приложения без двоеточия 
-					1 - вывод данных для UART 
-					
-		Notation -	В какой системе выводить адрес:
-													0 - HEX
-													1 - DEC
-	*/
-	for (uint8_t i = 0; i < 8; i++)  {
+void printAddress(DeviceAddress deviceAddress, byte Units, byte ViewLogs){
+/*
+		Units	-	В какой системе выводить адрес:	SENSORS_SEARCH_OUTPUT_HEX_FORMAT - HEX
+													SENSORS_SEARCH_OUTPUT_DEC_FORMAT - DEC
+		
+ 		ViewLogs:	SENSORS_SEARCH_TO_APP	- вывод данных для приложения без двоеточия
+ 					SENSORS_SEARCH_TO_UART	- вывод данных для UART
+*/
+
+	for (uint8_t i = 0; i < 8; i++){
 		if (deviceAddress[i] < 16) Serial.print(F("0"));
-		switch(Notation){
-			case 0:
-				Serial.print(deviceAddress[i], HEX);
-				break;
-			case 1:
-				Serial.print(deviceAddress[i], DEC);
-				break;
-		}
+		switch(Units){
+	 		case SENSORS_SEARCH_OUTPUT_HEX_FORMAT:
+	 			Serial.print(deviceAddress[i], HEX);
+	 			break;
+	 		case SENSORS_SEARCH_OUTPUT_DEC_FORMAT:
+	 			Serial.print(deviceAddress[i], DEC);
+	 			break;
+	 	}
 		switch(ViewLogs){
-			case 0:
+			case SENSORS_SEARCH_TO_APP:
 				if(i != 7) Serial.print(F(" "));
 				break;
-			case 1:
+			case SENSORS_SEARCH_TO_UART:
 				if(i != 7) Serial.print(F(":"));
 				break;
 		}
 	}
+	Serial.println();
 }
 
-void printTemperature(DeviceAddress deviceAddress, byte Number_Input_GPIO_Port){		// Функция вывода температуры датчика по его идентификатору
-	float tempC;
-	switch(Number_Input_GPIO_Port){
-		case 1:
-			tempC = sensors1.getTempC(deviceAddress);
-			break;
-		case 2:
-			tempC = sensors2.getTempC(deviceAddress);
-			break;
-		case 3:
-			tempC = sensors3.getTempC(deviceAddress);
-			break;
-		case 4:
-			tempC = sensors4.getTempC(deviceAddress);
-			break;
-		case 5:
-			tempC = sensors5.getTempC(deviceAddress);
-			break;
-		case 6:
-			tempC = sensors6.getTempC(deviceAddress);
-			break;
+
+void Print_Count_Sensors(byte countSensors, byte Number_Input_GPIO_Port){
+	if(countSensors > 0){																							// Если нашли датчики на порту
+		Serial.print(F("\t\tOn Input_GPIO_Port ")); Serial.print(Number_Input_GPIO_Port); Serial.print(F(": "));	// Показываем количество найденных датчиков
+		Serial.println(countSensors);
 	}
-	Serial.print(tempC);
-	Serial.print(F(" C"));
 }
 
 
-void DS18B20_scaner(byte ViewLogs){
-	/*
-		ViewLogs:	0 - Вывод данных без описаний
-					1 - вывод данных с описанием 
-	*/
+void DS18B20_scaner(bool LogsToUART){
+/*
+	LogsToUART:	0 - Вывод данных без описаний
+				1 - вывод данных с описанием
+*/
 	
-	#define HEX 0
-	#define DEC 1
+	if(LogsToUART == SENSORS_SEARCH_TO_UART){
+		Serial.println(F("\tDS18B20 sensors:"));
+	}
 	
-	Serial.println(F("\tDS18B20 sensors:"));
+	byte countSensors;
+	DeviceAddress *sensorsUnique;
 	
 	sensors1.begin();
 	sensors2.begin();
@@ -252,117 +235,93 @@ void DS18B20_scaner(byte ViewLogs){
 	sensors4.requestTemperatures();
 	sensors5.requestTemperatures();
 	sensors6.requestTemperatures();
-	
+
 	delay(1500);
 	
-	for (byte Number_Input_GPIO_Port = 1; Number_Input_GPIO_Port <= 6; Number_Input_GPIO_Port ++){		
-		Serial.print("Number_Input_GPIO_Port: "); Serial.println(Number_Input_GPIO_Port);
-		byte deviceCount = 0;								// Переменная для хранения количества датчиков
-		
-		// =========================== Получаем количество найденых датчиков на шине ===========================
+	sensorsUnique = new DeviceAddress[16];							// Выделяем память в динамическом массиве под количество обнаруженных сенсоров
+	
+	for (byte Number_Input_GPIO_Port = 1; Number_Input_GPIO_Port <= 6; Number_Input_GPIO_Port ++){	
 		switch(Number_Input_GPIO_Port){
-			case 1:
-				deviceCount = sensors1.getDeviceCount();
-				break;
-			case 2:
-				deviceCount = sensors2.getDeviceCount();
-				break;
-			case 3:
-				deviceCount = sensors3.getDeviceCount();
-				break;
-			case 4:
-				deviceCount = sensors4.getDeviceCount();
-				break;
-			case 5:
-				deviceCount = sensors5.getDeviceCount();
-				break;
-			case 6:
-				deviceCount = sensors6.getDeviceCount();
-				break;
+ 			case 1:
+ 				countSensors = sensors1.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+					sensors1.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 			case 2:
+ 				countSensors = sensors2.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+					sensors2.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 			case 3:
+ 				countSensors = sensors3.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+					sensors3.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 			case 4:
+ 				countSensors = sensors4.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+					sensors4.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 			case 5:
+ 				countSensors = sensors5.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+					sensors5.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 			case 6:
+ 				countSensors = sensors6.getDeviceCount();
+				for (int i = 0; i < countSensors; i++) {
+				 sensors6.getAddress(sensorsUnique[i], i);
+				}
+ 				break;
+ 		}
+		if(LogsToUART == SENSORS_SEARCH_TO_UART){
+			Print_Count_Sensors(countSensors, Number_Input_GPIO_Port);		// Выводим количество найденых датчиков на порту
 		}
 		
-		
-		if(deviceCount > 0){														// Если нашли датчики на порту
-			Serial.println("\t\t" + String(deviceCount) + " sensors were found on the port input GPIO.P" + String(Number_Input_GPIO_Port));		// Показываем количество найденных датчиков
-			
-			// =========================== Получаем режим питания датчиков - паразитное или обычное ===========================
-			Serial.print(F("\t\tParasite power is: "));									
-			switch(Number_Input_GPIO_Port){ 
-				case 1:
-					Serial.println("\t\t" + sensors1.isParasitePowerMode() ? "ON" : "OFF");
+		// ========================== Выводим полученные адреса измеренную температуру ==========================
+		// Данные с описаниями выводятся только при выставленном флаге SENSORS_SEARCH_ALLOW_LOG_TO_UART =========
+		// При флаге SENSORS_SEARCH_TO_APP выводятся только байты адресов для приложений конфигурирования =======
+		for (int i = 0; i < countSensors; i++) {
+			switch(LogsToUART){
+				case SENSORS_SEARCH_TO_APP:
+					printAddress(sensorsUnique[i], SENSORS_SEARCH_OUTPUT_HEX_FORMAT, LogsToUART);
 					break;
-				case 2:
-					Serial.println("\t\t" + sensors2.isParasitePowerMode() ? "ON" : "OFF");
-					break;
-				case 3:
-					Serial.println("\t\t" + sensors3.isParasitePowerMode() ? "ON" : "OFF");
-					break;
-				case 4:
-					Serial.println("\t\t" + sensors4.isParasitePowerMode() ? "ON" : "OFF");
-					break;
-				case 5:
-					Serial.println("\t\t" + sensors5.isParasitePowerMode() ? "ON" : "OFF");
-					break;
-				case 6:
-					Serial.println("\t\t" + sensors6.isParasitePowerMode() ? "ON" : "OFF");
-					break;
-			}
-		
-			for (int i = 0; i < deviceCount; i++) {											// Заполняем массив адресами устройств
-				bool Device_found = false;
-				switch(Number_Input_GPIO_Port){
-					case 1:
-						if (!sensors1.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-					case 2:
-						if (!sensors2.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-					case 3:
-						if (!sensors3.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-					case 4:
-						if (!sensors4.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-					case 5:
-						if (!sensors5.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-					case 6:
-						if (!sensors6.getAddress(deviceAddresses[i], i)) {												// Если не удалось получить идентификатор
-							Serial.println(F("\t\tUnable to find address for Device ")); Serial.println(String(i));		// Выдаем сообщение об этом
-						}
-						else Device_found = true;
-						break;
-				}
-
-				if(Device_found){
-   					Serial.println("\t\tSensor " + String(i + 1) + ": ");
-					Serial.print(F("\t\t\tAddress (HEX): "));
-					printAddress(deviceAddresses[i], HEX, 1);					// Выводим адрес каждого устройства в HEX
-					Serial.println();
+				case SENSORS_SEARCH_TO_UART:
+					Serial.print(F("\t\t\tDevice ")); Serial.print(i); Serial.println(F(":"));
 					
-					Serial.print(F("\t\t\tAddress (DEC): "));
-					printAddress(deviceAddresses[i], DEC, 1);					// Выводим адрес каждого устройства в DEC
-					Serial.println();			
-											
-					Serial.print(F("\t\t\tTemperature: "));
-					printTemperature(deviceAddresses[i], Number_Input_GPIO_Port);
-					Serial.println();
-				}
+					Serial.print(F("\t\t\t\tAddress (DEC): "));
+					printAddress(sensorsUnique[i], SENSORS_SEARCH_OUTPUT_DEC_FORMAT, LogsToUART);
+					
+					Serial.print(F("\t\t\t\tAddress (HEX): "));
+					printAddress(sensorsUnique[i], SENSORS_SEARCH_OUTPUT_HEX_FORMAT, LogsToUART);
+					
+					Serial.print(F("\t\t\t\tTemperature: "));
+					switch(Number_Input_GPIO_Port){
+						case 1:
+							Serial.print(sensors1.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+						case 2:
+							Serial.print(sensors2.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+						case 3:
+							Serial.print(sensors3.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+						case 4:
+							Serial.print(sensors4.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+						case 5:
+							Serial.print(sensors5.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+						case 6:
+							Serial.print(sensors6.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
+							break;
+					}
+					break;
 			}
 		}
 	}

@@ -38,91 +38,75 @@ float Value(byte _NumberSensor, byte _DataType){
 }
 
 
-void CalculateHTU21D(byte _NumberSensor, byte TypeDataSensor){
-	#define TEMP_VALUE 1
-	#define HUMM_VALUE 2
-	#define HUMM_AND_TEMP_VALUE 12
-	
+void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 	float _BufferValue;
-	ControllPort(_NumberSensor, 1);											// Включаем управление Controll портом
+	ControllPort(NumberSensor, 1);											// Включаем управление Controll портом
 	switch(TypeDataSensor){
-		case TEMP_VALUE:
+		case TEMP_AIR_VALUE:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Temp"));Serial.println(F("...done"));
 			}
-			_BufferValue = Value(_NumberSensor, TEMP_VALUE);
+			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
 			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)							
-				RealValueSensors[_NumberSensor][VALUE_1] = _BufferValue;
-				SensorsError[_NumberSensor][VALUE_1] = 0;
+				RealValueSensors[NumberSensor][VALUE_1] = _BufferValue;
+				SensorsError[NumberSensor][VALUE_1] = 0;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
 			}
 			else {
-				SensorsError[_NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
-				if (OUTPUT_LEVEL_UART_SENSOR){
-					Serial.println(F("...error"));
-				}
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
 			}
 			break;
-		case HUMM_VALUE:
+		case HUMM_AIR_VALUE:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Humm"));
 			}
-			_BufferValue = Value(_NumberSensor, HUMM_VALUE);
+			_BufferValue = Value(NumberSensor, HUMM_AIR_VALUE);
 			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
-				RealValueSensors[_NumberSensor][VALUE_2] = _BufferValue;
+				RealValueSensors[NumberSensor][VALUE_2] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
-				SensorsError[_NumberSensor][VALUE_2] = 0;
+				SensorsError[NumberSensor][VALUE_2] = 0;
 			}
 			else{
-				if (OUTPUT_LEVEL_UART_SENSOR){
-					Serial.println(F("...error"));
-				}
-				SensorsError[_NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 			}
 			break;
 		case HUMM_AND_TEMP_VALUE:		
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Temp"));
 			}
-			_BufferValue = Value(_NumberSensor, TEMP_VALUE);
+			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
 			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)
-				SensorsError[_NumberSensor][VALUE_1] = 0;
-				RealValueSensors[_NumberSensor][VALUE_1] = _BufferValue;
+				SensorsError[NumberSensor][VALUE_1] = 0;
+				RealValueSensors[NumberSensor][VALUE_1] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
 			}
 			else{
-				SensorsError[_NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
-				if (OUTPUT_LEVEL_UART_SENSOR){
-					Serial.println(F("...error"));
-				}
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
 			}
 			// --------------------------------------------
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Humm"));
 			}
-			_BufferValue = Value(_NumberSensor, HUMM_VALUE);
+			_BufferValue = Value(NumberSensor, HUMM_AIR_VALUE);
 			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
-				SensorsError[_NumberSensor][VALUE_2] = 0;
-				RealValueSensors[_NumberSensor][VALUE_2] = _BufferValue;
+				SensorsError[NumberSensor][VALUE_2] = 0;
+				RealValueSensors[NumberSensor][VALUE_2] = _BufferValue;
 			}
 			else{
-				if (OUTPUT_LEVEL_UART_SENSOR){
-					Serial.println(F("...error"));
-				}
-				SensorsError[_NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 			}
 			break;
 	}
-	ControllPort(_NumberSensor, 0);											// Выключаем управление Controll портом
+	ControllPort(NumberSensor, 0);											// Выключаем управление Controll портом
 }
 
 

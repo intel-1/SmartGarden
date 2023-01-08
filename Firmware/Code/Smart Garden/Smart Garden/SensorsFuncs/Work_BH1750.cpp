@@ -41,12 +41,8 @@ void CalculateBH1750(byte NumberSensor, byte TypeDataSensor){
 			break;
 	}
 		
-	if (lux < 0) {												// Если значение не получено
-		SensorsError[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения
-		RealValueSensors[NumberSensor][VALUE_2] = 0;			// Обнуляем значение в массиве
-		if (OUTPUT_LEVEL_UART_SENSOR){
-			Serial.println(F("...error or reading less than zero"));
-		}
+	if (lux < 0) {												// Если значение не получено (ошибка)
+		React_to_Error_Calculate_Value(NumberSensor, LIGHT, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 	}
 	else {
 		SensorsError[NumberSensor][VALUE_2] = 0;				// Снимаем возможную ошибку чтения данных

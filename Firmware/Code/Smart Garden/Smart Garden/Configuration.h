@@ -24,8 +24,6 @@ extern char Text_Error_Configuration[];
 extern boolean ControllerSetup;			// Для обозначения стадии загрузки контроллера (Setup)
 extern byte LOGING_TO_SERIAL;
 extern char NameSensor[17][20];			// Всего датчиков 16 шт, но счет для удобства идет с единицы.
-//extern String Name[17];
-//extern char Name[17];
 // ======================================================================
 #define ADDRESS_INPUT_LM75 0x48			// Адрес встроенного датчика температуры LM75
 #define ADDRESS_INPUT_LCD 0x3f			// Адрес LCD экрана
@@ -100,6 +98,16 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define LED_ERROR_VCC 1
 #define LED_ERROR_SD_CARD 2
 #define LED_NOT_SD_CARD 11
+
+
+// =============================================================================
+// ==================== Логирования в UART при поиске датчиков =================
+// =============================================================================
+#define SENSORS_SEARCH_TO_UART 1
+#define SENSORS_SEARCH_TO_APP 2
+
+#define SENSORS_SEARCH_OUTPUT_HEX_FORMAT 0
+#define SENSORS_SEARCH_OUTPUT_DEC_FORMAT 1
 
 
 // =============================================================================

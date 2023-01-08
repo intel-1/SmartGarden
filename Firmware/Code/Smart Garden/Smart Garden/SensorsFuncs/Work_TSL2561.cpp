@@ -102,11 +102,7 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 		}
 	
 		if(ErrorCalculate){											// Если значение датчика не получено
-			if (OUTPUT_LEVEL_UART_SENSOR){
-				Serial.println(F("...error"));
-			}
-			SensorsError[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
-			RealValueSensors[NumberSensor][VALUE_2] = 0;			// Обнуляем значение датчика в массиве
+			React_to_Error_Calculate_Value(NumberSensor, LIGHT, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 		}
 		else{
 			SensorsError[NumberSensor][VALUE_2] = 0;				// Снимаем возможную ошибку чтения данных

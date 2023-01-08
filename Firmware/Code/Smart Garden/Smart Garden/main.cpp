@@ -326,13 +326,13 @@ void ManagementVCC(){
 			if (LowChargeBattery_SMS == false){						// Если СМС не отправлялось
 				switch(EEPROM.read(E_ReactToMinVCC)){
 					case REACTION_ERORR_VCC_SEND_SMS:
-						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_WARNING_SMS);
+						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_SMS_WARNING);
 						break;
 					case REACTION_ERORR_VCC_SEND_GET:
 						Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 						break;
 					case REACTION_ERORR_VCC_SEND_SMS_AND_GET:
-						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_WARNING_SMS);
+						Send_SMS(String (F("Controller. Low input VCC: ")) + VCC, GSM_SMS_WARNING);
 						Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Low input VCC: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 						break;
 				}
@@ -352,13 +352,13 @@ void ManagementVCC(){
 				if(LowChargeBattery_SMS){							// Если ранее отправлялась СМС
 					switch(EEPROM.read(E_ReactToMinVCC)){
 						case REACTION_ERORR_VCC_SEND_SMS:
-							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_WARNING_SMS);
+							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_SMS_WARNING);
 							break;
 						case REACTION_ERORR_VCC_SEND_GET:
 							Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 							break;
 						case REACTION_ERORR_VCC_SEND_SMS_AND_GET:
-							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_WARNING_SMS);
+							Send_SMS(String (F("Controller. Input VCC OK: ")) + VCC, GSM_SMS_WARNING);
 							Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("Input VCC OK: ")) + VCC + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 							break;
 					}
@@ -682,7 +682,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		if (WorkValueSensor.Value < EEPROM.read(E_MinValueToReact + (WorkChannel.Number - 1))){
 			if(EEPROM.read(E_AllowReactToMinValue + (WorkChannel.Number - 1)) == 1){											// Если настроено на отправку этого уведомления
 				if(EEPROM.read(E_SendingSMSminValue + (WorkChannel.Number - 1)) == 1){										// Если СМС не отправлялось
-					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is lower than minimum")), GSM_ERROR_SMS);  
+					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is lower than minimum")), GSM_SMS_ERROR);  
 					EEPROM.write(E_SendingSMSmaxValue + (WorkChannel.Number - 1), 1);
 				}
 			}
@@ -690,7 +690,7 @@ void WorkThermostatMode(byte _Mode){								// Рабочая ф-ция для �
 		if (WorkValueSensor.Value > EEPROM.read(E_MaxValueToReact + (WorkChannel.Number - 1))){
 			if(EEPROM.read(E_AllowReactToMaxValue + (WorkChannel.Number - 1)) == 1){											// Если настроено на отправку этого уведомления
 				if(EEPROM.read(E_SendingSMSmaxValue + (WorkChannel.Number - 1)) == 1){										// Если СМС не отправлялось
-					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is higher than maximum")), GSM_ERROR_SMS);  
+					Send_SMS(String(F("The value of channel ")) + (WorkChannel.Number - 1) + (F(" is higher than maximum")), GSM_SMS_ERROR);  
 					EEPROM.write(E_SendingSMSmaxValue + (WorkChannel.Number - 1), 1);
 				}
 			}

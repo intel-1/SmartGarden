@@ -293,25 +293,25 @@ void Send_SMS(String _Text, byte _Level) {
 	if(StateGSM.GSM_Registered){				// и если зарегистрирован
 		String Phone;
 		switch(_Level){
-			case GSM_INFO_SMS:					// info — обычные сообщения
+			case GSM_SMS_INFO:					// info — обычные сообщения
 				//Phone = PhoneNumber;
 				Phone = (F("+79139045925"));
 				break;
-			case GSM_ANSWER_SMS:				// Ответ на входящее СМС
+			case GSM_SMS_ANSWER:				// Ответ на входящее СМС
 				Phone = RingPhone;
 				break;
-			case GSM_DEBUG_SMS:					// debug — Подробная информация для отладки			
+			case GSM_SMS_DEBUG:					// debug — Подробная информация для отладки			
 				break;
-			case GSM_WARNING_SMS:				// warning — Исключительные случаи, но не ошибки
+			case GSM_SMS_WARNING:				// warning — Исключительные случаи, но не ошибки
 				//Phone = NumberForWarningSMS[0];
 				Phone = (F("+79139045925"));
 				break;
-			case GSM_ERROR_SMS:					// error — Ошибки исполнения, не требующие сиюминутного вмешательства
+			case GSM_SMS_ERROR:					// error — Ошибки исполнения, не требующие сиюминутного вмешательства
 				Phone = (F("+79139045925"));
 				break;
-			case GSM_CRITICAL_SMS:				// critical — Критические состояния
+			case GSM_SMS_CRITICAL:				// critical — Критические состояния
 				break;
-			case GSM_EMERGENCY_SMS:				// emergency — Система не работает
+			case GSM_SMS_EMERGENCY:				// emergency — Система не работает
 				break;
 		}
 		//gsm_dtr_off();								// Взбадриваем модуль
@@ -876,7 +876,7 @@ void Master_SMS(String _Line) {
 						(F("Temp_Right: ")) + RealValueSensors[SENSOR_2][VALUE_1]	+	(F(", ")) +
 						(F("Ti: "))			+ Ti 									+	(F(", ")) + 
 						(F("VCC: "))		+ VCC, 
-																GSM_ANSWER_SMS);
+																GSM_SMS_ANSWER);
 	}
 	// ===========================================================================================================
 	if ((_Line.indexOf(F("temp")) > -1)) {
@@ -885,7 +885,7 @@ void Master_SMS(String _Line) {
 		}
 		Send_SMS(String	(F("Temp_UP: "))	+ RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
 						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_3][VALUE_1] + (F(", ")) , 
-																GSM_ANSWER_SMS);
+																GSM_SMS_ANSWER);
 	}
 	RingPhone = "";								// Очищаем номер автора смс
 	gsm_dtr_on();								// Усыпляем модуль

@@ -62,10 +62,10 @@ void RecievedDebug(){
 				i2c_scaner(ON);
 				break;
 			case 3:
-				DS18B20_scaner(ON);		// Вывод результатов поиска с описаниями
+				//DS18B20_scaner(ON);		// Вывод результатов поиска с описаниями
 				break;
 			case 4:
-				DS18B20_scaner(OFF);		// Вывод результатов поиска в виде байт
+				//DS18B20_scaner(OFF);		// Вывод результатов поиска в виде байт
 				Serial.println();
 				break;
 			case 5:

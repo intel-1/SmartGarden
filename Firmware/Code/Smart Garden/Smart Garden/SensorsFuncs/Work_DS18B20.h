@@ -15,7 +15,8 @@ extern DallasTemperature sensors6;
 
 
 void CalculateDS18B20(byte NumberSensor);
-void DS18B20_scaner(byte ViewLogs);
+//void DS18B20_scaner(byte ViewLogs);
+void DS18B20_scaner(bool LogsToUART);
 void StartMeasurementIndicationsDS18B20();
 
 #endif
