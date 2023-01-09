@@ -147,6 +147,26 @@ void CalculateDS18B20(byte NumberSensor){
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
+				switch(EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2)){			// Отдаем команды измерять температуру
+					case 1:
+						sensors1.requestTemperatures();					
+						break;
+					case 2:
+						sensors2.requestTemperatures();
+						break;
+					case 3:
+						sensors3.requestTemperatures();
+						break;
+					case 4:
+						sensors4.requestTemperatures();
+						break;
+					case 5:
+						sensors5.requestTemperatures();
+						break;
+					case 6:
+						sensors6.requestTemperatures();
+						break;
+				}
 			}
 // 			else{
 // 				SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком

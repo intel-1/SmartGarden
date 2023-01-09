@@ -336,12 +336,12 @@ void setup() {
 	// ===================================================================================================================================	
 	WriteToLCD(String(F("Input VCC")), LCD_LINE_2, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	Serial.print(F("Input VCC: "));
-	Dimension_VCC();											// Измерение напряжения
-	Serial.print(VCC);
-	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){			// Напряжение питания выше минимального
+	Dimension_VCC();													// Измерение напряжения
+	Serial.print(VCC);	
+	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){					// Напряжение питания выше минимального
 		WriteToLCD(String(F("...OK")), LCD_LINE_2, LCD_START_SYMBOL_10, LCD_SCREEN_REFRESH_DELAY);
 		Serial.println(F("...OK"));
-		if(EEPROM.read(E_ControllVCC) == true){					// Если включено контролирование VCC
+		if(EEPROM.read(E_ControllVCC) == true){							// Если включено контролирование VCC
 			Low_Input_VCC = false;
 		}
 	}
@@ -350,8 +350,8 @@ void setup() {
 		WriteToLCD(String(F("...No start GSM   ")), LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
 		WriteToLCD(String(F("...No Exec modules ")), LCD_LINE_4, LCD_START_SYMBOL_2, LCD_SCREEN_REFRESH_DELAY);
 		Serial.println(F("...LOW"));
-		if(EEPROM.read(E_ControllVCC) == true){					// Если включено контролирование VCC
-			Low_Input_VCC = true;								// Поднимаем флаг низкого напряжения питания
+		if(EEPROM.read(E_ControllVCC) == true){							// Если включено контролирование VCC
+			Low_Input_VCC = true;										// Поднимаем флаг низкого напряжения питания
 		}
 		StatusLED(LED_ERROR_VCC);													
 	}
