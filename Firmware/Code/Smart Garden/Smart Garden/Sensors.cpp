@@ -45,7 +45,7 @@ byte ViewMaxLongValue(byte NameSensor, int Value){
 }
 
 
-void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte TypeValue){
+void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte Value){
 	String Text = "";
 	boolean Send = false;
 	switch(TypeMeasurement){
@@ -74,7 +74,7 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 		case S_BME280:
 			switch(TypeMeasurement){
 				case TEMP_AIR_VALUE:																// Температура
-					if (TypeValue == -139.98){
+					if (Value == -139.98){
 						if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
 							if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){				// Если не отправлялось СМС
 								Send = true;
@@ -88,7 +88,7 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 					}
 					break;
 				case ATMOSPHERIC_PRESSURE:							// Атмосферное давление
-					if (TypeValue == 905.76){
+					if (Value == 905.76){
 						if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
 							if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){				// Если не отправлялось СМС
 								Send = true;
@@ -133,6 +133,22 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 		case S_INA3221:
 			break;	
 		case S_AHT25:
+			switch(TypeMeasurement){
+				case TEMP_AIR_VALUE:
+					SensorsError[NumberSensor][VALUE_1] = 1;						// Поднимаем ошибку чтения
+					RealValueSensors[NumberSensor][VALUE_1] = 0;					// Обнуляем значение в массиве
+					if (OUTPUT_LEVEL_UART_SENSOR){
+						Serial.println(F("...error"));
+					}
+					break;
+				case HUMM_AIR_VALUE:
+					SensorsError[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
+					RealValueSensors[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
+					if (OUTPUT_LEVEL_UART_SENSOR){
+						Serial.println(F("...error"));
+					}
+					break;
+			}
 			break;
 	}
 }
@@ -495,6 +511,7 @@ void i2c_scaner(boolean LogView){
 			if(stringOne == "26") Serial.println(F("'PCF8574 8-Bit I/O Expander'"));
 			if(stringOne == "27") Serial.println(F("'PCF8574 8-Bit I/O Expander' OR 'LCD module'"));
 			if(stringOne == "29") Serial.println(F("'TSL2561 Light Sensor'"));
+			if(stringOne == "38") Serial.println(F("'AHT25'"));
 			if(stringOne == "39") Serial.println(F("'TSL2561 Light Sensor'"));
 			if(stringOne == "40") Serial.println(F("'BMP180, Si7013, Si7020, Si7021, HTU21D, SHT21, INA219'" ));
 			if(stringOne == "41") Serial.println(F("'INA219'" ));

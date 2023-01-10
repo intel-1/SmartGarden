@@ -54,6 +54,6 @@ void ViewValueAllSensors();
 void CalculateSensors();
 void i2c_scaner(boolean LogView);
 
-void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte TypeValue);
+void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte Value);
 
 #endif

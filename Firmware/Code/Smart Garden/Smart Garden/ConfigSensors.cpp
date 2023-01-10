@@ -172,7 +172,9 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + GSM_GET_Tab_2 + (F("Sensor ")) + NumberSensor + (F(": Work port is not configured")) + (F("\"")), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
 	}						
 	
+	// ==============================================================================================
 	// ================================ Проверка подключен ли датчик ================================
+	// ==============================================================================================
 	Serial.print(F("\t\tСonnection status: "));
 	switch(Config_Sensor_B){
 		case 1:
@@ -213,14 +215,14 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			break;
 	}
 	
-	
-	// ================================ Задаем точность измерения ================================
-	// ========================= Задаем новые пороговые значения тревоги =========================
+	// ==============================================================================================
+	// ================================== Задаем точность измерения =================================
+	// ==============================================================================================
 	byte ConfigSensor_A = EEPROM.read(E_ConfigSensor_A + NumberSensor);
 	switch(Config_Sensor_B){
 		case 1:
 			if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){					// Разрешенные значения разрешения 9, 10, 11, 12
-				sensors1.setResolution(ConfigSensor_A);
+				sensors1.setResolution(AddresSensor, ConfigSensor_A);
 				Send_to_UART_Resolution(sensors1.getResolution(AddresSensor), 0);
 			} 
 			else{
