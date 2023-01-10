@@ -33,35 +33,10 @@ void ViewError(){
 }
 
 
-// void StartMeasurementIndicationsDS18B20(){											// Ф-ция комманд измерения температур датчиками		
-// 	for(byte NumberGPIO = 1; NumberGPIO <= QuantityInputGPIO; NumberGPIO++){		// Отправляем команду на измерение температуры только проинициализированым датчикам
-// 		switch(Init_DS18B20[NumberGPIO]){
-// 			case 1:
-// 				sensors1.requestTemperatures();
-// 				break;
-// 			case 2:
-// 				sensors2.requestTemperatures();
-// 				break;
-// 			case 3:
-// 				sensors3.requestTemperatures();
-// 				break;
-// 			case 4:
-// 				sensors4.requestTemperatures();
-// 				break;
-// 			case 5:
-// 				sensors5.requestTemperatures();
-// 				break;
-// 			case 6:
-// 				sensors6.requestTemperatures();
-// 				break;
-// 		}
-// 	}
-// 	_delay_ms(500);																	// Задержка для измерений
-// }
-
-
 void CalculateDS18B20(byte NumberSensor){
 	float RealValue;
+	bool SensorConnect = false;
+	byte Config_Sensor_B = EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2);
 	DeviceAddress AddresSensor = {	EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 0),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 1),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 2),
@@ -71,118 +46,147 @@ void CalculateDS18B20(byte NumberSensor){
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 6),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 7)};
 		
-	ControllPort(NumberSensor, 1);													// Включаем управление Controll портом
-	
-	switch(EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2)){
-		case 1:
-			RealValue = sensors1.getTempC(AddresSensor);							// Получаем измеренное значение
-			break;
-		case 2:
-			RealValue = sensors2.getTempC(AddresSensor);
-			break;
-		case 3:
-			RealValue = sensors3.getTempC(AddresSensor);
-			break;
-		case 4:
-			RealValue = sensors4.getTempC(AddresSensor);
-			break;
-		case 5:
-			RealValue = sensors5.getTempC(AddresSensor);
-			break;
-		case 6:
-			RealValue = sensors6.getTempC(AddresSensor);
-			break;
-	}
-	
 	if (OUTPUT_LEVEL_UART_SENSOR){
 		Serial.print(F("\t\t\t...measurement Temp"));
 	}
 	
-	switch((int)RealValue){																// Преобразуем показание в int для определения валидности значения
-		case -127:																		// Датчик не доступен
-			SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
-			EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
-			ViewError();
-			if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
-				if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
-					
-// 					MessageGSM.Arg_1_a = 1;
-// 					MessageGSM.Arg_1_b = 2;
-// 					MessageGSM.Arg_2_a = 2;
-// 					MessageGSM.Arg_2_b = NumberSensor;
-// 					MessageGSM.Arg_3_a = 1;
-// 					MessageGSM.Arg_3_b = 3;
-// 					MessageGSM.PhoneNumber = 0;
-// 					WriteToQueueGSM(MessageGSM);
-					
-					Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_SMS_ERROR);  
-					EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);	
-				}
-			}
-			EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
+	switch(Config_Sensor_B){
+		case 1:
+			if(sensors1.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 85:																			// Ошибка чтения данных
-			EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
-			SensorsError[NumberSensor][VALUE_1] = 1;										// Ошибка чтения данных датчиком
-			ViewError();
-			if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){						// Если настроено на отправку СМС при ошибке чтения
-				if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
-					EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 1);	 
-				}
-			}
-			EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
+		case 2:
+			if(sensors2.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		default:																	// Все хорошо, показания датчика валидны
-			if(-55 <= RealValue && RealValue <= 125){								// Диапазон измеряемых температур: -55…+125°C
-				
-				
-				RealValueSensors[NumberSensor][VALUE_1] = RealValue;
-				SensorsError[NumberSensor][VALUE_1] = 0;							// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
-			
-				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){			// Если настроено на отправку СМС при ошибках датчиков
-					if(EEPROM.read(E_ReadSensorOK_SMS + NumberSensor) == 0){		// Если не отправлялось СМС
-						EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 1);
-					}
-				}
-				if (OUTPUT_LEVEL_UART_SENSOR){
-					Serial.println(F("...done"));
-				}
-				switch(EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2)){			// Отдаем команды измерять температуру
-					case 1:
-						sensors1.requestTemperatures();					
-						break;
-					case 2:
-						sensors2.requestTemperatures();
-						break;
-					case 3:
-						sensors3.requestTemperatures();
-						break;
-					case 4:
-						sensors4.requestTemperatures();
-						break;
-					case 5:
-						sensors5.requestTemperatures();
-						break;
-					case 6:
-						sensors6.requestTemperatures();
-						break;
-				}
-			}
-// 			else{
-// 				SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
-// 				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
-// 				ViewError();
-// 				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
-// 					if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС					
-// 						SendSMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_ERROR_SMS);
-// 						EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);
-// 					}
-// 				}
-// 				EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
-// 			}
+		case 3:
+			if(sensors3.isConnected(AddresSensor)) SensorConnect = true;
+			break;
+		case 4:
+			if(sensors4.isConnected(AddresSensor)) SensorConnect = true;
+			break;
+		case 5:
+			if(sensors5.isConnected(AddresSensor)) SensorConnect = true;
+			break;
+		case 6:
+			if(sensors6.isConnected(AddresSensor)) SensorConnect = true;
 			break;
 	}
-	ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом
+	
+	if(SensorConnect){																	// Если датчик подключен к шине
+		ControllPort(NumberSensor, 1);													// Включаем управление Controll портом
+	
+		switch(Config_Sensor_B){
+			case 1:
+				RealValue = sensors1.getTempC(AddresSensor);							// Получаем измеренное значение
+				break;
+			case 2:
+				RealValue = sensors2.getTempC(AddresSensor);
+				break;
+			case 3:
+				RealValue = sensors3.getTempC(AddresSensor);
+				break;
+			case 4:
+				RealValue = sensors4.getTempC(AddresSensor);
+				break;
+			case 5:
+				RealValue = sensors5.getTempC(AddresSensor);
+				break;
+			case 6:
+				RealValue = sensors6.getTempC(AddresSensor);
+				break;
+		}
+	
+		switch((int)RealValue){																// Преобразуем показание в int для определения валидности значения
+			case -127:																		// Датчик не доступен
+				SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
+				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
+				ViewError();
+				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
+					if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
+					
+	// 					MessageGSM.Arg_1_a = 1;
+	// 					MessageGSM.Arg_1_b = 2;
+	// 					MessageGSM.Arg_2_a = 2;
+	// 					MessageGSM.Arg_2_b = NumberSensor;
+	// 					MessageGSM.Arg_3_a = 1;
+	// 					MessageGSM.Arg_3_b = 3;
+	// 					MessageGSM.PhoneNumber = 0;
+	// 					WriteToQueueGSM(MessageGSM);
+					
+						Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_SMS_ERROR);  
+						EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);	
+					}
+				}
+				EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
+				break;
+			case 85:																			// Ошибка чтения данных
+				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
+				SensorsError[NumberSensor][VALUE_1] = 1;										// Ошибка чтения данных датчиком
+				ViewError();
+				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){						// Если настроено на отправку СМС при ошибке чтения
+					if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
+						EEPROM.write(E_ErrorReadSensor_SMS + NumberSensor, 1);	 
+					}
+				}
+				EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
+				break;
+			default:																	// Все хорошо, показания датчика валидны
+				if(-55 <= RealValue && RealValue <= 125){								// Диапазон измеряемых температур: -55…+125°C
+				
+				
+					RealValueSensors[NumberSensor][VALUE_1] = RealValue;
+					SensorsError[NumberSensor][VALUE_1] = 0;							// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
+			
+					if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){			// Если настроено на отправку СМС при ошибках датчиков
+						if(EEPROM.read(E_ReadSensorOK_SMS + NumberSensor) == 0){		// Если не отправлялось СМС
+							EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 1);
+						}
+					}
+					if (OUTPUT_LEVEL_UART_SENSOR){
+						Serial.println(F("...done"));
+					}
+					switch(EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2)){			// Отдаем команды измерять температуру
+						case 1:
+							sensors1.requestTemperatures();					
+							break;
+						case 2:
+							sensors2.requestTemperatures();
+							break;
+						case 3:
+							sensors3.requestTemperatures();
+							break;
+						case 4:
+							sensors4.requestTemperatures();
+							break;
+						case 5:
+							sensors5.requestTemperatures();
+							break;
+						case 6:
+							sensors6.requestTemperatures();
+							break;
+					}
+				}
+	// 			else{
+	// 				SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
+	// 				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
+	// 				ViewError();
+	// 				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
+	// 					if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС					
+	// 						SendSMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_ERROR_SMS);
+	// 						EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);
+	// 					}
+	// 				}
+	// 				EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
+	// 			}
+				break;
+		}
+		ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом
+	}
+	else{
+		if (OUTPUT_LEVEL_UART_SENSOR){
+			Serial.println(F("...error"));
+			Serial.println(F("\t\t\t...sensor not connected"));
+		}
+	}
 }
 
 

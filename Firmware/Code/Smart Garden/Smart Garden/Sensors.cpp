@@ -7,8 +7,8 @@
 #include "lib\SD.h"
 
 #include "Sensors.h"
+#include "GSM.h"
 #include "EEPROM_ADR.h"
-//#include "SDcard.h"
 #include "Warning.h"
 #include "main.h"
 #include "DigitalPorts.h"
@@ -23,7 +23,6 @@ int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения �
 float RealValueSensors[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
 float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
 byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
-//boolean DebugRepet_1;									// Повторять ли вывод в консоль
 int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
 
@@ -103,7 +102,7 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 					break;
 			}
 			if(Send){
-				//Send_SMS(String(F("Error of reading ")) + Text + String(F(" on sensor ")) + NameSensor[NumberSensor], GSM_ERROR_SMS);
+				Send_SMS(String(F("Error of reading ")) + Text + String(F(" on sensor ")) + NameSensor[NumberSensor], GSM_SMS_ERROR);
 			}
 			break;	
 		case S_BMP280:
@@ -404,12 +403,12 @@ void CalculateSensors(){																	// Определяем какие по
 	for (byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor ++){			// Проходим по всем датчикам
 		wdt_reset();
 		if(EEPROM.read(E_StatusSensor + NumberSensor) == 1){								// Если датчик включен																								
-			if (OUTPUT_LEVEL_UART_SENSOR){
-				Serial.print(F("\t...Датчик ")); Serial.print(NumberSensor); Serial.println(F(":"));
-				Serial.print(F("\t\t...Наименование датчика: "));
-			}
 			byte Type_B_Sensor = EEPROM.read(E_Type_B_Sensor + NumberSensor);
 			if(AllowCalculateSensor(NumberSensor)){																
+				if (OUTPUT_LEVEL_UART_SENSOR){
+					Serial.print(F("\t...Датчик ")); Serial.print(NumberSensor); Serial.println(F(":"));
+					Serial.print(F("\t\t...Наименование датчика: "));
+				}
 				DefinitionSensor(NumberSensor, Type_B_Sensor);								// Измеряем показания
 				for(byte SGB = 0; SGB < 3; SGB ++){											// Проходим по всем байтам привязки к круппам
 					byte NumberChannel = EEPROM.read(E_SBG + (NumberSensor*3) + SGB);		// Получаем номер группы к которой привязано значение датчика
@@ -426,7 +425,6 @@ void CalculateSensors(){																	// Определяем какие по
 			}
 		}
 	}
-	//StartMeasurementIndicationsDS18B20();
 }
 
 

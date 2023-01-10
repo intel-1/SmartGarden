@@ -281,8 +281,6 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			}
 			break;
 	}
-	
-	//StartMeasurementIndicationsDS18B20();				// Сразу отдаем датчикам команду измерять температуру 
 }
 
 
