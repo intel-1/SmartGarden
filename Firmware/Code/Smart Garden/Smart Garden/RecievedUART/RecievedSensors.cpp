@@ -107,7 +107,7 @@ void SentConfigSensorsUART(){
 	
 	// ========================================================	
 	switch(EEPROM.read(E_Type_A_Sensor + INPUT_BYTE_NUMBER_SENSOR)){
-		case 1:																			// Если DS18B20
+		case S_DS18B20:																			// Если DS18B20
 			Serial.print(F("Разрешение датчика: ")); Serial.print(EEPROM.read(E_ConfigSensor_A + INPUT_BYTE_NUMBER_SENSOR)); Serial.println(F("бит"));
 			Serial.print(F("Порт подключения: "));
 			switch(EEPROM_int_read(E_ConfigSensor_B + INPUT_BYTE_NUMBER_SENSOR*2)){			// Имя порта к которому подключене датчик
@@ -133,11 +133,11 @@ void SentConfigSensorsUART(){
 					Serial.println(F("Ошибка. Не корректно настроен"));
 			}
 			break;
-		case 4:																			// Если BMP280
+		case S_BME280:																			// Если BMP280
 			break;
-		case 5:																			// Если BME280
+		case S_BMP280:																			// Если BME280
 			break;
-		case 7:																			// Analog port
+		case S_ANALOG_SENSOR:																			// Analog port
 			Serial.print(F("Единицы измерения: "/*"\tUnits of measure: "*/));			// Выводим единицы измерения датчика
 			switch(EEPROM.read(E_ConfigSensor_A + INPUT_BYTE_NUMBER_SENSOR)){
 				case 0:
@@ -158,7 +158,7 @@ void SentConfigSensorsUART(){
 				}
 			}
 			break;
-		case 8:																				// Если датчик TSL2561
+		case S_TSL2561:																				// Если датчик TSL2561
 			Serial.print(F("Спектр измерений: "));
 			switch(EEPROM.read(E_ConfigSensor_A + INPUT_BYTE_NUMBER_SENSOR)){
 				case 1:
@@ -209,7 +209,7 @@ void SentConfigSensorsUART(){
 				default:
 					Serial.println(F("Не настроено (default: 13ms)"));		
 			}
-		case 9:																						// Если BH1750
+		case S_BH1750:																						// Если BH1750
 			Serial.print(F("Режим измерения: "));
 			switch(EEPROM.read(E_ConfigSensor_A + INPUT_BYTE_NUMBER_SENSOR)){					// Имя порта к которому подключене датчик
 				case 1:
@@ -234,7 +234,7 @@ void SentConfigSensorsUART(){
 					Serial.println(Text_Error_Configuration);
 			}
 			break;
-		case 10:																					// Если датчик MAX44009
+		case S_MAX44009:																					// Если датчик MAX44009
 			break;
 	}		
 	// ========================================================
@@ -354,7 +354,7 @@ void WriteConfigSensors(){																// Сохранение данных �
 		NameSensor[INPUT_BYTE_NUMBER_SENSOR][i] = InputFromSerial0[25 + i];				// Сразу пишем имя в массив чтобы не надо было ребутить контроллер		
 	}
 	// ----------------- Наименование датчика ----------------
-	if(1 <= INPUT_BYTE_TYPE_A_SENSOR && INPUT_BYTE_TYPE_A_SENSOR <= 12){				// Разрешенные значения от 1 до 12-и
+	if(1 <= INPUT_BYTE_TYPE_A_SENSOR && INPUT_BYTE_TYPE_A_SENSOR <= 13){				// Разрешенные значения от 1 до 13-и
 		EEPROM.update(E_Type_A_Sensor + INPUT_BYTE_NUMBER_SENSOR, INPUT_BYTE_TYPE_A_SENSOR);
 	}
 	// ---------------- Тип измеряемых данных ----------------
@@ -364,6 +364,7 @@ void WriteConfigSensors(){																// Сохранение данных �
 	}
 	else if(INPUT_BYTE_TYPE_B_SENSOR == 12 ||
 			INPUT_BYTE_TYPE_B_SENSOR == 15 ||
+			INPUT_BYTE_TYPE_B_SENSOR == 25 ||
 			INPUT_BYTE_TYPE_B_SENSOR == 125 ||
 			INPUT_BYTE_TYPE_B_SENSOR == 67){
 				AllowSaveETypeB = true;
@@ -397,16 +398,22 @@ void WriteConfigSensors(){																// Сохранение данных �
 	}
 	// ---------------- Адрес датчика ----------------
 	switch(INPUT_BYTE_TYPE_A_SENSOR){
-		case 1:																							// Датчик DS18B20 (адрес 8 бит)
+		case S_DS18B20:																					// Датчик DS18B20 (адрес 8 бит)
 			for(byte i = 0; i < 8; i++){
 				EEPROM.update(E_Address_Sensor + (10*INPUT_BYTE_NUMBER_SENSOR) + i, InputFromSerial0[i + 8]);
 			}
 			break;
-		case 7:																							// Аналоговый датчик (в качестве адреса записывается номер порта)
+		case S_ANALOG_SENSOR:																			// Аналоговый датчик (в качестве адреса записывается номер порта)
 			if(AllowDigitalPort(INPUT_BYTE_ADDRESS_SENSOR)){											// Если порт находится в числе разрешенных
 				CleaningDuplicatedPorts(INPUT_BYTE_ADDRESS_SENSOR);										// Проверяем чтобы порт не оказался настроен у другого датчика или модуля
 				EEPROM.update(E_Address_Sensor + (10*INPUT_BYTE_NUMBER_SENSOR), INPUT_BYTE_ADDRESS_SENSOR);
 			}
+			break;
+		case S_AHT25:	
+			EEPROM.update(E_Address_Sensor + (10*INPUT_BYTE_NUMBER_SENSOR), 0x38);						// Пишем default адрес поскольку он может быть только один
+			break;
+		case S_HTU21D:
+			EEPROM.update(E_Address_Sensor + (10*INPUT_BYTE_NUMBER_SENSOR), 0x40);						// Пишем default адрес поскольку он может быть только один
 			break;
 		default:																						// i2c датчик (адрес 1 бит)
 			EEPROM.update(E_Address_Sensor + (10*INPUT_BYTE_NUMBER_SENSOR), INPUT_BYTE_ADDRESS_SENSOR);

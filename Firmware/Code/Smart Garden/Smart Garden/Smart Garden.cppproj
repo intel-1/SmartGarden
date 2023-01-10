@@ -295,6 +295,21 @@
     <Compile Include="lib\AccelStepper.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="lib\Adafruit_BusIO_Register.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_BusIO_Register.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_I2CDevice.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_I2CDevice.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_I2CRegister.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="lib\Adafruit_INA219.cpp">
       <SubType>compile</SubType>
     </Compile>
@@ -302,6 +317,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\Adafruit_Sensor.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_AHTX0.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_AHTX0.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_SPIDevice.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="lib\Adafruit_SPIDevice.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="lib\AM2320.cpp">
@@ -530,6 +557,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Sensors.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SensorsFuncs\Work_AHT25.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="SensorsFuncs\Work_AHT25.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="SensorsFuncs\Work_AM2302.cpp">

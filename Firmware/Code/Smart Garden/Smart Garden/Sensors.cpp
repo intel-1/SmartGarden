@@ -132,6 +132,8 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 			break;
 		case S_INA3221:
 			break;	
+		case S_AHT25:
+			break;
 	}
 }
 
@@ -319,7 +321,7 @@ void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Опред�
 			}
 			CalculateINA219(NumberSensor, TypeDataSensor);
 			break;
-		case S_ANALOG_SENSOR:									/* Аналоговой датчик */
+		case S_ANALOG_SENSOR:							/* Аналоговой датчик */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("Analog Port"));
 			}
@@ -343,17 +345,23 @@ void DefinitionSensor(byte NumberSensor, byte TypeDataSensor){				// Опред�
 			}
 			CalculateMAX44009(NumberSensor, TypeDataSensor);
 			break;
-		case S_LM75:								/* LM75 */
+		case S_LM75:									/* LM75 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("LM75"));
 			}
 			//CalculateLM75(NumberSensor);
 			break;
-		case S_INA3221:								/* INA3221 */
+		case S_INA3221:									/* INA3221 */
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("INA3221"));
 			}
 			CalculateINA3221(NumberSensor, TypeDataSensor);
+			break;
+		case S_AHT25:									/* AHT25 */
+			if (OUTPUT_LEVEL_UART_SENSOR){
+				Serial.println(F("AHT25"));
+			}
+			CalculateAHT25(NumberSensor, TypeDataSensor);
 			break;
 		default:
 			if (OUTPUT_LEVEL_UART_SENSOR){
@@ -402,7 +410,7 @@ void CalculateSensors(){																	// Определяем какие по
 			}
 		}
 	}
-	StartMeasurementIndicationsDS18B20();
+	//StartMeasurementIndicationsDS18B20();
 }
 
 

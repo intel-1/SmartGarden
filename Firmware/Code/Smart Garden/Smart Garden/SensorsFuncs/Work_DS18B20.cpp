@@ -33,31 +33,31 @@ void ViewError(){
 }
 
 
-void StartMeasurementIndicationsDS18B20(){											// Ф-ция комманд измерения температур датчиками		
-	for(byte NumberGPIO = 1; NumberGPIO <= QuantityInputGPIO; NumberGPIO++){		// Отправляем команду на измерение температуры только проинициализированым датчикам
-		switch(Init_DS18B20[NumberGPIO]){
-			case 1:
-				sensors1.requestTemperatures();
-				break;
-			case 2:
-				sensors2.requestTemperatures();
-				break;
-			case 3:
-				sensors3.requestTemperatures();
-				break;
-			case 4:
-				sensors4.requestTemperatures();
-				break;
-			case 5:
-				sensors5.requestTemperatures();
-				break;
-			case 6:
-				sensors6.requestTemperatures();
-				break;
-		}
-	}
-	_delay_ms(500);																	// Задержка для измерений
-}
+// void StartMeasurementIndicationsDS18B20(){											// Ф-ция комманд измерения температур датчиками		
+// 	for(byte NumberGPIO = 1; NumberGPIO <= QuantityInputGPIO; NumberGPIO++){		// Отправляем команду на измерение температуры только проинициализированым датчикам
+// 		switch(Init_DS18B20[NumberGPIO]){
+// 			case 1:
+// 				sensors1.requestTemperatures();
+// 				break;
+// 			case 2:
+// 				sensors2.requestTemperatures();
+// 				break;
+// 			case 3:
+// 				sensors3.requestTemperatures();
+// 				break;
+// 			case 4:
+// 				sensors4.requestTemperatures();
+// 				break;
+// 			case 5:
+// 				sensors5.requestTemperatures();
+// 				break;
+// 			case 6:
+// 				sensors6.requestTemperatures();
+// 				break;
+// 		}
+// 	}
+// 	_delay_ms(500);																	// Задержка для измерений
+// }
 
 
 void CalculateDS18B20(byte NumberSensor){

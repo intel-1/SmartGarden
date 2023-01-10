@@ -11,7 +11,7 @@
 #define INIT 2
 
 
-bool Init_DS18B20[7];		// Номер Wire шины которая уже проинициализирована
+bool Init_DS18B20[8];		// Номер Wire шины которая уже проинициализирована
 bool Init_HTU21D = false;	// 
 bool Init_BH1750[2];		// 2 доступных адреса
 bool Init_MAX44009[2];		// 2 доступных адреса (0x4a, 0x4b)
@@ -24,16 +24,24 @@ bool Init_TSL2561[3];		// 3 доступных адреса (0x29, 0x39, ox49)
 
 
 
-void View_Name_Work_Port_DS18B20(byte _NumberPort){
-	Serial.print(F("\t\tConfiguration Wire InputGPIO.P")); Serial.print(_NumberPort);
-	Serial.println(F("...done"));
-	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + GSM_GET_Tab_2 + (F("Configuration Wire InputGPIO.P")) + _NumberPort + (F("...done")) + (F("\"")), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
-	
-	Clean_LCD(LCD_LINE_4, LCD_START_SYMBOL_1);
-	WriteToLCD(String(F("Wire InputGPIO.P")), LCD_LINE_4, LCD_START_SYMBOL_3, LCD_NO_SCREEN_REFRESH_DELAY);
-	WriteToLCD(String(_NumberPort), LCD_LINE_4, LCD_START_SYMBOL_19, LCD_SCREEN_REFRESH_DELAY);
+void View_Name_Work_Port_DS18B20(byte _NumberPort, byte State){
+	switch(State){
+		case 1:
+			Serial.print(F("\t\tConfiguration Wire InputGPIO.P")); Serial.print(_NumberPort);
+			Serial.println(F("...done"));
+			Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + GSM_GET_Tab_2 + (F("Configuration Wire InputGPIO.P")) + _NumberPort + (F("...done")) + (F("\"")), GSM_WAITING_ANSWER, GSM_NO_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+			
+			Clean_LCD(LCD_LINE_4, LCD_START_SYMBOL_1);
+			WriteToLCD(String(F("Wire InputGPIO.P")), LCD_LINE_4, LCD_START_SYMBOL_3, LCD_NO_SCREEN_REFRESH_DELAY);
+			WriteToLCD(String(_NumberPort), LCD_LINE_4, LCD_START_SYMBOL_19, LCD_SCREEN_REFRESH_DELAY);
+			break;
+		case 0:
+			Serial.print(F("Wire InputGPIO.P")); Serial.print(_NumberPort); Serial.println(F(" has been configured before"));
+			break;
+	}
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------
+
 
 void Output_Text_To_LCD(byte NumberSensor, String Text){
 	WriteToLCD(Text, LCD_LINE_3, LCD_START_SYMBOL_2, LCD_NO_SCREEN_REFRESH_DELAY);
@@ -41,6 +49,7 @@ void Output_Text_To_LCD(byte NumberSensor, String Text){
 	WriteToLCD(String(NumberSensor), LCD_LINE_3, LCD_START_SYMBOL_19, LCD_NO_SCREEN_REFRESH_DELAY);
 }
 // -------------------------------------------------------------------------------------------------------------------------------------------	
+
 
 void Output_Text_To_LCD_and_UART(byte _Text, byte _Start_Symbol){
 	switch(_Text){
@@ -60,111 +69,117 @@ void Output_Text_To_LCD_and_UART(byte _Text, byte _Start_Symbol){
 
 
 // ==========================================================================================================================================
-void printAlarms(uint8_t deviceAddress[], byte Number_Input_GPIO_Port){				// Функция вывода информации о параметрах тревоги
-	char temp_A_H;
-	char temp_A_L;
-	switch(Number_Input_GPIO_Port){
-		case 1:
-			temp_A_H = sensors1.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors1.getLowAlarmTemp(deviceAddress);
-			break;
-		case 2:
-			temp_A_H = sensors2.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors2.getLowAlarmTemp(deviceAddress);
-			break;
-		case 3:
-			temp_A_H = sensors3.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors3.getLowAlarmTemp(deviceAddress);
-			break;
-		case 4:
-			temp_A_H = sensors4.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors4.getLowAlarmTemp(deviceAddress);
-			break;
-		case 5:
-			temp_A_H = sensors5.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors5.getLowAlarmTemp(deviceAddress);
-			break;
-		case 6:
-			temp_A_H = sensors6.getHighAlarmTemp(deviceAddress);
-			temp_A_L = sensors6.getLowAlarmTemp(deviceAddress);
-			break;
-	}
-	Serial.print(F("High Alarm: "));
-	Serial.print(temp_A_H, DEC);
-	Serial.print(F("C"));
-	Serial.print(F(" | Low Alarm: "));
-	Serial.print(temp_A_L, DEC);
-	Serial.print(F("C"));
-}
+// void printAlarms(uint8_t deviceAddress[], byte Number_Input_GPIO_Port){				// Функция вывода информации о параметрах тревоги
+// 	char temp_A_H;
+// 	char temp_A_L;
+// 	switch(Number_Input_GPIO_Port){
+// 		case 1:
+// 			temp_A_H = sensors1.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors1.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 		case 2:
+// 			temp_A_H = sensors2.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors2.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 		case 3:
+// 			temp_A_H = sensors3.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors3.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 		case 4:
+// 			temp_A_H = sensors4.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors4.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 		case 5:
+// 			temp_A_H = sensors5.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors5.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 		case 6:
+// 			temp_A_H = sensors6.getHighAlarmTemp(deviceAddress);
+// 			temp_A_L = sensors6.getLowAlarmTemp(deviceAddress);
+// 			break;
+// 	}
+// 	Serial.print(F("High Alarm: "));
+// 	Serial.print(temp_A_H, DEC);
+// 	Serial.print(F("C"));
+// 	Serial.print(F(" | Low Alarm: "));
+// 	Serial.print(temp_A_L, DEC);
+// 	Serial.print(F("C"));
+// }
 
-boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){	
+
+boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
+	#define STATE_ERROR 0
+	#define STATE_DONE 1
+		
 	ina219.begin(ADDRESS_INPUT_INA);
-	static bool AllowOutputStrInitDS18B20 = true;
-	if(AllowOutputStrInitDS18B20){								// Сделано чтобы сообщение выводилось один раз даже если датчиков несколько 
-		AllowOutputStrInitDS18B20 = false;
-		Serial.print(F("\tInitializing DS18B20 (Sensor ")); Serial.print(NumberSensor); Serial.println(F(")..."));
-	}
-	
 	byte Config_Sensor_B = EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2);
+
+	Serial.print(F("\tInitializing DS18B20 (Sensor ")); Serial.print(NumberSensor); Serial.println(F(")..."));
 	
-// 	DeviceAddress AddresSensor = {	EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 0),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 1),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 2),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 3),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 4),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 5),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 6),
-// 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 7)};
+	DeviceAddress AddresSensor = {	EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 0),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 1),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 2),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 3),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 4),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 5),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 6),
+									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 7)};
 	
 	// ---------------------------------------------------------------
 	switch(Config_Sensor_B){
 		case 1:
-			if(!Init_DS18B20[1]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P1, INPUT);
 				sensors1.begin();
-				Init_DS18B20[1] = true;
-				View_Name_Work_Port_DS18B20(1);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		case 2:
-			if(!Init_DS18B20[2]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P2, INPUT);
 				sensors2.begin();
-				Init_DS18B20[2] = true;
-				View_Name_Work_Port_DS18B20(2);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		case 3:
-			if(!Init_DS18B20[3]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P3, INPUT);
 				sensors3.begin();
-				Init_DS18B20[3] = true;
-				View_Name_Work_Port_DS18B20(3);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		case 4:
-			if(!Init_DS18B20[4]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P4, INPUT);
 				sensors4.begin();
-				Init_DS18B20[4] = true;
-				View_Name_Work_Port_DS18B20(4);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		case 5:
-			if(!Init_DS18B20[5]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P5, INPUT);
 				sensors5.begin();
-				Init_DS18B20[5] = true;
-				View_Name_Work_Port_DS18B20(5);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		case 6:
-			if(!Init_DS18B20[6]){
+			if(!Init_DS18B20[Config_Sensor_B]){
 				pinMode(INPUT_GPIO_P6, INPUT);
 				sensors6.begin();
-				Init_DS18B20[6] = true;
-				View_Name_Work_Port_DS18B20(6);
+				Init_DS18B20[Config_Sensor_B] = true;
+				View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_DONE);
 			}
+			else View_Name_Work_Port_DS18B20(Config_Sensor_B, STATE_ERROR);
 			break;
 		default:
 			Serial.print(F("\t\tSensor ")); Serial.print(NumberSensor);
@@ -174,53 +189,52 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 	}						
 	
 	// ================================ Задаем точность измерения ================================
-	// ========================= Задаем новые пороговые значения тревоги =========================
-// 	switch(Config_Sensor_B){
-// 		case 1:
-// 			sensors1.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors1.getResolution(AddresSensor), DEC);
-// 			sensors1.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors1.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 		case 2:
-// 			sensors2.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors2.getResolution(AddresSensor), DEC);
-// 			sensors2.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors2.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 		case 3:
-// 			sensors3.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors3.getResolution(AddresSensor), DEC);
-// 			sensors3.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors3.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 		case 4:
-// 			sensors4.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors4.getResolution(AddresSensor), DEC);
-// 			sensors4.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors4.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 		case 5:
-// 			sensors5.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors5.getResolution(AddresSensor), DEC);
-// 			sensors5.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors5.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 		case 6:
-// 			sensors6.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
-// 			Serial.print(F("\t\t\tResolution: "));
-// 			Serial.println(sensors6.getResolution(AddresSensor), DEC);
-// 			sensors6.setHighAlarmTemp(AddresSensor, 20);
-// 			sensors6.setLowAlarmTemp(AddresSensor, -10);
-// 			break;
-// 	}
+	switch(Config_Sensor_B){
+		case 1:
+			sensors1.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors1.getResolution(AddresSensor), DEC);
+			//sensors1.setHighAlarmTemp(AddresSensor, 20);
+			//sensors1.setLowAlarmTemp(AddresSensor, -10);
+			break;
+		case 2:
+			sensors2.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors2.getResolution(AddresSensor), DEC);
+			//sensors2.setHighAlarmTemp(AddresSensor, 20);
+			//sensors2.setLowAlarmTemp(AddresSensor, -10);
+			break;
+		case 3:
+			sensors3.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors3.getResolution(AddresSensor), DEC);
+			//sensors3.setHighAlarmTemp(AddresSensor, 20);
+			//sensors3.setLowAlarmTemp(AddresSensor, -10);
+			break;
+		case 4:
+			sensors4.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors4.getResolution(AddresSensor), DEC);
+			//sensors4.setHighAlarmTemp(AddresSensor, 20);
+			//sensors4.setLowAlarmTemp(AddresSensor, -10);
+			break;
+		case 5:
+			sensors5.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors5.getResolution(AddresSensor), DEC);
+			//sensors5.setHighAlarmTemp(AddresSensor, 20);
+			//sensors5.setLowAlarmTemp(AddresSensor, -10);
+			break;
+		case 6:
+			sensors6.setResolution(AddresSensor, EEPROM.read(E_ConfigSensor_A + NumberSensor));
+			Serial.print(F("\t\t\tResolution: "));
+			Serial.println(sensors6.getResolution(AddresSensor), DEC);
+			//sensors6.setHighAlarmTemp(AddresSensor, 20);
+			//sensors6.setLowAlarmTemp(AddresSensor, -10);
+			break;
+	}
 	
-	StartMeasurementIndicationsDS18B20();				// Сразу отдаем датчикам команду измерять температуру 
+	//StartMeasurementIndicationsDS18B20();				// Сразу отдаем датчикам команду измерять температуру 
 }
 
 
@@ -698,6 +712,20 @@ boolean InitializingMAX44009(byte AddressSensor, byte NumberSensor){
 
 
 // ==========================================================================================================================================
+// ====================================================== Инициализация датчика AHT25 =======================================================
+// ==========================================================================================================================================
+boolean InitializingHTA25(byte AddressSensor, byte NumberSensor){
+	Serial.print(F("\tInitializing AHT25 (Sensor ")); Serial.print(NumberSensor); Serial.print(F(")..."));
+	if (AHT25.begin()){
+		Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
+	}
+	else{ 
+		Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);
+	}
+}
+	
+
+// ==========================================================================================================================================
 // ========================================================= Инициализации датчиков =========================================================
 // ==========================================================================================================================================
 void ConfigSensor(byte NumberSensor){									
@@ -708,45 +736,51 @@ void ConfigSensor(byte NumberSensor){
 	Clean_LCD(LCD_LINE_4, LCD_START_SYMBOL_1);
 	
 	switch(EEPROM.read(E_Type_A_Sensor + NumberSensor)){
-		case 1:																// DS18B20
+		case S_DS18B20:																// DS18B20
 			Output_Text_To_LCD(NumberSensor, String(F("--- DS18B20:")));
 			InitializingDS18B20(AdressSensor, NumberSensor);
 			break;
-		case 2:																// AM2302
+		case S_AM2302:																// AM2302
 			Output_Text_To_LCD(NumberSensor, String(F("--- AM2302:")));
 			InitAM2302(AdressSensor, NumberSensor);
 			break;
-		case 3:																// Si7013, Si7020, Si7021, HTU21D, SHT21 (адрес только 0x40)
+		case S_HTU21D:																// Si7013, Si7020, Si7021, HTU21D, SHT21 (адрес только 0x40)
 			Output_Text_To_LCD(NumberSensor, String(F("--- HTU21D:")));
 			InitializingHTU21D(AdressSensor, NumberSensor);
 			break;
-		case 4:																// BME280 (0x76, 0x77)
+		case S_BME280:																// BME280 (0x76, 0x77)
 			Output_Text_To_LCD(NumberSensor, String(F("--- BME280:")));
 			InitializingBME280(AdressSensor, NumberSensor);
 			break;
-		case 5:																// BMP280 (0x76, 0x77)
+		case S_BMP280:																// BMP280 (0x76, 0x77)
 			Output_Text_To_LCD(NumberSensor, String(F("--- BMP280:")));
 			InitializingBMP280(AdressSensor, NumberSensor);
 			break;
-		case 6:																// INA219 (0x40, 0x41, 0x44, 0x45)
+		case S_INA219:																// INA219 (0x40, 0x41, 0x44, 0x45)
 			Output_Text_To_LCD(NumberSensor, String(F("--- INA219:")));
 			InitializingINA219(AdressSensor, NumberSensor);
 			break;
-		case 8:																// TSL2561 (0x29, 0x39, 0x49)
+		case S_TSL2561:																// TSL2561 (0x29, 0x39, 0x49)
 			Output_Text_To_LCD(NumberSensor, String(F("--- TSL2561:")));
 			InitializingTSL2561(AdressSensor, NumberSensor);
 			break;
-		case 9:																// BH1750 (0x23, 0x5c)
+		case S_BH1750:																// BH1750 (0x23, 0x5c)
 			Output_Text_To_LCD(NumberSensor, String(F("--- BH1750:")));	
 			InitializingBH1750(AdressSensor, NumberSensor);
 			break;
-		case 10:															// MAX44009 (0х4a, ...)
+		case S_MAX44009:															// MAX44009 (0х4a, ...)
 			Output_Text_To_LCD(NumberSensor, String(F("--- MAX44009:")));	
 			InitializingMAX44009(AdressSensor, NumberSensor);
 			break;
-		case 11:
+		case S_LM75:																// LN75
+			Output_Text_To_LCD(NumberSensor, String(F("--- LM75:")));
 			break;
-		case 12:
+		case S_INA3221:																// INA3221
+			Output_Text_To_LCD(NumberSensor, String(F("--- INA3221:")));
+			break;
+		case S_AHT25:																// AHT25
+			Output_Text_To_LCD(NumberSensor, String(F("--- AHT25:")));
+			InitializingHTA25(AdressSensor, NumberSensor);
 			break;
 	}
 }
