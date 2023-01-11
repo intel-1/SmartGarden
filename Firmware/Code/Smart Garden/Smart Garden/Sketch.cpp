@@ -93,26 +93,26 @@ ISR(INT5_vect){						// Крутилка энкодера
 }
 
 ISR(PCINT0_vect) {							// Прерывания концевиков
-	if (!(PINB & (1 << INPUT_D_PIN_5))) {StatusSwitchPorts[5] = true;}		// INPUT_D_PIN_5 - PCINT4
+	if (!(PINB & (1 << PORT_INPUT_D_PIN_5))) {StatusSwitchPorts[5] = true;}		// INPUT_D_PIN_5 - PCINT4
 	else StatusSwitchPorts[3] = false;
-	if (!(PINB & (1 << INPUT_D_PIN_1))) {StatusSwitchPorts[1] = true;}		// INPUT_D_PIN_1 - PCINT5
+	if (!(PINB & (1 << PORT_INPUT_D_PIN_1))) {StatusSwitchPorts[1] = true;}		// INPUT_D_PIN_1 - PCINT5
 	else StatusSwitchPorts[1] = false;
-	if (!(PINB & (1 << INPUT_D_PIN_2))) {StatusSwitchPorts[2] = true;}		// INPUT_D_PIN_2 - PCINT6
+	if (!(PINB & (1 << PORT_INPUT_D_PIN_2))) {StatusSwitchPorts[2] = true;}		// INPUT_D_PIN_2 - PCINT6
 	else StatusSwitchPorts[2] = false;
-	if (!(PINB & (1 << INPUT_D_PIN_3))) {StatusSwitchPorts[3] = true;}		// INPUT_D_PIN_3 - PCINT7
+	if (!(PINB & (1 << PORT_INPUT_D_PIN_3))) {StatusSwitchPorts[3] = true;}		// INPUT_D_PIN_3 - PCINT7
 	else StatusSwitchPorts[3] = false;
 }
 
 ISR(PCINT1_vect) {
-	if (!(PINJ & (1 << INPUT_D_PIN_4))) {StatusSwitchPorts[4] = true;}		// INPUT_D_PIN_4 - PCINT11
+	if (!(PINJ & (1 << PORT_INPUT_D_PIN_4))) {StatusSwitchPorts[4] = true;}		// INPUT_D_PIN_4 - PCINT11
 	else StatusSwitchPorts[4] = false;
-	if (!(PINJ & (1 << INPUT_D_PIN_6))) {StatusSwitchPorts[6] = true;}		// INPUT_D_PIN_6 - PCINT13
+	if (!(PINJ & (1 << PORT_INPUT_D_PIN_6))) {StatusSwitchPorts[6] = true;}		// INPUT_D_PIN_6 - PCINT13
 	else StatusSwitchPorts[6] = false;
-	if (!(PINJ & (1 << INPUT_D_PIN_7))) {StatusSwitchPorts[7] = true;}		// INPUT_D_PIN_7 - PCINT12
+	if (!(PINJ & (1 << PORT_INPUT_D_PIN_7))) {StatusSwitchPorts[7] = true;}		// INPUT_D_PIN_7 - PCINT12
 	else StatusSwitchPorts[7] = false;
-	if (!(PINJ & (1 << INPUT_D_PIN_8))) {StatusSwitchPorts[8] = true;}		// INPUT_D_PIN_8 - PCINT15
+	if (!(PINJ & (1 << PORT_INPUT_D_PIN_8))) {StatusSwitchPorts[8] = true;}		// INPUT_D_PIN_8 - PCINT15
 	else StatusSwitchPorts[8] = false;
-	if (!(PINJ & (1 << INPUT_D_PIN_9))) {StatusSwitchPorts[9] = true;}		// INPUT_D_PIN_9 - PCINT14
+	if (!(PINJ & (1 << PORT_INPUT_D_PIN_9))) {StatusSwitchPorts[9] = true;}		// INPUT_D_PIN_9 - PCINT14
 	else StatusSwitchPorts[9] = false;
 }
 

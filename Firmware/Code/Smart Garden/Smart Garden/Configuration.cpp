@@ -150,231 +150,231 @@ void bt_vcc_off(){
 
 // ============== Output Digital Pins ==============
 void GPIO1_on(){
-	DDRC |= _BV(GPIO_1);	// OUTPUT
-	PORTC &= ~_BV(GPIO_1);	// 0
+	DDRC |= _BV(PORT_GPIO_1);	// OUTPUT
+	PORTC &= ~_BV(PORT_GPIO_1);	// 0
 }
 void GPIO1_off(){
-	DDRC |= _BV(GPIO_1);	// OUTPUT
-	PORTC |= _BV(GPIO_1);	// 1
+	DDRC |= _BV(PORT_GPIO_1);	// OUTPUT
+	PORTC |= _BV(PORT_GPIO_1);	// 1
 }
 void GPIO2_on(){
-	DDRG |= _BV(GPIO_2);	// OUTPUT
-	PORTG &= ~_BV(GPIO_2);	// 0
+	DDRG |= _BV(PORT_GPIO_2);	// OUTPUT
+	PORTG &= ~_BV(PORT_GPIO_2);	// 0
 }
 void GPIO2_off(){
-	DDRG |= _BV(GPIO_2);	// OUTPUT
-	PORTG |= _BV(GPIO_2);	// 1
+	DDRG |= _BV(PORT_GPIO_2);	// OUTPUT
+	PORTG |= _BV(PORT_GPIO_2);	// 1
 }
 void GPIO3_on(){
-	DDRA |= _BV(GPIO_3);	// OUTPUT
-	PORTA &= ~_BV(GPIO_3);	// 0
+	DDRA |= _BV(PORT_GPIO_3);	// OUTPUT
+	PORTA &= ~_BV(PORT_GPIO_3);	// 0
 }
 void GPIO3_off(){
-	DDRA |= _BV(GPIO_3);	// OUTPUT
-	PORTA |= _BV(GPIO_3);	// 1
+	DDRA |= _BV(PORT_GPIO_3);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_3);	// 1
 }
 void GPIO4_on(){
-	DDRA |= _BV(GPIO_4);	// OUTPUT
-	PORTA &= ~_BV(GPIO_4);	// 0
+	DDRA |= _BV(PORT_GPIO_4);	// OUTPUT
+	PORTA &= ~_BV(PORT_GPIO_4);	// 0
 }
 void GPIO4_off(){
-	DDRA |= _BV(GPIO_4);	// OUTPUT
-	PORTA |= _BV(GPIO_4);	// 1
+	DDRA |= _BV(PORT_GPIO_4);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_4);	// 1
 }
 void GPIO5_on(){
-	DDRA |= _BV(GPIO_5);	// OUTPUT
-	PORTA &= ~_BV(GPIO_5);	// 0
+	DDRA |= _BV(PORT_GPIO_5);	// OUTPUT
+	PORTA &= ~_BV(PORT_GPIO_5);	// 0
 }
 void GPIO5_off(){
-	DDRA |= _BV(GPIO_5);	// OUTPUT
-	PORTA |= _BV(GPIO_5);	// 1
+	DDRA |= _BV(PORT_GPIO_5);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_5);	// 1
 }
 void GPIO6_on(){
-	DDRA |= _BV(GPIO_6);	// OUTPUT
-	PORTA &= ~_BV(GPIO_6);	// 0
+	DDRA |= _BV(PORT_GPIO_6);	// OUTPUT
+	PORTA &= ~_BV(PORT_GPIO_6);	// 0
 }
 void GPIO6_off(){
-	DDRA |= _BV(GPIO_6);	// OUTPUT
-	PORTA |= _BV(GPIO_6);	// 1
+	DDRA |= _BV(PORT_GPIO_6);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_6);	// 1
 }
 void GPIO7_on(){
-	DDRA |= _BV(GPIO_7);	// OUTPUT
-	PORTA &= ~_BV(GPIO_7);	// 0
+	DDRA |= _BV(PORT_GPIO_7);	// OUTPUT
+	PORTA &= ~_BV(PORT_GPIO_7);	// 0
 }
 void GPIO7_off(){
-	DDRA |= _BV(GPIO_7);	// OUTPUT
-	PORTA |= _BV(GPIO_7);	// 1
+	DDRA |= _BV(PORT_GPIO_7);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_7);	// 1
 }
 void GPIO8_on(){
-	DDRC |= _BV(GPIO_8);	// OUTPUT
-	PORTC &= ~_BV(GPIO_8);	// 0
+	DDRC |= _BV(PORT_GPIO_8);	// OUTPUT
+	PORTC &= ~_BV(PORT_GPIO_8);	// 0
 }
 void GPIO8_off(){
-	DDRA |= _BV(GPIO_8);	// OUTPUT
-	PORTA |= _BV(GPIO_8);	// 1
+	DDRA |= _BV(PORT_GPIO_8);	// OUTPUT
+	PORTA |= _BV(PORT_GPIO_8);	// 1
 }
 
 
 
 // ============== Analog Input Pins ==============
 void INPUT_GPIO_P1_on(){
-	DDRF |= _BV(INPUT_GPIO_P1);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P1);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P1);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P1);	// 1
 }
 void INPUT_GPIO_P1_off(){
-	DDRF |= _BV(INPUT_GPIO_P1);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P1);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P1);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P1);	// 0
 }
 void INPUT_GPIO_P2_on(){
-	DDRF |= _BV(INPUT_GPIO_P2);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P2);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P2);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P2);	// 1
 }
 void INPUT_GPIO_P2_off(){
-	DDRF |= _BV(INPUT_GPIO_P2);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P2);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P2);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P2);	// 0
 }
 void INPUT_GPIO_P3_on(){
-	DDRF |= _BV(INPUT_GPIO_P3);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P3);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P3);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P3);	// 1
 }
 void INPUT_GPIO_P3_off(){
-	DDRF |= _BV(INPUT_GPIO_P3);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P3);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P3);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P3);	// 0
 }
 void INPUT_GPIO_P4_on(){
-	DDRF |= _BV(INPUT_GPIO_P4);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P4);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P4);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P4);	// 1
 }
 void INPUT_GPIO_P4_off(){
-	DDRF |= _BV(INPUT_GPIO_P4);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P4);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P4);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P4);	// 0
 }
 void INPUT_GPIO_P5_on(){
-	DDRF |= _BV(INPUT_GPIO_P5);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P5);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P5);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P5);	// 1
 }
 void INPUT_GPIO_P5_off(){
-	DDRF |= _BV(INPUT_GPIO_P5);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P5);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P5);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P5);	// 0
 }
 void INPUT_GPIO_P6_on(){
-	DDRF |= _BV(INPUT_GPIO_P6);		// OUTPUT
-	PORTF |= _BV(INPUT_GPIO_P6);	// 1
+	DDRF |= _BV(PORT_INPUT_GPIO_P6);		// OUTPUT
+	PORTF |= _BV(PORT_INPUT_GPIO_P6);	// 1
 }
 void INPUT_GPIO_P6_off(){
-	DDRF |= _BV(INPUT_GPIO_P6);		// OUTPUT
-	PORTF &= ~_BV(INPUT_GPIO_P6);	// 0
+	DDRF |= _BV(PORT_INPUT_GPIO_P6);		// OUTPUT
+	PORTF &= ~_BV(PORT_INPUT_GPIO_P6);	// 0
 }
 
 
 
 // ============== External Digital Pins ==============
 void EXT_PIN_1_on(){
-	DDRH |= _BV(EXT_PIN_1);		// OUTPUT
-	PORTH |= _BV(EXT_PIN_1);	// 1
+	DDRH |= _BV(PORT_EXT_PIN_1);		// OUTPUT
+	PORTH |= _BV(PORT_EXT_PIN_1);	// 1
 }
 void EXT_PIN_1_off(){
-	DDRH |= _BV(EXT_PIN_1);		// OUTPUT
-	PORTH &= ~_BV(EXT_PIN_1);	// 0
+	DDRH |= _BV(PORT_EXT_PIN_1);		// OUTPUT
+	PORTH &= ~_BV(PORT_EXT_PIN_1);	// 0
 }
 void EXT_PIN_2_on(){
-	DDRE |= _BV(EXT_PIN_2);		// OUTPUT
-	PORTE |= _BV(EXT_PIN_2);	// 1
+	DDRE |= _BV(PORT_EXT_PIN_2);		// OUTPUT
+	PORTE |= _BV(PORT_EXT_PIN_2);	// 1
 }
 void EXT_PIN_2_off(){
-	DDRE |= _BV(EXT_PIN_2);		// OUTPUT
-	PORTE &= ~_BV(EXT_PIN_2);	// 0
+	DDRE |= _BV(PORT_EXT_PIN_2);		// OUTPUT
+	PORTE &= ~_BV(PORT_EXT_PIN_2);	// 0
 }
 void EXT_PIN_3_on(){
-	DDRE |= _BV(EXT_PIN_3);		// OUTPUT
-	PORTE |= _BV(EXT_PIN_3);	// 1
+	DDRE |= _BV(PORT_EXT_PIN_3);		// OUTPUT
+	PORTE |= _BV(PORT_EXT_PIN_3);	// 1
 }
 void EXT_PIN_3_off(){
-	DDRE |= _BV(EXT_PIN_3);		// OUTPUT
-	PORTE &= ~_BV(EXT_PIN_3);	// 0
+	DDRE |= _BV(PORT_EXT_PIN_3);		// OUTPUT
+	PORTE &= ~_BV(PORT_EXT_PIN_3);	// 0
 }
 void EXT_PIN_4_on(){
-	DDRE |= _BV(EXT_PIN_4);		// OUTPUT
-	PORTE |= _BV(EXT_PIN_4);	// 1
+	DDRE |= _BV(PORT_EXT_PIN_4);		// OUTPUT
+	PORTE |= _BV(PORT_EXT_PIN_4);	// 1
 }
 void EXT_PIN_4_off(){
-	DDRE |= _BV(EXT_PIN_4);		// OUTPUT
-	PORTE &= ~_BV(EXT_PIN_4);	// 0
+	DDRE |= _BV(PORT_EXT_PIN_4);		// OUTPUT
+	PORTE &= ~_BV(PORT_EXT_PIN_4);	// 0
 }
 void EXT_PIN_5_on(){
-	DDRH |= _BV(EXT_PIN_5);		// OUTPUT
-	PORTH |= _BV(EXT_PIN_5);	// 1
+	DDRH |= _BV(PORT_EXT_PIN_5);		// OUTPUT
+	PORTH |= _BV(PORT_EXT_PIN_5);	// 1
 }
 void EXT_PIN_5_off(){
-	DDRH |= _BV(EXT_PIN_5);		// OUTPUT
-	PORTH &= ~_BV(EXT_PIN_5);	// 0
+	DDRH |= _BV(PORT_EXT_PIN_5);		// OUTPUT
+	PORTH &= ~_BV(PORT_EXT_PIN_5);	// 0
 }
 void EXT_PIN_6_on(){
-	DDRH |= _BV(EXT_PIN_6);		// OUTPUT
-	PORTH |= _BV(EXT_PIN_6);	// 1
+	DDRH |= _BV(PORT_EXT_PIN_6);		// OUTPUT
+	PORTH |= _BV(PORT_EXT_PIN_6);	// 1
 }
 void EXT_PIN_6_off(){
-	DDRH |= _BV(EXT_PIN_6);		// OUTPUT
-	PORTH &= ~_BV(EXT_PIN_6);	// 0
+	DDRH |= _BV(PORT_EXT_PIN_6);		// OUTPUT
+	PORTH &= ~_BV(PORT_EXT_PIN_6);	// 0
 }
 void EXT_PIN_7_on(){
-	DDRK |= _BV(EXT_PIN_7);		// OUTPUT
-	PORTK |= _BV(EXT_PIN_7);	// 1
+	DDRK |= _BV(PORT_EXT_PIN_7);		// OUTPUT
+	PORTK |= _BV(PORT_EXT_PIN_7);	// 1
 }
 void EXT_PIN_7_off(){
-	DDRK |= _BV(EXT_PIN_7);		// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_7);	// 0
+	DDRK |= _BV(PORT_EXT_PIN_7);		// OUTPUT
+	PORTK &= ~_BV(PORT_EXT_PIN_7);	// 0
 }
 void EXT_PIN_8_on(){
-	DDRK |= _BV(EXT_PIN_8);		// OUTPUT
-	PORTK |= _BV(EXT_PIN_8);	// 1
+	DDRK |= _BV(PORT_EXT_PIN_8);		// OUTPUT
+	PORTK |= _BV(PORT_EXT_PIN_8);	// 1
 }
 void EXT_PIN_8_off(){
-	DDRK |= _BV(EXT_PIN_8);		// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_8);	// 0
+	DDRK |= _BV(PORT_EXT_PIN_8);		// OUTPUT
+	PORTK &= ~_BV(PORT_EXT_PIN_8);	// 0
 }
 void EXT_PIN_9_on(){
-	DDRK |= _BV(EXT_PIN_9);		// OUTPUT
-	PORTK |= _BV(EXT_PIN_9);	// 1
+	DDRK |= _BV(PORT_EXT_PIN_9);		// OUTPUT
+	PORTK |= _BV(PORT_EXT_PIN_9);	// 1
 }
 void EXT_PIN_9_off(){
-	DDRK |= _BV(EXT_PIN_9);		// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_9);	// 0
+	DDRK |= _BV(PORT_EXT_PIN_9);		// OUTPUT
+	PORTK &= ~_BV(PORT_EXT_PIN_9);	// 0
 }
 void EXT_PIN_10_on(){
-	DDRG |= _BV(EXT_PIN_10);	// OUTPUT
-	PORTG |= _BV(EXT_PIN_10);	// 1
+	DDRG |= _BV(PORT_EXT_PIN_10);	// OUTPUT
+	PORTG |= _BV(PORT_EXT_PIN_10);	// 1
 }
 void EXT_PIN_10_off(){
-	DDRG |= _BV(EXT_PIN_10);	// OUTPUT
-	PORTG &= ~_BV(EXT_PIN_10);	// 0
+	DDRG |= _BV(PORT_EXT_PIN_10);	// OUTPUT
+	PORTG &= ~_BV(PORT_EXT_PIN_10);	// 0
 }
 void EXT_PIN_11_on(){}
 void EXT_PIN_11_off(){}
 
 void EXT_PIN_12_on(){
-	DDRK |= _BV(EXT_PIN_12);	// OUTPUT
-	PORTK |= _BV(EXT_PIN_12);	// 1
+	DDRK |= _BV(PORT_EXT_PIN_12);	// OUTPUT
+	PORTK |= _BV(PORT_EXT_PIN_12);	// 1
 }
 void EXT_PIN_12_off(){
-	DDRK |= _BV(EXT_PIN_12);	// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_12);	// 0
+	DDRK |= _BV(PORT_EXT_PIN_12);	// OUTPUT
+	PORTK &= ~_BV(PORT_EXT_PIN_12);	// 0
 }
 void EXT_PIN_13_on(){
-	DDRF |= _BV(EXT_PIN_13);	// OUTPUT
-	PORTF |= _BV(EXT_PIN_13);	// 1
+	DDRF |= _BV(PORT_EXT_PIN_13);	// OUTPUT
+	PORTF |= _BV(PORT_EXT_PIN_13);	// 1
 }
 void EXT_PIN_13_off(){
-	DDRF |= _BV(EXT_PIN_13);	// OUTPUT
-	PORTF &= ~_BV(EXT_PIN_13);	// 0
+	DDRF |= _BV(PORT_EXT_PIN_13);	// OUTPUT
+	PORTF &= ~_BV(PORT_EXT_PIN_13);	// 0
 }
 void EXT_PIN_14_on(){
-	DDRK |= _BV(EXT_PIN_14);	// OUTPUT
-	PORTK |= _BV(EXT_PIN_14);	// 1
+	DDRK |= _BV(PORT_EXT_PIN_14);	// OUTPUT
+	PORTK |= _BV(PORT_EXT_PIN_14);	// 1
 }
 void EXT_PIN_14_off(){
-	DDRK |= _BV(EXT_PIN_14);	// OUTPUT
-	PORTK &= ~_BV(EXT_PIN_14);	// 0
+	DDRK |= _BV(PORT_EXT_PIN_14);	// OUTPUT
+	PORTK &= ~_BV(PORT_EXT_PIN_14);	// 0
 }
 					
 

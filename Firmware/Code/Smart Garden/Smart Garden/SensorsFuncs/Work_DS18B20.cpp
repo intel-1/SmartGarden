@@ -11,12 +11,12 @@
 
 
 
-OneWire ds1(INPUT_GPIO_P1);
-OneWire ds2(INPUT_GPIO_P2);
-OneWire ds3(INPUT_GPIO_P3);
-OneWire ds4(INPUT_GPIO_P4);
-OneWire ds5(INPUT_GPIO_P5);
-OneWire ds6(INPUT_GPIO_P6);
+OneWire ds1(PORT_INPUT_GPIO_P1);
+OneWire ds2(PORT_INPUT_GPIO_P2);
+OneWire ds3(PORT_INPUT_GPIO_P3);
+OneWire ds4(PORT_INPUT_GPIO_P4);
+OneWire ds5(PORT_INPUT_GPIO_P5);
+OneWire ds6(PORT_INPUT_GPIO_P6);
 DallasTemperature sensors1(&ds1);
 DallasTemperature sensors2(&ds2);
 DallasTemperature sensors3(&ds3);
@@ -36,7 +36,6 @@ void ViewError(){
 void CalculateDS18B20(byte NumberSensor){
 	float RealValue;
 	bool SensorConnect = false;
-	byte Config_Sensor_B = EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2);
 	DeviceAddress AddresSensor = {	EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 0),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 1),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 2),
@@ -47,24 +46,25 @@ void CalculateDS18B20(byte NumberSensor){
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 7)};
 		
 	
+	byte Config_Sensor_B = EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2);
 	
 	switch(Config_Sensor_B){
-		case 1:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 			if(sensors1.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 2:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 			if(sensors2.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 3:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 			if(sensors3.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 4:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 			if(sensors4.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 5:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 			if(sensors5.isConnected(AddresSensor)) SensorConnect = true;
 			break;
-		case 6:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 			if(sensors6.isConnected(AddresSensor)) SensorConnect = true;
 			break;
 	}
@@ -76,22 +76,22 @@ void CalculateDS18B20(byte NumberSensor){
 		ControllPort(NumberSensor, 1);													// Включаем управление Controll портом
 	
 		switch(Config_Sensor_B){
-			case 1:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 				RealValue = sensors1.getTempC(AddresSensor);							// Получаем измеренное значение
 				break;
-			case 2:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 				RealValue = sensors2.getTempC(AddresSensor);
 				break;
-			case 3:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 				RealValue = sensors3.getTempC(AddresSensor);
 				break;
-			case 4:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 				RealValue = sensors4.getTempC(AddresSensor);
 				break;
-			case 5:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 				RealValue = sensors5.getTempC(AddresSensor);
 				break;
-			case 6:
+			case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 				RealValue = sensors6.getTempC(AddresSensor);
 				break;
 		}
@@ -102,17 +102,7 @@ void CalculateDS18B20(byte NumberSensor){
 				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
 				ViewError();
 				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
-					if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
-					
-	// 					MessageGSM.Arg_1_a = 1;
-	// 					MessageGSM.Arg_1_b = 2;
-	// 					MessageGSM.Arg_2_a = 2;
-	// 					MessageGSM.Arg_2_b = NumberSensor;
-	// 					MessageGSM.Arg_3_a = 1;
-	// 					MessageGSM.Arg_3_b = 3;
-	// 					MessageGSM.PhoneNumber = 0;
-	// 					WriteToQueueGSM(MessageGSM);
-					
+					if(EEPROM.read(E_SensorOff_SMS + NumberSensor) != 1){					// Если не отправлялось СМС				
 						Send_SMS(String(F("Sensor ")) + NameSensor[NumberSensor] + (F(" is off")), GSM_SMS_ERROR);  
 						EEPROM.write(E_SensorOff_SMS + NumberSensor, 1);	
 					}
@@ -145,23 +135,23 @@ void CalculateDS18B20(byte NumberSensor){
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
-					switch(EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2)){			// Отдаем команды измерять температуру
-						case 1:
+					switch(Config_Sensor_B){											// Отдаем команды измерять температуру
+						case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 							sensors1.requestTemperatures();					
 							break;
-						case 2:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 							sensors2.requestTemperatures();
 							break;
-						case 3:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 							sensors3.requestTemperatures();
 							break;
-						case 4:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 							sensors4.requestTemperatures();
 							break;
-						case 5:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 							sensors5.requestTemperatures();
 							break;
-						case 6:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 							sensors6.requestTemperatures();
 							break;
 					}
@@ -261,43 +251,43 @@ void DS18B20_scaner(bool LogsToUART){
 	sensors5.requestTemperatures();
 	sensors6.requestTemperatures();
 
-	delay(1500);
+	delay(1200);
 	
-	sensorsUnique = new DeviceAddress[16];							// Выделяем память в динамическом массиве под количество обнаруженных сенсоров
+	sensorsUnique = new DeviceAddress[QUANTITY_SENSORS];							// Выделяем память в динамическом массиве под количество обнаруженных сенсоров
 	
 	for (byte Number_Input_GPIO_Port = 1; Number_Input_GPIO_Port <= 6; Number_Input_GPIO_Port ++){	
 		switch(Number_Input_GPIO_Port){
- 			case 1:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P1:
  				countSensors = sensors1.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 					sensors1.getAddress(sensorsUnique[i], i);
 				}
  				break;
- 			case 2:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P2:
  				countSensors = sensors2.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 					sensors2.getAddress(sensorsUnique[i], i);
 				}
  				break;
- 			case 3:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P3:
  				countSensors = sensors3.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 					sensors3.getAddress(sensorsUnique[i], i);
 				}
  				break;
- 			case 4:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P4:
  				countSensors = sensors4.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 					sensors4.getAddress(sensorsUnique[i], i);
 				}
  				break;
- 			case 5:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P5:
  				countSensors = sensors5.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 					sensors5.getAddress(sensorsUnique[i], i);
 				}
  				break;
- 			case 6:
+ 			case CONFIG_SENSOR_B_INPUT_GPIO_P6:
  				countSensors = sensors6.getDeviceCount();
 				for (int i = 0; i < countSensors; i++) {
 				 sensors6.getAddress(sensorsUnique[i], i);
@@ -327,22 +317,22 @@ void DS18B20_scaner(bool LogsToUART){
 					
 					Serial.print(F("\t\t\t\tTemperature: "));
 					switch(Number_Input_GPIO_Port){
-						case 1:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 							Serial.print(sensors1.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
-						case 2:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 							Serial.print(sensors2.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
-						case 3:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 							Serial.print(sensors3.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
-						case 4:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 							Serial.print(sensors4.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
-						case 5:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 							Serial.print(sensors5.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
-						case 6:
+						case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 							Serial.print(sensors6.getTempC(sensorsUnique[i])); Serial.println(F(" C"));
 							break;
 					}

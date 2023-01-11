@@ -111,22 +111,22 @@ void SentConfigSensorsUART(){
 			Serial.print(F("Разрешение датчика: ")); Serial.print(EEPROM.read(E_ConfigSensor_A + INPUT_BYTE_NUMBER_SENSOR)); Serial.println(F("бит"));
 			Serial.print(F("Порт подключения: "));
 			switch(EEPROM_int_read(E_ConfigSensor_B + INPUT_BYTE_NUMBER_SENSOR*2)){			// Имя порта к которому подключене датчик
-				case 1:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 					Serial.println(F("Input GPIO. P1"));
 					break;
-				case 2:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 					Serial.println(F("Input GPIO. P2"));
 					break;
-				case 3:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 					Serial.println(F("Input GPIO. P3"));
 					break;
-				case 4:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 					Serial.println(F("Input GPIO. P4"));
 					break;
-				case 5:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 					Serial.println(F("Input GPIO. P5"));
 					break;
-				case 6:
+				case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 					Serial.println(F("Input GPIO. P6"));
 					break;
 				default:

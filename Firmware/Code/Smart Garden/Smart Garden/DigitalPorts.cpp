@@ -65,55 +65,55 @@ void ViewNameInputDigitalPorts(byte Port){
 boolean ReadInputDigitalPorts(byte Port){
 	switch(Port){
 		case PORT_INPUT_D_PIN_1:
-			if(!(PINB & (1 << INPUT_D_PIN_1))){				// Если на порту '0'
+			if(!(PINB & (1 << PORT_INPUT_D_PIN_1))){				// Если на порту '0'
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_2:
-			if(!(PINB & (1 << INPUT_D_PIN_2))){
+			if(!(PINB & (1 << PORT_INPUT_D_PIN_2))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_3:
-			if(!(PINB & (1 << INPUT_D_PIN_3))){
+			if(!(PINB & (1 << PORT_INPUT_D_PIN_3))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_4:
-			if(!(PINJ & (1 << INPUT_D_PIN_4))){
+			if(!(PINJ & (1 << PORT_INPUT_D_PIN_4))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_5:
-			if(!(PINB & (1 << INPUT_D_PIN_5))){
+			if(!(PINB & (1 << PORT_INPUT_D_PIN_5))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_6:
-			if(!(PINJ & (1 << INPUT_D_PIN_6))){
+			if(!(PINJ & (1 << PORT_INPUT_D_PIN_6))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_7:
-			if(!(PINJ & (1 << INPUT_D_PIN_7))){
+			if(!(PINJ & (1 << PORT_INPUT_D_PIN_7))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_8:
-			if(!(PINJ & (1 << INPUT_D_PIN_8))){
+			if(!(PINJ & (1 << PORT_INPUT_D_PIN_8))){
 				return true;
 			}
 			else return false;
 			break;
 		case PORT_INPUT_D_PIN_9:
-			if(!(PINJ & (1 << INPUT_D_PIN_9))){
+			if(!(PINJ & (1 << PORT_INPUT_D_PIN_9))){
 				return true;
 			}
 			else return false;

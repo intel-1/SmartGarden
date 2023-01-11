@@ -169,7 +169,16 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define TENS_And_CURR 67			// Напряжение и ток
 
 
-
+// ========================================================================================
+// =========================== Названия портов Input GPIO P1-P6 ===========================
+// ======================== в конфигурационном бите E_ConfigSensor ========================
+// ========================================================================================
+#define CONFIG_SENSOR_B_INPUT_GPIO_P1 1
+#define CONFIG_SENSOR_B_INPUT_GPIO_P2 2
+#define CONFIG_SENSOR_B_INPUT_GPIO_P3 3
+#define CONFIG_SENSOR_B_INPUT_GPIO_P4 4
+#define CONFIG_SENSOR_B_INPUT_GPIO_P5 5
+#define CONFIG_SENSOR_B_INPUT_GPIO_P6 6
 
 
 
@@ -190,7 +199,7 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 #define STEPPER_DIR 66			// PK4
 
 // Порт включения питания драйверов исполнительных модулей
-#define VCC_STEPPER_DRIVERS EXT_PIN_4	// PE7		
+#define VCC_STEPPER_DRIVERS PORT_EXT_PIN_4	// PE7		
 
 // NRF24L01
 #define NRF_VCC_RUN PH7
@@ -215,50 +224,50 @@ extern char NameSensor[17][20];			// Всего датчиков 16 шт, но �
 
 
 /*
---------------------------------|---------------|-----------|---------------------------|
-	Наименование порта			|   Тип порта	| Мнемоника |   Порт в Arduino формате	|
---------------------------------|---------------|-----------|---------------------------|	*/
+------------------------------------|---------------|-----------|---------------------------|
+	Наименование порта				|   Тип порта	| Мнемоника |   Порт в Arduino формате	|
+------------------------------------|---------------|-----------|---------------------------|	*/
 // External Digital Pins (Пины исполнительных модулей):
-#define EXT_PIN_1 PH3	//		| D,PWM			|	 (1)	|		    (6)				|
-#define EXT_PIN_2 PE3	//		| D,PWM			|	 (2)	|		    (5)				|
-#define EXT_PIN_3 PE6	//		| D,PWM,PDM		|	 (3)	|		    (-)				|
-#define EXT_PIN_4 PE7	//		| D,PWM,PMD		|	 (4)	|		    (-)				|
-#define EXT_PIN_5 PH5	//		| D,PWM,PDM		|	 (5)	|		    (8)				|
-#define EXT_PIN_6 PH4	//		| D,PMD			|	 (6)	|		    (7)				|
-#define EXT_PIN_7 PK5	//		| D,PWM,PDM		|	 (7)	|			(67)			|	A13
-#define EXT_PIN_8 PK1	//		| D,PMD			|	 (8)	|		    (63)			|	A9
-#define EXT_PIN_9 PK2	//		| D,PMD			|	 (9)	|			(64)			|	A10
-#define EXT_PIN_10 PG5	//		| D,PWM,PMD		|	 (10)	|		    (4)				|
-//#define EXT_PIN_11	
-#define EXT_PIN_12 PK3	//		| D,PMD			|	 (12)	|			(65)			|	A11
-#define EXT_PIN_13 PF6	//		| D,PMD			|	 (13)	|			(60)			|	A6
-#define EXT_PIN_14 PK4	//		| D,PMD			|	 (14)	|			(66)			|	A12
+#define PORT_EXT_PIN_1 PH3	//		| D,PWM			|	 (1)	|		    (6)				|
+#define PORT_EXT_PIN_2 PE3	//		| D,PWM			|	 (2)	|		    (5)				|
+#define PORT_EXT_PIN_3 PE6	//		| D,PWM,PDM		|	 (3)	|		    (-)				|
+#define PORT_EXT_PIN_4 PE7	//		| D,PWM,PMD		|	 (4)	|		    (-)				|
+#define PORT_EXT_PIN_5 PH5	//		| D,PWM,PDM		|	 (5)	|		    (8)				|
+#define PORT_EXT_PIN_6 PH4	//		| D,PMD			|	 (6)	|		    (7)				|
+#define PORT_EXT_PIN_7 PK5	//		| D,PWM,PDM		|	 (7)	|			(67)			|	A13
+#define PORT_EXT_PIN_8 PK1	//		| D,PMD			|	 (8)	|		    (63)			|	A9
+#define PORT_EXT_PIN_9 PK2	//		| D,PMD			|	 (9)	|			(64)			|	A10
+#define PORT_EXT_PIN_10 PG5	//		| D,PWM,PMD		|	 (10)	|		    (4)				|
+//#define PORT_EXT_PIN_11	
+#define PORT_EXT_PIN_12 PK3	//		| D,PMD			|	 (12)	|			(65)			|	A11
+#define PORT_EXT_PIN_13 PF6	//		| D,PMD			|	 (13)	|			(60)			|	A6
+#define PORT_EXT_PIN_14 PK4	//		| D,PMD			|	 (14)	|			(66)			|	A12
 // Output Digital Pins (Группа выходных цифровых портов):
-#define GPIO_1 PC5		//		| D.MOSFET		|	 (21)	|		    (32)			|
-#define GPIO_2 PG2		//		| D.MOSFET		|	 (22)	|		    (39)			|
-#define GPIO_3 PA7		//		| D.MOSFET		|	 (23)	|		    (29)			|
-#define GPIO_4 PA5		//		| D.MOSFET		|	 (24)	|		    (27)			|
-#define GPIO_5 PA3		//		| D.MOSFET		|	 (25)	|		    (25)			|
-#define GPIO_6 PA4		//		| D.MOSFET		|	 (26)	|		    (26)			|
-#define GPIO_7 PA1		//		| D.MOSFET		|	 (27)	|		    (23)			|
-#define GPIO_8 PA0		//		| D.MOSFET		|	 (28)	|		    (22)			|
+#define PORT_GPIO_1 PC5		//		| D.MOSFET		|	 (21)	|		    (32)			|
+#define PORT_GPIO_2 PG2		//		| D.MOSFET		|	 (22)	|		    (39)			|
+#define PORT_GPIO_3 PA7		//		| D.MOSFET		|	 (23)	|		    (29)			|
+#define PORT_GPIO_4 PA5		//		| D.MOSFET		|	 (24)	|		    (27)			|
+#define PORT_GPIO_5 PA3		//		| D.MOSFET		|	 (25)	|		    (25)			|
+#define PORT_GPIO_6 PA4		//		| D.MOSFET		|	 (26)	|		    (26)			|
+#define PORT_GPIO_7 PA1		//		| D.MOSFET		|	 (27)	|		    (23)			|
+#define PORT_GPIO_8 PA0		//		| D.MOSFET		|	 (28)	|		    (22)			|
 // Input GPIO:
-#define INPUT_GPIO_P1 9	//		| D.INPUT		|	 (31)	|			(9)				|	PH6		
-#define INPUT_GPIO_P2 A0//		| A.INPUT,D		|	 (32)	|			(A0)			|	PF0		ADC0
-#define INPUT_GPIO_P3 A1//		| A.INPUT,D		|	 (33)	|			(A1)			|	PF1		ADC1
-#define INPUT_GPIO_P4 A6//		| A.INPUT,D		|	 (34)	|			(A6)			|	PF7		ADC7
-#define INPUT_GPIO_P5 A3//		| A.INPUT,D		|	 (35)	|			(A3)			|	PF3		ADC3
-#define INPUT_GPIO_P6 A4//		| A.INPUT,D		|	 (36)	|			(A4)			|	PF4		ADC4
+#define PORT_INPUT_GPIO_P1 9	//		| D.INPUT		|	 (31)	|			(9)				|	PH6		
+#define PORT_INPUT_GPIO_P2 A0//		| A.INPUT,D		|	 (32)	|			(A0)			|	PF0		ADC0
+#define PORT_INPUT_GPIO_P3 A1//		| A.INPUT,D		|	 (33)	|			(A1)			|	PF1		ADC1
+#define PORT_INPUT_GPIO_P4 A6//		| A.INPUT,D		|	 (34)	|			(A6)			|	PF7		ADC7
+#define PORT_INPUT_GPIO_P5 A3//		| A.INPUT,D		|	 (35)	|			(A3)			|	PF3		ADC3
+#define PORT_INPUT_GPIO_P6 A4//		| A.INPUT,D		|	 (36)	|			(A4)			|	PF4		ADC4
 // Input Digital Pins:
-#define INPUT_D_PIN_1 PB5	//	| D.INPUT		|	 (41)	|		    (11)			|	PCINT5
-#define INPUT_D_PIN_2 PB6	//	| D.INPUT		|	 (42)	|			(9)				|	PCINT6
-#define INPUT_D_PIN_3 PB7	//	| D.INPUT		|	 (43)	|			(13)			|	PCINT7
-#define INPUT_D_PIN_4 PJ2	//	| D.INPUT		|	 (44)	|			()				|	PCINT11
-#define INPUT_D_PIN_5 PB4	//	| D.INPUT		|	 (45)	|			(15)			|	PCINT4
-#define INPUT_D_PIN_6 PJ4	//	| D.INPUT		|	 (46)	|			()				|	PCINT13
-#define INPUT_D_PIN_7 PJ3	//	| D.INPUT		|	 (47)	|			()				|	PCINT12
-#define INPUT_D_PIN_8 PJ6	//	| D.INPUT		|	 (48)	|			()				|	PCINT15
-#define INPUT_D_PIN_9 PJ5	//	| D.INPUT		|	 (49)	|			()				|	PCINT14
+#define PORT_INPUT_D_PIN_1 PB5	//	| D.INPUT		|	 (41)	|		    (11)			|	PCINT5
+#define PORT_INPUT_D_PIN_2 PB6	//	| D.INPUT		|	 (42)	|			(9)				|	PCINT6
+#define PORT_INPUT_D_PIN_3 PB7	//	| D.INPUT		|	 (43)	|			(13)			|	PCINT7
+#define PORT_INPUT_D_PIN_4 PJ2	//	| D.INPUT		|	 (44)	|			()				|	PCINT11
+#define PORT_INPUT_D_PIN_5 PB4	//	| D.INPUT		|	 (45)	|			(15)			|	PCINT4
+#define PORT_INPUT_D_PIN_6 PJ4	//	| D.INPUT		|	 (46)	|			()				|	PCINT13
+#define PORT_INPUT_D_PIN_7 PJ3	//	| D.INPUT		|	 (47)	|			()				|	PCINT12
+#define PORT_INPUT_D_PIN_8 PJ6	//	| D.INPUT		|	 (48)	|			()				|	PCINT15
+#define PORT_INPUT_D_PIN_9 PJ5	//	| D.INPUT		|	 (49)	|			()				|	PCINT14
 
 
 // =============================================================================

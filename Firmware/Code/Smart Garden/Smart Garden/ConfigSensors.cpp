@@ -111,54 +111,54 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 	
 	// ---------------------------------------------------------------
 	switch(Config_Sensor_B){
-		case 1:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P1, INPUT);
+				pinMode(PORT_INPUT_GPIO_P1, INPUT);
 				sensors1.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
 			}
 			else View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_BEFORE);
 			break;
-		case 2:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P2, INPUT);
+				pinMode(PORT_INPUT_GPIO_P2, INPUT);
 				sensors2.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
 			}
 			else View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_BEFORE);
 			break;
-		case 3:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P3, INPUT);
+				pinMode(PORT_INPUT_GPIO_P3, INPUT);
 				sensors3.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
 			}
 			else View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_BEFORE);
 			break;
-		case 4:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P4, INPUT);
+				pinMode(PORT_INPUT_GPIO_P4, INPUT);
 				sensors4.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
 			}
 			else View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_BEFORE);
 			break;
-		case 5:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P5, INPUT);
+				pinMode(PORT_INPUT_GPIO_P5, INPUT);
 				sensors5.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
 			}
 			else View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_BEFORE);
 			break;
-		case 6:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 			if(!Init_DS18B20[Config_Sensor_B]){
-				pinMode(INPUT_GPIO_P6, INPUT);
+				pinMode(PORT_INPUT_GPIO_P6, INPUT);
 				sensors6.begin();
 				Init_DS18B20[Config_Sensor_B] = true;
 				View_Name_Work_Port_DS18B20(Config_Sensor_B, INIT_DS18B20_STATE_DONE);
@@ -179,7 +179,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 	byte ConfigSensor_A = EEPROM.read(E_ConfigSensor_A + NumberSensor);
 	Serial.print(F("\t\tСonnection status: "));
 	switch(Config_Sensor_B){
-		case 1:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 			if(sensors1.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
@@ -193,7 +193,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			} 
 			else Send_to_UART_State_Connection_DS18B20(DS18B20_NOT_CONNECTED);
 			break;
-		case 2:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P2:
 			if(sensors2.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
@@ -207,7 +207,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			} 
 			else Send_to_UART_State_Connection_DS18B20(DS18B20_NOT_CONNECTED);
 			break;
-		case 3:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P3:
 			if(sensors3.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
@@ -221,7 +221,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			}
 			else Send_to_UART_State_Connection_DS18B20(DS18B20_NOT_CONNECTED);
 			break;
-		case 4:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P4:
 			if(sensors4.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
@@ -235,7 +235,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			}
 			else Send_to_UART_State_Connection_DS18B20(DS18B20_NOT_CONNECTED);
 			break;
-		case 5:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P5:
 			if(sensors5.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
@@ -250,7 +250,7 @@ boolean InitializingDS18B20(byte AdressSensor, byte NumberSensor){
 			}
 			else Send_to_UART_State_Connection_DS18B20(DS18B20_NOT_CONNECTED);
 			break;
-		case 6:
+		case CONFIG_SENSOR_B_INPUT_GPIO_P6:
 			if(sensors6.isConnected(AddresSensor)){
 				Send_to_UART_State_Connection_DS18B20(DS18B20_CONNECTED);
 				if(9 <= ConfigSensor_A && ConfigSensor_A <= 12){						// Разрешенные значения разрешения 9, 10, 11, 12
