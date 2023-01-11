@@ -46,9 +46,7 @@ void CalculateDS18B20(byte NumberSensor){
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 6),
 									EEPROM.read((E_Address_Sensor + NumberSensor * 10) + 7)};
 		
-	if (OUTPUT_LEVEL_UART_SENSOR){
-		Serial.print(F("\t\t\t...measurement Temp"));
-	}
+	
 	
 	switch(Config_Sensor_B){
 		case 1:
@@ -72,6 +70,9 @@ void CalculateDS18B20(byte NumberSensor){
 	}
 	
 	if(SensorConnect){																	// Если датчик подключен к шине
+		if (OUTPUT_LEVEL_UART_SENSOR){
+			Serial.print(F("\t\t\t...measurement Temp"));
+		}
 		ControllPort(NumberSensor, 1);													// Включаем управление Controll портом
 	
 		switch(Config_Sensor_B){
@@ -183,7 +184,6 @@ void CalculateDS18B20(byte NumberSensor){
 	}
 	else{
 		if (OUTPUT_LEVEL_UART_SENSOR){
-			Serial.println(F("...error"));
 			Serial.println(F("\t\t\t...sensor not connected"));
 		}
 	}
