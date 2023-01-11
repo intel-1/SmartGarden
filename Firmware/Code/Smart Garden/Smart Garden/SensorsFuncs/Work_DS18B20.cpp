@@ -186,6 +186,7 @@ void CalculateDS18B20(byte NumberSensor){
 		if (OUTPUT_LEVEL_UART_SENSOR){
 			Serial.println(F("\t\t\t...sensor not connected"));
 		}
+		SensorsError[NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
 	}
 }
 
