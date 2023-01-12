@@ -633,7 +633,7 @@ boolean InitializingTSL2561(byte AddressSensor, byte NumberSensor){
 
 
 // ==========================================================================================================================================
-// ===================================================== Инициализация датчика MAX44009 =====================================================
+// ====================================================== Инициализация датчика BH1750 ======================================================
 // ==========================================================================================================================================
 boolean InitializingBH1750(byte AddressSensor, byte NumberSensor){
 	bool _Error_Init_Sensor = false;
@@ -736,13 +736,18 @@ boolean InitializingMAX44009(byte AddressSensor, byte NumberSensor){
 		case 0x4a:
 			WriteToLCD(String(F("...0x4a...")), LCD_LINE_4, LCD_START_SYMBOL_3, LCD_NO_SCREEN_REFRESH_DELAY);
 			Serial.print(F("...0x4a..."));
-			Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
+			if(MAX44009_1.isConnected()){
+				Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);	
+			}
+			Serial.println(F("\t\t\t...Not connection"));
 			break;
 		case 0x4b:
 			WriteToLCD(String(F("...0x4b...")), LCD_LINE_4, LCD_START_SYMBOL_3, LCD_NO_SCREEN_REFRESH_DELAY);
 			Serial.print(F("...0x4b..."));
-			Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
-			break;
+			if(MAX44009_2.isConnected()){
+				Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
+			}
+			Serial.println(F("\t\t\t...Not connection"));
 		default:
 			Serial.println(F("...Error address"));
 			Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);

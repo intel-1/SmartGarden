@@ -2,6 +2,7 @@
 #define CONFIGSENSORS_H
 
 
+
 extern boolean Init_DS18B20[7];
 
 
