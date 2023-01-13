@@ -26,6 +26,7 @@ bool Init_bme280[2];		// 2 доступных адреса (0x76, 0x77)
 bool Init_bmp280[2];		//
 bool Init_ina219[4];		// 4 доступных адреса (0x40, 0x41, 0x42, 0x43)
 bool Init_TSL2561[3];		// 3 доступных адреса (0x29, 0x39, ox49)
+bool Init_AHT2x[1];			// доступные адреса (0x38)
 
 //byte bme280_sensors[2];		// Адреса bme280 с привязкой к номеру датчика (доступные адреса 0x76 и 0x77)
 
@@ -439,10 +440,10 @@ boolean InitializingINA219(byte AddressSensor, byte NumberSensor){
 // ==========================================================================================================================================
 // ====================================================== Инициализация датчика TSL2561 =====================================================
 // ==========================================================================================================================================
-void Config_Integration_Time(byte AddressSensor, byte _Integration_Time){
+void Config_Integration_Time(byte AddressSensor, byte Integration_Time){
 	switch(AddressSensor){
 		case TSL2561_ADDR_LOW:
-			switch (_Integration_Time){
+			switch (Integration_Time){
 				case TSL2561_INTEGRATIONTIME_13MS:
 					tsl1.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
 					break;
@@ -455,7 +456,7 @@ void Config_Integration_Time(byte AddressSensor, byte _Integration_Time){
 			}
 			break;
 		case TSL2561_ADDR_FLOAT:
-			switch (_Integration_Time){
+			switch (Integration_Time){
 				case TSL2561_INTEGRATIONTIME_13MS:
 					tsl2.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
 					break;
@@ -468,7 +469,7 @@ void Config_Integration_Time(byte AddressSensor, byte _Integration_Time){
 			}
 			break;
 		case TSL2561_ADDR_HIGH:
-			switch (_Integration_Time){
+			switch (Integration_Time){
 				case TSL2561_INTEGRATIONTIME_13MS:
 					tsl3.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
 					break;
@@ -482,10 +483,11 @@ void Config_Integration_Time(byte AddressSensor, byte _Integration_Time){
 			break;
 	}
 }
-void Config_Gain(byte AddressSensor, byte _Gain){
+// -----------------------------------------------------------------------------------------------
+void Config_Gain(byte AddressSensor, byte Gain){
 	switch(AddressSensor){
 		case TSL2561_ADDR_LOW:
-			switch (_Gain){
+			switch (Gain){
 				case GAIN_16X:
 					tsl1.setGain(TSL2561_GAIN_16X);
 					break;
@@ -493,13 +495,13 @@ void Config_Gain(byte AddressSensor, byte _Gain){
 					tsl1.setGain(TSL2561_GAIN_16X);
 					break;
 				case GAIN_AUTO:
-					tsl1.setGain(TSL2561_GAIN_16X);
+					tsl1.enableAutoRange(true);
 					break;
 				break;
 			}
 			break;
 		case TSL2561_ADDR_FLOAT:
-			switch (_Gain){
+			switch (Gain){
 				case GAIN_16X:
 					tsl2.setGain(TSL2561_GAIN_16X);
 					break;
@@ -507,13 +509,13 @@ void Config_Gain(byte AddressSensor, byte _Gain){
 					tsl2.setGain(TSL2561_GAIN_16X);
 					break;
 				case GAIN_AUTO:
-					tsl2.setGain(TSL2561_GAIN_16X);
+					tsl2.enableAutoRange(true);
 					break;
 				break;
 			}
 			break;
 		case TSL2561_ADDR_HIGH:
-			switch (_Gain){
+			switch (Gain){
 				case GAIN_16X:
 					tsl3.setGain(TSL2561_GAIN_16X);
 					break;
@@ -521,14 +523,14 @@ void Config_Gain(byte AddressSensor, byte _Gain){
 					tsl3.setGain(TSL2561_GAIN_16X);
 					break;
 				case GAIN_AUTO:
-					tsl3.setGain(TSL2561_GAIN_16X);
+					tsl3.enableAutoRange(true);
 					break;
 				break;
 			}
 			break;
 	}
 }
-
+// -----------------------------------------------------------------------------------------------
 boolean InitializingTSL2561(byte AddressSensor, byte NumberSensor){
 	bool _ErrorAdressSensor = false;
 	
@@ -547,10 +549,13 @@ boolean InitializingTSL2561(byte AddressSensor, byte NumberSensor){
 			WriteToLCD(String(F("...0x49...")), LCD_LINE_4, LCD_START_SYMBOL_3, LCD_NO_SCREEN_REFRESH_DELAY);
 			break;
 		default:
-			Serial.print(F("...error address sensor - 0x")); Serial.println(AddressSensor); 
+			Serial.print(F("...error address - 0x")); Serial.println(AddressSensor, HEX); 
 			_ErrorAdressSensor = true;
 	}
-	// ================================== Блок инициализации датчика ==================================
+	
+	// =================================================================================================================
+	// =========================================== Блок инициализации датчика ==========================================
+	// =================================================================================================================
 	bool InitializSensor = false;	
 	if(!_ErrorAdressSensor){											// Если верен адрес датчика
 		switch(AddressSensor){
@@ -588,21 +593,24 @@ boolean InitializingTSL2561(byte AddressSensor, byte NumberSensor){
 				else Serial.println(F("Previously initialized"));
 				break;
 		}
-		// ================================== Блок конфигурирования датчика ==================================
+		
+		// =================================================================================================================
+		// ========================================= Блок конфигурирования датчика =========================================
+		// =================================================================================================================
 		if(InitializSensor){											// Если до этого успешно проиниализировали датчик
 			Serial.print(F("\t\t\tGain: "));
 			switch(EEPROM_int_read(E_ConfigSensor_C + NumberSensor)){	// Настройка усиления
-				case GAIN_16X:											// Тусклый свет
+				case GAIN_16X:											// 16-кратное усиление ... используется при слабом освещении для повышения чувствительности
 					Serial.println(F("16x"));
 					Config_Gain(AddressSensor, GAIN_16X);
 					break;
-				case GAIN_1X:											// Яркий свет
+				case GAIN_1X:											// Нет усиления ... используется при ярком свете, чтобы избежать насыщения датчика
 					Serial.println(F("1x"));
 					Config_Gain(AddressSensor, GAIN_1X);
 					break;
 				case GAIN_AUTO:		
 					Serial.println(F("auto"));					
-					Config_Gain(AddressSensor, GAIN_AUTO);
+					Config_Gain(AddressSensor, GAIN_AUTO);				// Авто-усиление ... автоматически переключается между 1x и 16x
 					break;
 				default:												
 					Serial.println(F("auto (default)"));	
@@ -610,21 +618,21 @@ boolean InitializingTSL2561(byte AddressSensor, byte NumberSensor){
 			}
 			
 			Serial.print(F("\t\t\tIntegration time: "));
-			switch(EEPROM_int_read(E_ConfigSensor_D + NumberSensor)){			// Времени конвертации
-				case INTEGRATIONTIME_13MS:
+			switch(EEPROM_int_read(E_ConfigSensor_D + NumberSensor)){						// Времени конвертации
+				case INTEGRATIONTIME_13MS:													// Быстрое, но низкое разрешение
 					Serial.println(F("13ms"));
 					Config_Integration_Time(AddressSensor, TSL2561_INTEGRATIONTIME_13MS);	
 					break;
-				case INTEGRATIONTIME_101MS:
+				case INTEGRATIONTIME_101MS:													// Среднее разрешение и скорость
 					Serial.println(F("101ms"));
 					Config_Integration_Time(AddressSensor, TSL2561_INTEGRATIONTIME_101MS);					
 					break;
-				case INTEGRATIONTIME_402MS:
+				case INTEGRATIONTIME_402MS:													// 16-битные данные, но самое медленное преобразование
 					Serial.println(F("402ms"));
 					Config_Integration_Time(AddressSensor, TSL2561_INTEGRATIONTIME_402MS);	
 					break;
 				default:
-					Serial.println(F("13ms (default)"));
+					Serial.println(F("13ms (default)"));									// Быстрое, но низкое разрешение
 					Config_Integration_Time(AddressSensor, TSL2561_INTEGRATIONTIME_13MS);	
 			}
 		}
@@ -749,8 +757,9 @@ boolean InitializingMAX44009(byte AddressSensor, byte NumberSensor){
 			}
 			Serial.println(F("\t\t\t...Not connection"));
 		default:
-			Serial.println(F("...Error address"));
-			Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);
+			Serial.println();
+			Serial.println(F("\t\t\t...Error address"));
+			//Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);
 	}
 }
 
@@ -760,11 +769,17 @@ boolean InitializingMAX44009(byte AddressSensor, byte NumberSensor){
 // ==========================================================================================================================================
 boolean InitializingHTA25(byte AddressSensor, byte NumberSensor){
 	Serial.print(F("\tInitializing AHT25 (Sensor ")); Serial.print(NumberSensor); Serial.print(F(")..."));
-	if (AHT25.begin()){
-		Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
+	if(!Init_AHT2x){
+		if (AHT25.begin()){
+			Output_Text_To_LCD_and_UART(DONE, LCD_START_SYMBOL_13);
+		}
+		else{ 
+			Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);
+		}
 	}
-	else{ 
-		Output_Text_To_LCD_and_UART(ERROR, LCD_START_SYMBOL_13);
+	else{
+		Serial.println(F("ok"));
+		Serial.println(F("...has been configured before"));
 	}
 }
 	

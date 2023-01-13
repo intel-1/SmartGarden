@@ -42,11 +42,11 @@ void CalculateBH1750(byte NumberSensor, byte TypeDataSensor){
 	}
 		
 	if (lux < 0) {												// Если значение не получено (ошибка)
-		React_to_Error_Calculate_Value(NumberSensor, LIGHT, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
+		React_to_Error_Calculate_Value(NumberSensor, LIGHT, Sensors.PresentValue[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 	}
 	else {
-		SensorsError[NumberSensor][VALUE_2] = 0;				// Снимаем возможную ошибку чтения данных
-		RealValueSensors[NumberSensor][VALUE_2] = lux;			// Сохраняем измеренное значение датчика
+		Sensors.Error_Value[NumberSensor][VALUE_2] = 0;			// Снимаем возможную ошибку чтения данных
+		Sensors.PresentValue[NumberSensor][VALUE_2] = lux;		// Сохраняем измеренное значение датчика
 		if (OUTPUT_LEVEL_UART_SENSOR){
 			Serial.println(F("...done"));
 		}

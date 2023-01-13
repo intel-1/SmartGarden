@@ -48,7 +48,8 @@ void CalculateMAX44009(byte NumberSensor, byte TypeDataSensor){
 		default:
 			Error_Address = true;
 			if (OUTPUT_LEVEL_UART_SENSOR){
-				Serial.println(F("_Error address"));
+				Serial.println();
+				Serial.println(F("\t\t\t...Error address"));
 			}
 	}
 	
@@ -59,14 +60,14 @@ void CalculateMAX44009(byte NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Light"));
 			}
 	
-			SensorsError[NumberSensor][VALUE_2] = 0;									// Снимаем возможную ошибку чтения данных
+			Sensors.Error_Value[NumberSensor][VALUE_2] = 0;									// Снимаем возможную ошибку чтения данных
 			
 			switch(AddressSensor){
 				case 0x4a:
-					RealValueSensors[NumberSensor][VALUE_2] = MAX44009_1.getLux();		// Сохраняем измеренное значение датчика
+					Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_1.getLux();		// Сохраняем измеренное значение датчика
 					break;
 				case 0x4b:
-					RealValueSensors[NumberSensor][VALUE_2] = MAX44009_2.getLux();		// Сохраняем измеренное значение датчика
+					Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_2.getLux();		// Сохраняем измеренное значение датчика
 					break;
 			}
 			
@@ -76,11 +77,11 @@ void CalculateMAX44009(byte NumberSensor, byte TypeDataSensor){
 			ControllPort(NumberSensor, 0);												// Выключаем управление Controll портом
 		}
 		else{ 
-			SensorsError[NumberSensor][VALUE_2] = 1;
+			Sensors.Error_Value[NumberSensor][VALUE_2] = 1;
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("\t\t\t...Not connection"));
 			}
 		}
 	}
-	else SensorsError[NumberSensor][VALUE_2] = 1;
+	else Sensors.Error_Value[NumberSensor][VALUE_2] = 1;
 }

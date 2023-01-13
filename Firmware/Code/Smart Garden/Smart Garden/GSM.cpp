@@ -869,11 +869,11 @@ void Master_SMS(String _Line) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("Status"));
 		}
-		Send_SMS(String	(F("Temp_Box: "))	+ RealValueSensors[SENSOR_0][VALUE_1]	+	(F(", ")) +
-						(F("Temp_UP: "))	+ RealValueSensors[SENSOR_8][VALUE_1]	+	(F(", ")) +
-						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_5][VALUE_1]	+	(F(", ")) +
-						(F("Temp_Left: "))	+ RealValueSensors[SENSOR_7][VALUE_1]	+	(F(", ")) +
-						(F("Temp_Right: ")) + RealValueSensors[SENSOR_2][VALUE_1]	+	(F(", ")) +
+		Send_SMS(String	(F("Temp_Box: "))	+ Sensors.PresentValue[SENSOR_0][VALUE_1]	+	(F(", ")) +
+						(F("Temp_UP: "))	+ Sensors.PresentValue[SENSOR_8][VALUE_1]	+	(F(", ")) +
+						(F("Temp_DOWN: "))	+ Sensors.PresentValue[SENSOR_5][VALUE_1]	+	(F(", ")) +
+						(F("Temp_Left: "))	+ Sensors.PresentValue[SENSOR_7][VALUE_1]	+	(F(", ")) +
+						(F("Temp_Right: ")) + Sensors.PresentValue[SENSOR_2][VALUE_1]	+	(F(", ")) +
 						(F("Ti: "))			+ Ti 									+	(F(", ")) + 
 						(F("VCC: "))		+ VCC, 
 																GSM_SMS_ANSWER);
@@ -883,8 +883,8 @@ void Master_SMS(String _Line) {
 		if(LOGING_TO_SERIAL == UART_LOG_LEVEL_GSM || LOGING_TO_SERIAL == UART_LOG_LEVEL_ALL){
 			Serial.println(F("temp"));
 		}
-		Send_SMS(String	(F("Temp_UP: "))	+ RealValueSensors[SENSOR_2][VALUE_1] + (F(", ")) +
-						(F("Temp_DOWN: "))	+ RealValueSensors[SENSOR_3][VALUE_1] + (F(", ")) , 
+		Send_SMS(String	(F("Temp_UP: "))	+ Sensors.PresentValue[SENSOR_2][VALUE_1] + (F(", ")) +
+						(F("Temp_DOWN: "))	+ Sensors.PresentValue[SENSOR_3][VALUE_1] + (F(", ")) , 
 																GSM_SMS_ANSWER);
 	}
 	RingPhone = "";								// Очищаем номер автора смс

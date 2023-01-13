@@ -115,9 +115,9 @@ boolean ArchiveRestoreSaveWordData(byte Type){							// Ф-ция сохране
 		for(byte SGB = 0; SGB < 3; SGB ++){								// Ищем датчики прикрепленные к группе по байтам конфигурации E_SBG_A_*, E_SBG_B_*, E_SBG_C_*
 			switch(Type){
 				case 1:
-					EEPROM_float_write(E_ArchiveOldValueSensors, OldValueSensors[Sensor][SGB]);
+					EEPROM_float_write(E_ArchiveOldValueSensors, Sensors.OldValue[Sensor][SGB]);
 				case2:
-					OldValueSensors[Sensor][SGB] = EEPROM_float_read(E_ArchiveOldValueSensors);
+					Sensors.OldValue[Sensor][SGB] = EEPROM_float_read(E_ArchiveOldValueSensors);
 			}
 		}
 	}
@@ -224,69 +224,69 @@ void TimeIntervals(){
 			Send_GET_request(String	(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogDataWebServer	+ 
 									(F("&VCC="))	+ VCC_Ext		        				+
 									(F("&Ti="))		+ Ti									+ 
-									(F("&S11="))	+ RealValueSensors[SENSOR_1] [VALUE_1]  + 
-									(F("&S12="))	+ RealValueSensors[SENSOR_1] [VALUE_2]  + 
-									(F("&S13="))	+ RealValueSensors[SENSOR_1] [VALUE_3]  + 
+									(F("&S11="))	+ Sensors.PresentValue[SENSOR_1] [VALUE_1]  + 
+									(F("&S12="))	+ Sensors.PresentValue[SENSOR_1] [VALUE_2]  + 
+									(F("&S13="))	+ Sensors.PresentValue[SENSOR_1] [VALUE_3]  + 
 									
-									(F("&S21="))	+ RealValueSensors[SENSOR_2] [VALUE_1]  +
-									(F("&S22="))	+ RealValueSensors[SENSOR_2] [VALUE_2]  +
-									(F("&S23="))	+ RealValueSensors[SENSOR_2] [VALUE_3]  + 
+									(F("&S21="))	+ Sensors.PresentValue[SENSOR_2] [VALUE_1]  +
+									(F("&S22="))	+ Sensors.PresentValue[SENSOR_2] [VALUE_2]  +
+									(F("&S23="))	+ Sensors.PresentValue[SENSOR_2] [VALUE_3]  + 
 									
-									(F("&S31="))	+ RealValueSensors[SENSOR_3] [VALUE_1]  + 
-									(F("&S32="))	+ RealValueSensors[SENSOR_3] [VALUE_2]  + 
-									(F("&S33="))	+ RealValueSensors[SENSOR_3] [VALUE_3]  + 
+									(F("&S31="))	+ Sensors.PresentValue[SENSOR_3] [VALUE_1]  + 
+									(F("&S32="))	+ Sensors.PresentValue[SENSOR_3] [VALUE_2]  + 
+									(F("&S33="))	+ Sensors.PresentValue[SENSOR_3] [VALUE_3]  + 
 									
-									(F("&S41="))	+ RealValueSensors[SENSOR_4] [VALUE_1]  + 
-									(F("&S42="))	+ RealValueSensors[SENSOR_4] [VALUE_2]  + 
-									(F("&S43="))	+ RealValueSensors[SENSOR_4] [VALUE_3]  + 
+									(F("&S41="))	+ Sensors.PresentValue[SENSOR_4] [VALUE_1]  + 
+									(F("&S42="))	+ Sensors.PresentValue[SENSOR_4] [VALUE_2]  + 
+									(F("&S43="))	+ Sensors.PresentValue[SENSOR_4] [VALUE_3]  + 
 									
- 									(F("&S51="))	+ RealValueSensors[SENSOR_5] [VALUE_1]  + 
- 									(F("&S52="))	+ RealValueSensors[SENSOR_5] [VALUE_2]  + 
- 									(F("&S53="))	+ RealValueSensors[SENSOR_5] [VALUE_3]  + 
+ 									(F("&S51="))	+ Sensors.PresentValue[SENSOR_5] [VALUE_1]  + 
+ 									(F("&S52="))	+ Sensors.PresentValue[SENSOR_5] [VALUE_2]  + 
+ 									(F("&S53="))	+ Sensors.PresentValue[SENSOR_5] [VALUE_3]  + 
 									
-									(F("&S61="))	+ RealValueSensors[SENSOR_6] [VALUE_1]  +
-									(F("&S62="))	+ RealValueSensors[SENSOR_6] [VALUE_2]  +
-									(F("&S63="))	+ RealValueSensors[SENSOR_6] [VALUE_3]  +
+									(F("&S61="))	+ Sensors.PresentValue[SENSOR_6] [VALUE_1]  +
+									(F("&S62="))	+ Sensors.PresentValue[SENSOR_6] [VALUE_2]  +
+									(F("&S63="))	+ Sensors.PresentValue[SENSOR_6] [VALUE_3]  +
 																		
-									(F("&S71="))	+ RealValueSensors[SENSOR_7] [VALUE_1]  +
-									(F("&S72="))	+ RealValueSensors[SENSOR_7] [VALUE_2]  +
-									(F("&S73="))	+ RealValueSensors[SENSOR_7] [VALUE_3]  +
+									(F("&S71="))	+ Sensors.PresentValue[SENSOR_7] [VALUE_1]  +
+									(F("&S72="))	+ Sensors.PresentValue[SENSOR_7] [VALUE_2]  +
+									(F("&S73="))	+ Sensors.PresentValue[SENSOR_7] [VALUE_3]  +
 									
-									(F("&S81="))	+ RealValueSensors[SENSOR_8] [VALUE_1]  +
-									(F("&S82="))	+ RealValueSensors[SENSOR_8] [VALUE_2]  +
-									(F("&S83="))	+ RealValueSensors[SENSOR_8] [VALUE_3]  +
+									(F("&S81="))	+ Sensors.PresentValue[SENSOR_8] [VALUE_1]  +
+									(F("&S82="))	+ Sensors.PresentValue[SENSOR_8] [VALUE_2]  +
+									(F("&S83="))	+ Sensors.PresentValue[SENSOR_8] [VALUE_3]  +
 																	 
-									(F("&S91="))	+ RealValueSensors[SENSOR_9] [VALUE_1]  + 
-									(F("&S92="))	+ RealValueSensors[SENSOR_9] [VALUE_2]  + 
-									(F("&S93="))	+ RealValueSensors[SENSOR_9] [VALUE_3]  + 
+									(F("&S91="))	+ Sensors.PresentValue[SENSOR_9] [VALUE_1]  + 
+									(F("&S92="))	+ Sensors.PresentValue[SENSOR_9] [VALUE_2]  + 
+									(F("&S93="))	+ Sensors.PresentValue[SENSOR_9] [VALUE_3]  + 
 									
-									(F("&S101="))	+ RealValueSensors[SENSOR_10][VALUE_1]  +
-									(F("&S102="))	+ RealValueSensors[SENSOR_10][VALUE_2]  +
-									(F("&S102="))	+ RealValueSensors[SENSOR_10][VALUE_3]  +
+									(F("&S101="))	+ Sensors.PresentValue[SENSOR_10][VALUE_1]  +
+									(F("&S102="))	+ Sensors.PresentValue[SENSOR_10][VALUE_2]  +
+									(F("&S102="))	+ Sensors.PresentValue[SENSOR_10][VALUE_3]  +
 									
-									(F("&S111="))	+ RealValueSensors[SENSOR_11][VALUE_1]  + 
-									(F("&S112="))	+ RealValueSensors[SENSOR_11][VALUE_2]  +
-									(F("&S113="))	+ RealValueSensors[SENSOR_11][VALUE_3]  +
+									(F("&S111="))	+ Sensors.PresentValue[SENSOR_11][VALUE_1]  + 
+									(F("&S112="))	+ Sensors.PresentValue[SENSOR_11][VALUE_2]  +
+									(F("&S113="))	+ Sensors.PresentValue[SENSOR_11][VALUE_3]  +
 									
-// 									(F("&S121="))	+ RealValueSensors[SENSOR_12][VALUE_1]  +
-// 									(F("&S122="))	+ RealValueSensors[SENSOR_12][VALUE_2]  +
-// 									(F("&S123="))	+ RealValueSensors[SENSOR_12][VALUE_3]  +
+// 									(F("&S121="))	+ Sensors.PresentValue[SENSOR_12][VALUE_1]  +
+// 									(F("&S122="))	+ Sensors.PresentValue[SENSOR_12][VALUE_2]  +
+// 									(F("&S123="))	+ Sensors.PresentValue[SENSOR_12][VALUE_3]  +
 // 									
-// 									(F("&S131="))	+ RealValueSensors[SENSOR_13][VALUE_1]  +
-// 									(F("&S132="))	+ RealValueSensors[SENSOR_13][VALUE_2]  +
-// 									(F("&S133="))	+ RealValueSensors[SENSOR_13][VALUE_3]  +
+// 									(F("&S131="))	+ Sensors.PresentValue[SENSOR_13][VALUE_1]  +
+// 									(F("&S132="))	+ Sensors.PresentValue[SENSOR_13][VALUE_2]  +
+// 									(F("&S133="))	+ Sensors.PresentValue[SENSOR_13][VALUE_3]  +
 // 									
-// 									(F("&S141="))	+ RealValueSensors[SENSOR_14][VALUE_1]  + 
-// 									(F("&S142="))	+ RealValueSensors[SENSOR_14][VALUE_2]  + 
-// 									(F("&S143="))	+ RealValueSensors[SENSOR_14][VALUE_3]  + 
+// 									(F("&S141="))	+ Sensors.PresentValue[SENSOR_14][VALUE_1]  + 
+// 									(F("&S142="))	+ Sensors.PresentValue[SENSOR_14][VALUE_2]  + 
+// 									(F("&S143="))	+ Sensors.PresentValue[SENSOR_14][VALUE_3]  + 
 // 									
-// 									(F("&S151="))	+ RealValueSensors[SENSOR_15][VALUE_1]  +
-// 									(F("&S152="))	+ RealValueSensors[SENSOR_15][VALUE_2]  +
-// 									(F("&S153="))	+ RealValueSensors[SENSOR_15][VALUE_3]  +
+// 									(F("&S151="))	+ Sensors.PresentValue[SENSOR_15][VALUE_1]  +
+// 									(F("&S152="))	+ Sensors.PresentValue[SENSOR_15][VALUE_2]  +
+// 									(F("&S153="))	+ Sensors.PresentValue[SENSOR_15][VALUE_3]  +
 // 									
-// 									(F("&S161="))	+ RealValueSensors[SENSOR_16][VALUE_1]  +
-// 									(F("&S162="))	+ RealValueSensors[SENSOR_16][VALUE_2]  +
-// 									(F("&S163="))	+ RealValueSensors[SENSOR_16][VALUE_3]  +
+// 									(F("&S161="))	+ Sensors.PresentValue[SENSOR_16][VALUE_1]  +
+// 									(F("&S162="))	+ Sensors.PresentValue[SENSOR_16][VALUE_2]  +
+// 									(F("&S163="))	+ Sensors.PresentValue[SENSOR_16][VALUE_3]  +
 									
 									(F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_VALUE_REQUEST);
 		}
@@ -387,10 +387,10 @@ void Read_Value_Sensor(byte _NumberChannel){
 				if(EEPROM.read(E_SBG + ((Sensor) * 3) + SGB) == _NumberChannel){	// если нашли
 					WorkValueSensor.NumberSGB = SGB;								// Сохраняем номер SGB
 					WorkValueSensor.NumberSensor = Sensor;							// Сохраняем номер датчика		
-					if(SensorsError[Sensor][SGB] == 0){								// если не висит флаг ошибочности значений						
+					if(Sensors.Error_Value[Sensor][SGB] == 0){						// если не висит флаг ошибочности значений						
 						WorkValueSensor.Error = false;								// На всякий случай снимаем ошибку показаний датчика
-						WorkValueSensor.Value = RealValueSensors[Sensor][SGB];		// Присваиваем переменной измеренное показание датчика
-						WorkValueSensor.OldValue = OldValueSensors[Sensor][SGB];	// Получаем старое показание датчика
+						WorkValueSensor.Value = Sensors.PresentValue[Sensor][SGB];	// Присваиваем переменной измеренное показание датчика
+						WorkValueSensor.OldValue = Sensors.OldValue[Sensor][SGB];	// Получаем старое показание датчика
 						return;
 					}
 					WorkValueSensor.Error = true;					// если висит, то возвращаем ошибку что данные не валидны
@@ -784,7 +784,7 @@ boolean ValidDataSensors(byte _NumberChannel){							// Ф-ция для пол�
 	Read_Value_Sensor(_NumberChannel);									// Получаем показание датчика
 	if(!WorkValueSensor.Error){											// Если нет ошибок показаний
 		if(WorkValueSensor.Value != WorkValueSensor.OldValue){			// Если показание датчика привязанного к группе изменилось
-			OldValueSensors[WorkValueSensor.NumberSensor][WorkValueSensor.NumberSGB] = WorkValueSensor.Value; // Сохраняем значение
+			Sensors.OldValue[WorkValueSensor.NumberSensor][WorkValueSensor.NumberSGB] = WorkValueSensor.Value; // Сохраняем значение
 			return true;
 		}
 		else{

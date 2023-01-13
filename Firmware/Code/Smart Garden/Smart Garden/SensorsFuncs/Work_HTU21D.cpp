@@ -48,14 +48,14 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 			}
 			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
 			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)							
-				RealValueSensors[NumberSensor][VALUE_1] = _BufferValue;
-				SensorsError[NumberSensor][VALUE_1] = 0;
+				Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
+				Sensors.Error_Value[NumberSensor][VALUE_1] = 0;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
 			}
 			else {
-				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
 			}
 			break;
 		case HUMM_AIR_VALUE:
@@ -64,14 +64,14 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 			}
 			_BufferValue = Value(NumberSensor, HUMM_AIR_VALUE);
 			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
-				RealValueSensors[NumberSensor][VALUE_2] = _BufferValue;
+				Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
-				SensorsError[NumberSensor][VALUE_2] = 0;
+				Sensors.Error_Value[NumberSensor][VALUE_2] = 0;
 			}
 			else{
-				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 			}
 			break;
 		case HUMM_AND_TEMP_VALUE:		
@@ -79,15 +79,16 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Temp"));
 			}
 			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
-			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)
-				SensorsError[NumberSensor][VALUE_1] = 0;
-				RealValueSensors[NumberSensor][VALUE_1] = _BufferValue;
+			if(-40 <= _BufferValue && _BufferValue <= 105){					// Если температура воздуха в пределе -40-105*С (точность измерения 0.3%)
+				Sensors.Error_Value[NumberSensor][VALUE_1] = 0;
+				Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
 			}
+			//eeprom_update_float()
 			else{
-				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
 			}
 			// --------------------------------------------
 			if (OUTPUT_LEVEL_UART_SENSOR){
@@ -98,11 +99,11 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
-				SensorsError[NumberSensor][VALUE_2] = 0;
-				RealValueSensors[NumberSensor][VALUE_2] = _BufferValue;
+				Sensors.Error_Value[NumberSensor][VALUE_2] = 0;
+				Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
 			}
 			else{
-				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
+				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 			}
 			break;
 	}

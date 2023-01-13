@@ -218,16 +218,16 @@ void WindowMenu(byte NumberScreen, byte Update){
 					lcd.print(Ti, 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_6,LCD_LINE_3);
-					lcd.print(RealValueSensors[SENSOR_1][VALUE_1], 1);
+					lcd.print(Sensors.PresentValue[SENSOR_1][VALUE_1], 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_8,LCD_LINE_4);
-					lcd.print(RealValueSensors[SENSOR_5][VALUE_1], 1);
+					lcd.print(Sensors.PresentValue[SENSOR_5][VALUE_1], 1);
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_16,LCD_LINE_4);
 					lcd.print(time.gettime("H:i"));
 					// ------------------------------------------
 					lcd.setCursor(LCD_START_SYMBOL_18,LCD_LINE_2);
-					lcd.print(RealValueSensors[SENSOR_6][VALUE_2], 0);
+					lcd.print(Sensors.PresentValue[SENSOR_6][VALUE_2], 0);
 					
 					break;
 			}

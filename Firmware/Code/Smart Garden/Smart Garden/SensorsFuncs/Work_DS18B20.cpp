@@ -98,7 +98,7 @@ void CalculateDS18B20(byte NumberSensor){
 	
 		switch((int)RealValue){																// Преобразуем показание в int для определения валидности значения
 			case -127:																		// Датчик не доступен
-				SensorsError[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
+				Sensors.Error_Value[NumberSensor][VALUE_1] = 1;								// Ошибка чтения данных датчиком
 				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
 				ViewError();
 				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){					// Если настроено на отпраку СМС при ошибке чтения
@@ -111,7 +111,7 @@ void CalculateDS18B20(byte NumberSensor){
 				break;
 			case 85:																			// Ошибка чтения данных
 				EEPROM.put(E_QuantityErrors + NumberSensor, EEPROM_int_read(E_QuantityErrors + NumberSensor*2) + 1);	// Увеличиваем счетчик количества ошибок
-				SensorsError[NumberSensor][VALUE_1] = 1;										// Ошибка чтения данных датчиком
+				Sensors.Error_Value[NumberSensor][VALUE_1] = 1;									// Ошибка чтения данных датчиком
 				ViewError();
 				if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){						// Если настроено на отправку СМС при ошибке чтения
 					if(EEPROM.read(E_ErrorReadSensor_SMS + NumberSensor) != 1){					// Если не отправлялось СМС
@@ -124,8 +124,8 @@ void CalculateDS18B20(byte NumberSensor){
 				if(-55 <= RealValue && RealValue <= 125){								// Диапазон измеряемых температур: -55…+125°C
 				
 				
-					RealValueSensors[NumberSensor][VALUE_1] = RealValue;
-					SensorsError[NumberSensor][VALUE_1] = 0;							// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
+					Sensors.PresentValue[NumberSensor][VALUE_1] = RealValue;
+					Sensors.Error_Value[NumberSensor][VALUE_1] = 0;						// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
 			
 					if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){			// Если настроено на отправку СМС при ошибках датчиков
 						if(EEPROM.read(E_ReadSensorOK_SMS + NumberSensor) == 0){		// Если не отправлялось СМС
@@ -176,7 +176,7 @@ void CalculateDS18B20(byte NumberSensor){
 		if (OUTPUT_LEVEL_UART_SENSOR){
 			Serial.println(F("\t\t\t...sensor not connected"));
 		}
-		SensorsError[NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
+		Sensors.Error_Value[NumberSensor][VALUE_1] = 1;				// Иначе поднимаем флаг ошибочности данных
 	}
 }
 

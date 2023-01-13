@@ -16,21 +16,23 @@
 
 
  
-float CfCalcDC = 0;										// Поправочные коэфициенты для вычисления VCC
+//float CfCalcDC = 0;										// Поправочные коэфициенты для вычисления VCC
 float VCC = 0.0;										// Текущее напряжение питания
 float Ti = 0;											// Температура встроенного температурного датчика (LM75A)
-int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
-float RealValueSensors[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
-float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
+//int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
+//float RealValueSensors[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
+//float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
+//byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
 int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
+//float Bufer_Value_Sensors[QUANTITY_SENSORS + 1][3];
+//float Reading_Measurement_Counter[QUANTITY_SENSORS + 1][3];
 
-struct StructQuantityCalcSensors QuantityCalcSensors;
+struct StructSensors Sensors;
 
 
 byte ViewMaxLongValue(byte NameSensor, int Value){
-	float ValueSensor = RealValueSensors[NameSensor][Value];
+	float ValueSensor = Sensors.PresentValue[NameSensor][Value];
 	byte NumberValue = 0;
 	while(abs(ValueSensor) >= 10){			// Берем модуль Value
 		ValueSensor = ValueSensor / 10;
@@ -55,7 +57,7 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 		case S_HTU21D /*|| S_SI7013 || S_SI7020 || S_SI7021 || S_SHT21*/:
 			switch(TypeMeasurement){
 				case TEMP_AIR_VALUE:
-					SensorsError[NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
+					Sensors.Error_Value[NumberSensor][VALUE_1] = 1;					// Иначе поднимаем флаг ошибочности данных
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...error"));
 					}
@@ -64,7 +66,7 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...error"));
 					}
-					SensorsError[NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
+					Sensors.Error_Value[NumberSensor][VALUE_2] = 1;					// Иначе поднимаем флаг ошибочности данных
 					break;
 				case HUMM_AND_TEMP_VALUE:
 					break;
@@ -115,12 +117,12 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("...error"));
 			}
-			SensorsError[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
-			RealValueSensors[NumberSensor][VALUE_2] = 0;			// Обнуляем значение датчика в массиве
+			Sensors.Error_Value[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
+			Sensors.PresentValue[NumberSensor][VALUE_2] = 0;			// Обнуляем значение датчика в массиве
 			break;
 		case S_BH1750:
-			SensorsError[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
-			RealValueSensors[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
+			Sensors.Error_Value[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
+			Sensors.PresentValue[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("...error or reading less than zero"));
 			}
@@ -134,15 +136,15 @@ void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte
 		case S_AHT25:
 			switch(TypeMeasurement){
 				case TEMP_AIR_VALUE:
-					SensorsError[NumberSensor][VALUE_1] = 1;						// Поднимаем ошибку чтения
-					RealValueSensors[NumberSensor][VALUE_1] = 0;					// Обнуляем значение в массиве
+					Sensors.Error_Value[NumberSensor][VALUE_1] = 1;						// Поднимаем ошибку чтения
+					Sensors.PresentValue[NumberSensor][VALUE_1] = 0;					// Обнуляем значение в массиве
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...error"));
 					}
 					break;
 				case HUMM_AIR_VALUE:
-					SensorsError[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
-					RealValueSensors[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
+					Sensors.Error_Value[NumberSensor][VALUE_2] = 1;						// Поднимаем ошибку чтения
+					Sensors.PresentValue[NumberSensor][VALUE_2] = 0;					// Обнуляем значение в массиве
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...error"));
 					}
@@ -199,7 +201,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 					
 		for(byte Value = 0; Value < 3; Value++){
 			if(Value == 0){
-				Serial.print(F("  ")); Serial.print(RealValueSensors[NumberSensor][Value]); 
+				Serial.print(F("  ")); Serial.print(Sensors.PresentValue[NumberSensor][Value]); 
 			}
 			else{
 				LongLinesValue = ViewMaxLongValue(NumberSensor, Value - 1);
@@ -209,7 +211,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 						Serial.print(F(" "));
 					}	
 				}
-				Serial.print(F("  ")); Serial.print(RealValueSensors[NumberSensor][Value]); 
+				Serial.print(F("  ")); Serial.print(Sensors.PresentValue[NumberSensor][Value]); 
 			}
 		}
 		Serial.print(F("  "));
@@ -221,7 +223,7 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 			}
 		}
 		for(byte Value = 0; Value < 3; Value++){
-			Serial.print(F(" ")); Serial.print(SensorsError[NumberSensor][Value]);
+			Serial.print(F(" ")); Serial.print(Sensors.Error_Value[NumberSensor][Value]);
 		}
 		Serial.println();
 	}
@@ -236,13 +238,13 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 void  ReadValueAnalogPort(byte NumberSensor, byte NumberADC){
 	switch(EEPROM.read(E_ConfigSensor_A + NumberSensor)){
 		case 0:
-			RealValueSensors[NumberSensor][0] = map(RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
+			Sensors.PresentValue[NumberSensor][0] = map(Sensors.RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
 			break;
 		case 1:
-			RealValueSensors[NumberSensor][0] = RealValueADC[NumberADC];
+			Sensors.PresentValue[NumberSensor][0] = Sensors.RealValueADC[NumberADC];
 			break;
 		default:
-			RealValueSensors[NumberSensor][0] = map(RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
+			Sensors.PresentValue[NumberSensor][0] = map(Sensors.RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
 			break;
 	}	
 }
@@ -254,7 +256,7 @@ void ReadAnalogPort(byte NumberSensor, byte TypeDataSensor){
 
 	ControllPort(NumberSensor, 1);													// Включаем управление Controll портом		
 	
-	SensorsError[NumberSensor][0] = 0;										// Сбрасываем возможные ошибки чтения данных
+	Sensors.Error_Value[NumberSensor][0] = 0;										// Сбрасываем возможные ошибки чтения данных
 	switch(EEPROM.read(E_Address_Sensor + (NumberSensor * 10))){	
 		case PORT_INPUT_GPIO_P1:
 			if (OUTPUT_LEVEL_UART_SENSOR){

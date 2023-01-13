@@ -50,26 +50,26 @@ void CalculateBMP280(byte NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Temp")); Serial.println(F("...done"));
 			}			
 			
-			RealValueSensors[NumberSensor][VALUE_1] = ReadValueBMP280(AdressSensor, 1);
+			Sensors.PresentValue[NumberSensor][VALUE_1] = ReadValueBMP280(AdressSensor, 1);
 			
-			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний			
+			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний			
 			break;
 		case ATMOSPHERIC_PRESSURE:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Press")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_3] = ReadValueBMP280(AdressSensor, 5);
-			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_3]);	// Обработка ошибок чтения показаний
+			Sensors.PresentValue[NumberSensor][VALUE_3] = ReadValueBMP280(AdressSensor, 5);
+			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_3]);	// Обработка ошибок чтения показаний
 			break;
 		case TEMP_AIR_AND_PRESS:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Temp")); Serial.println(F("...done"));
 				Serial.print(F("\t\t\t...measurement Press")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_1] = ReadValueBMP280(AdressSensor, 1);
-			RealValueSensors[NumberSensor][VALUE_3] = ReadValueBMP280(AdressSensor, 5);
-			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
-			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, RealValueSensors[NumberSensor][VALUE_3]);	// Обработка ошибок чтения показаний
+			Sensors.PresentValue[NumberSensor][VALUE_1] = ReadValueBMP280(AdressSensor, 1);
+			Sensors.PresentValue[NumberSensor][VALUE_3] = ReadValueBMP280(AdressSensor, 5);
+			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
+			React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_3]);	// Обработка ошибок чтения показаний
 			break;
 	}
 	ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом

@@ -77,7 +77,7 @@ void SentConfigSensorsUART(){
 	// ========================================================
 	Serial.print(F("Ошибки показаний: "/*"Errors: "*/));
 	for(byte i = 0; i < 3; i ++){
-		Serial.print(SensorsError[INPUT_BYTE_NUMBER_SENSOR-1][i]); Serial.print(F(" "));
+		Serial.print(Sensors.Error_Value[INPUT_BYTE_NUMBER_SENSOR-1][i]); Serial.print(F(" "));
 	}
 	Serial.println();
 	// ========================================================
@@ -344,8 +344,8 @@ void WriteConfigSensors(){																// Сохранение данных �
 	if(InputFromSerial0[1] == 0){														// Если прилетела команда выключить датчик
 		byte Sensor = INPUT_BYTE_NUMBER_SENSOR;
 		for(byte i = 0; i < 3; i ++){
-			RealValueSensors[Sensor-1][i] = 0;											// Удаляем старые показания датчиков из массива RealValueSensors[][]
-			SensorsError[Sensor-1][i] = 0;												// и затираем ошибки датчика
+			Sensors.PresentValue[Sensor-1][i] = 0;										// Удаляем старые показания датчиков из массива RealValueSensors[][]
+			Sensors.Error_Value[Sensor-1][i] = 0;										// и затираем ошибки датчика
 		}
 	}
 	// --------------------- Имя датчика ---------------------

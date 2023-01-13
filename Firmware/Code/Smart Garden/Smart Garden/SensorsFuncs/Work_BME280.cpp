@@ -53,35 +53,35 @@ void CalculateBME280(byte NumberSensor, byte TypeDataSensor){
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Temp")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
+			Sensors.PresentValue[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
 			break;
 		case 2:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Humm"));Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
+			Sensors.PresentValue[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
 			break;
 		case 5:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Press")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
+			Sensors.PresentValue[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
 			break;
 		case 12:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Temp")); Serial.println(F("...done"));
 				Serial.print(F("\t\t\t...measurement Humm")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
-			RealValueSensors[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
+			Sensors.PresentValue[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
+			Sensors.PresentValue[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
 			break;
 		case 25:
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.print(F("\t\t\t...measurement Humm")); Serial.println(F("...done"));
 				Serial.print(F("\t\t\t...measurement Press")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
-			RealValueSensors[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
+			Sensors.PresentValue[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
+			Sensors.PresentValue[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
 			break;
 		case 125:
 			if (OUTPUT_LEVEL_UART_SENSOR){
@@ -89,9 +89,9 @@ void CalculateBME280(byte NumberSensor, byte TypeDataSensor){
 				Serial.print(F("\t\t\t...measurement Humm")); Serial.println(F("...done"));
 				Serial.print(F("\t\t\t...measurement Press")); Serial.println(F("...done"));
 			}
-			RealValueSensors[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
-			RealValueSensors[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
-			RealValueSensors[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
+			Sensors.PresentValue[NumberSensor][VALUE_1] = ReadValue(AdressSensor, 1);
+			Sensors.PresentValue[NumberSensor][VALUE_2] = ReadValue(AdressSensor, 2);
+			Sensors.PresentValue[NumberSensor][VALUE_3] = ReadValue(AdressSensor, 5);
 			break;
 	}
 	ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом
