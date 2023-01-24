@@ -46,10 +46,13 @@ void CalculateBH1750(byte NumberSensor, byte TypeDataSensor){
 	}
 	else {
 		Sensors.Error_Value[NumberSensor][VALUE_2] = 0;			// Снимаем возможную ошибку чтения данных
-		Sensors.PresentValue[NumberSensor][VALUE_2] = lux;		// Сохраняем измеренное значение датчика
+		BuferValueSensors.Value[VALUE_1] = lux;					// Записываем временное показание датчика
+		BuferValueSensors.Allow[VALUE_1] = true;				// и разрешаем его обработку
+		//Sensors.PresentValue[NumberSensor][VALUE_2] = lux;	// Сохраняем измеренное значение датчика
 		if (OUTPUT_LEVEL_UART_SENSOR){
 			Serial.println(F("...done"));
 		}
+		Recording_Sensor_Readings(NumberSensor);				// Запускаем обработку показаний	
 	}
 	ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом
 }

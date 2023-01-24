@@ -136,42 +136,42 @@ ISR(ADC_vect){
 	if(AllowSaveADC){
 		switch(ADMUX){
 			case 0b01000000:							// ADC0
-				Sensors.RealValueADC[0] = ADC;			// Сохраняем измеренное показание
+				Sensors.PresentValueADC[0] = ADC;		// Сохраняем измеренное показание
 				ADMUX = 0b01000001;						// Выставляем следующий канал для измерения (ADC1)
 				ADCSRB = 0b00000000;					// --//--//--//--
 				break;
 			case 0b01000001:							// ADC1
-				Sensors.RealValueADC[1] = ADC;			// Сохраняем измеренное показание
+				Sensors.PresentValueADC[1] = ADC;		// Сохраняем измеренное показание
 				ADMUX = 0b01000011;						// Выставляем следующий канал для измерения (ADC3)
 				ADCSRB = 0b00000000;					// --//--//--//--
 				break;
 			case 0b01000011:							// ADC3
-				Sensors.RealValueADC[3] = ADC;			// Сохраняем измеренное показание
+				Sensors.PresentValueADC[3] = ADC;		// Сохраняем измеренное показание
 				ADMUX = 0b01000100;						// Выставляем следующий канал для измерения (ADC4)
 				ADCSRB = 0b00000000;					// --//--//--//--
 				break;									// Сохраняем измеренное показание
 			case 0b01000100:							// ADC4
-				Sensors.RealValueADC[4] = ADC;			// Сохраняем измеренное показание
+				Sensors.PresentValueADC[4] = ADC;		// Сохраняем измеренное показание
 				ADMUX = 0b01000101;						// Выставляем следующий канал для измерения (ADC5)
 				ADCSRB = 0b00000000;					// --//--//--//--
 				break;
 			case 0b01000101:							// ADC5			(ACS712)
-				Sensors.RealValueADC[5] = ADC;			// Сохраняем измеренное показание
+				Sensors.PresentValueADC[5] = ADC;		// Сохраняем измеренное показание
 				ADMUX = 0b01000111;						// Выставляем следующий канал для измерения (ADC7)
 				ADCSRB = 0b00000000;					// --//--//--//--
 				WorkChanelADC_7_15 = 7;
 				break;
 			case 0b01000111:							// ADC7 или ADC15
 				switch(WorkChanelADC_7_15){
-					case 7:								// ADC7
-						Sensors.RealValueADC[7] = ADC;	// Сохраняем измеренное показание
-						ADMUX = 0b01000111;				// Выставляем следующий канал для измерения (ADC15)
+					case 7:									// ADC7
+						Sensors.PresentValueADC[7] = ADC;	// Сохраняем измеренное показание
+						ADMUX = 0b01000111;					// Выставляем следующий канал для измерения (ADC15)
 						ADCSRB = 0b00001000;
 						WorkChanelADC_7_15 = 15;
 						break;
-					case 15:									// ADC15 (напряжение питания)
-						Sensors.RealValueADC[15] = ADC;			// Сохраняем измеренное показание
-						ADMUX = 0b01000000;						// Выставляем следующий канал для измерения (ADC0)
+					case 15:								// ADC15 (напряжение питания)
+						Sensors.PresentValueADC[15] = ADC;	// Сохраняем измеренное показание
+						ADMUX = 0b01000000;					// Выставляем следующий канал для измерения (ADC0)
 						ADCSRB = 0b00000000;
 						break;
 				}
@@ -459,7 +459,7 @@ void setup() {
 	
 	
 	for(byte NumberSensor = 1; NumberSensor <= QUANTITY_SENSORS; NumberSensor++){
-		Sensors.QuantityCalc[NumberSensor] = 1;													// Обнуляем количество измерений
+		Sensors.MeasurementCounter[NumberSensor] = 1;											// Сбрасываем количество измерений
  		for(byte i = 0; i <= 20; i++){															// Заполняем массив с названиями
   			NameSensor[NumberSensor][i]= EEPROM.read((E_NameSensor + NumberSensor - 1) + i + 20 * (NumberSensor - 1));
  		}

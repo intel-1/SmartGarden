@@ -64,17 +64,23 @@ void CalculateMAX44009(byte NumberSensor, byte TypeDataSensor){
 			
 			switch(AddressSensor){
 				case 0x4a:
-					Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_1.getLux();		// Сохраняем измеренное значение датчика
+					BuferValueSensors.Value[VALUE_2] = MAX44009_1.getLux();					// Записываем временное показание датчика
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_1.getLux();	// Сохраняем измеренное значение датчика
 					break;
 				case 0x4b:
-					Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_2.getLux();		// Сохраняем измеренное значение датчика
+					BuferValueSensors.Value[VALUE_2] = MAX44009_2.getLux();					// Записываем временное показание датчика
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = MAX44009_2.getLux();	// Сохраняем измеренное значение датчика
 					break;
 			}
 			
 			if (OUTPUT_LEVEL_UART_SENSOR){
 				Serial.println(F("...done"));
 			}
-			ControllPort(NumberSensor, 0);												// Выключаем управление Controll портом
+			
+			BuferValueSensors.Allow[VALUE_2] = true;						// и разрешаем его обработку
+			Recording_Sensor_Readings(NumberSensor);						// Запускаем обработку показаний
+			
+			ControllPort(NumberSensor, 0);									// Выключаем управление Controll портом
 		}
 		else{ 
 			Sensors.Error_Value[NumberSensor][VALUE_2] = 1;

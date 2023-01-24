@@ -19,7 +19,9 @@ void CalculateAHT25(byte NumberSensor, byte TypeDataSensor){
 					Serial.print(F("\t\t\t...measurement Temp")); 
 				}
 				if(-40 <= temp.temperature && temp.temperature <= 120){					// Если температура воздуха в пределе -40-120*С (точность измерения 0.3%)
-					Sensors.PresentValue[NumberSensor][VALUE_1] = temp.temperature;
+					//Sensors.PresentValue[NumberSensor][VALUE_1] = temp.temperature;
+					BuferValueSensors.Value[VALUE_1] = temp.temperature;				// Записываем временное показание датчика
+					BuferValueSensors.Allow[VALUE_1] = true;							// и разрешаем его обработку
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
@@ -33,7 +35,9 @@ void CalculateAHT25(byte NumberSensor, byte TypeDataSensor){
 					Serial.print(F("\t\t\t...measurement Humm")); 
 				}
 				if(0 <= temp.temperature && temp.temperature <= 100){					// Если влажности воздуха в пределе 0-100*С (точность измерения 0.3%)
-					Sensors.PresentValue[NumberSensor][VALUE_2] = humidity.relative_humidity;
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = humidity.relative_humidity;
+					BuferValueSensors.Value[VALUE_2] = temp.temperature;				// Записываем временное показание датчика
+					BuferValueSensors.Allow[VALUE_2] = true;						// и разрешаем его обработку
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
@@ -47,7 +51,9 @@ void CalculateAHT25(byte NumberSensor, byte TypeDataSensor){
 					Serial.print(F("\t\t\t...measurement Temp")); 
 				}
 				if(-40 <= temp.temperature && temp.temperature <= 105){					// Если температура воздуха в пределе -40-120*С (точность измерения 0.3%)
-					Sensors.PresentValue[NumberSensor][VALUE_1] = temp.temperature;
+					//Sensors.PresentValue[NumberSensor][VALUE_1] = temp.temperature;
+					BuferValueSensors.Value[VALUE_1] = temp.temperature;				// Записываем временное показание датчика
+					BuferValueSensors.Allow[VALUE_1] = true;						// и разрешаем его обработку
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
@@ -60,7 +66,9 @@ void CalculateAHT25(byte NumberSensor, byte TypeDataSensor){
 					Serial.print(F("\t\t\t...measurement Humm")); 
 				}
 				if(0 <= temp.temperature && temp.temperature <= 100){					// Если влажности воздуха в пределе 0-100*С (точность измерения 0.3%)
-					Sensors.PresentValue[NumberSensor][VALUE_2] = humidity.relative_humidity;
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = humidity.relative_humidity;
+					BuferValueSensors.Value[VALUE_2] = temp.temperature;				// Записываем временное показание датчика
+					BuferValueSensors.Allow[VALUE_2] = true;						// и разрешаем его обработку
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
@@ -70,6 +78,8 @@ void CalculateAHT25(byte NumberSensor, byte TypeDataSensor){
 				}
 				break;
 		}
+		
+		Recording_Sensor_Readings(NumberSensor);						// Запускаем обработку показаний	
 	}
 	else{
 		if (OUTPUT_LEVEL_UART_SENSOR){

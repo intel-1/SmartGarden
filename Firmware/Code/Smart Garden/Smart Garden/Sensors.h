@@ -28,28 +28,26 @@ extern OneWire oneWire;
 
 extern int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
-//extern float CfCalcDC;										// Поправочные коэфициенты для вычисления VCC
 extern float VCC;												// Текущее напряжение питания
 extern float Ti;												// Температура встроенного температурного датчика (LM75A) 
 extern boolean DebugRepet_1;									// Повторять ли вывод в консоль или нет
 
-//extern int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
-//extern float RealValueSensors[QUANTITY_SENSORS + 1][3];			// Текущие значения датчиков
-//extern float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-//extern byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
-
-
 
 extern struct StructSensors{
-	int RealValueADC[QUANTITY_SENSORS + 1];						// Текущие значения аналоговых портов
-	float OldValue[QUANTITY_SENSORS + 1][3];					// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-	float Buffer_Sum_Value_Sensors[QUANTITY_SENSORS + 1][3];	// Суммы измеренных значений датчиков (сырые)
-	float PresentValue[QUANTITY_SENSORS + 1][3];				// Текущие значения датчиков
-	byte QuantityCalc[QUANTITY_SENSORS + 1];					// Счетчик количество измеренных показаний датчиков
-	//bool AllowSummData[QuantitySensors];						// Флаг что данные успешно суммированы и нет никаких ошибок измерений
-	bool Error_Value[QUANTITY_SENSORS + 1][3];					// Ошибки показаний датчиков
+	int PresentValueADC[QUANTITY_SENSORS + 1];			// Текущие значения аналоговых портов
+	float PresentValue[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков
+	float OldValue[QUANTITY_SENSORS + 1][3];			// Прошлые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
+	float BufferSumValue[QUANTITY_SENSORS + 1][3];		// Суммы измеренных значений датчиков (сырые)
+	byte MeasurementCounter[QUANTITY_SENSORS + 1];		// Счетчик количество измеренных показаний датчиков
+	bool Error_Value[QUANTITY_SENSORS + 1][3];			// Ошибки показаний датчиков
 } Sensors;
 
+
+
+extern struct StructBuferValueSensors{ 
+	float Value[3];
+	bool Allow[3];
+} BuferValueSensors;
 
 
 
@@ -57,6 +55,7 @@ void ControllPort(byte NumberSensor, byte Controll);
 //boolean UpDownControllPort(byte NumberSensor, boolean Controll);
 void ViewValueAllSensors();
 void CalculateSensors();
+void Recording_Sensor_Readings(byte NumberSensor);		// Актуализация измеренных показаний в зависимости от количества измерений
 void i2c_scaner(boolean LogView);
 
 void React_to_Error_Calculate_Value(byte NumberSensor,byte TypeMeasurement, byte Value);

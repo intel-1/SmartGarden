@@ -83,7 +83,8 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 						if (OUTPUT_LEVEL_UART_SENSOR){
 							Serial.println(F("...done"));
 						}
-						Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
+						BuferValueSensors.Value[VALUE_2] = event.light;					// Записываем временное показание датчика
+						//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
 					}
 					else {
 						if (OUTPUT_LEVEL_UART_SENSOR){
@@ -92,7 +93,7 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 					}
 				}
 				else{
-					ErrorCalculate = true;							// Данные не получены
+					ErrorCalculate = true;								// Данные не получены
 					Sensors.Error_Value[NumberSensor][VALUE_2] = 1;		// Поднимаем ошибку чтения данных датчиком
 				}
 				break;
@@ -102,7 +103,8 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 						if (OUTPUT_LEVEL_UART_SENSOR){
 							Serial.println(F("...done"));
 						}
-						Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
+						BuferValueSensors.Value[VALUE_2] = event.light;					// Записываем временное показание датчика
+						//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
 					}
 					else {
 						if (OUTPUT_LEVEL_UART_SENSOR){
@@ -111,7 +113,7 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 					}
 				}
 				else{ 
-					ErrorCalculate = true;							// Данные не получены
+					ErrorCalculate = true;								// Данные не получены
 					Sensors.Error_Value[NumberSensor][VALUE_2] = 1;		// Поднимаем ошибку чтения данных датчиком
 				}
 				break;
@@ -121,7 +123,8 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 						if (OUTPUT_LEVEL_UART_SENSOR){
 							Serial.println(F("...done"));
 						}
-						Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
+						BuferValueSensors.Value[VALUE_2] = event.light;					// Записываем временное показание датчика
+						//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;
 					}
 					else {
 						if (OUTPUT_LEVEL_UART_SENSOR){
@@ -144,20 +147,27 @@ void CalculateTSL2561(byte NumberSensor, byte TypeDataSensor){
 			Sensors.Error_Value[NumberSensor][VALUE_2] = 0;						// Снимаем возможную ошибку чтения данных
 			switch(ConfigSensorA){
 				case 1:															// Видимый спектр
-					Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
+					BuferValueSensors.Value[VALUE_2] = event.light;				// Записываем временное показание датчика
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
 					break;
 				case 2:															// Полный спектр
-					Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
+					BuferValueSensors.Value[VALUE_2] = event.light;				// Записываем временное показание датчика
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
 					break;
 				case 3:															// IR спектр
-					Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
+					BuferValueSensors.Value[VALUE_2] = event.light;				// Записываем временное показание датчика
+					//Sensors.PresentValue[NumberSensor][VALUE_2] = event.light;	
 					break;
 			}
  		}
+		
+		BuferValueSensors.Allow[VALUE_2] = true;					// и разрешаем его обработку
+		Recording_Sensor_Readings(NumberSensor);					// Запускаем обработку показаний
+		
 		ControllPort(NumberSensor, 0);								// Выключаем управление Controll портом
 	}
 	else {
-		Sensors.Error_Value[NumberSensor][VALUE_2] = 1;					// Поднимаем ошибку чтения данных датчиком
+		Sensors.Error_Value[NumberSensor][VALUE_2] = 1;				// Поднимаем ошибку чтения данных датчиком
 		if (OUTPUT_LEVEL_UART_SENSOR){
 			Serial.print(F("...error address sensor - 0x")); Serial.println(AddressSensor);
 		}

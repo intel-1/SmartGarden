@@ -48,7 +48,9 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 			}
 			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
 			if(-40 > _BufferValue && _BufferValue < 105){					// Если температура воздуха в пределе -40-106*С (точность измерения 0.3%)							
-				Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
+				//Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
+				BuferValueSensors.Value[VALUE_1] = _BufferValue;				// Записываем временное показание датчика
+				BuferValueSensors.Allow[VALUE_1] = true;						// и разрешаем его обработку
 				Sensors.Error_Value[NumberSensor][VALUE_1] = 0;
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
@@ -64,7 +66,9 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 			}
 			_BufferValue = Value(NumberSensor, HUMM_AIR_VALUE);
 			if(0 < _BufferValue && _BufferValue < 100){						// Если влажность воздуха в пределе 0-100% (точность измерения 2%)
-				Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
+				//Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
+				BuferValueSensors.Value[VALUE_2] = _BufferValue;				// Записываем временное показание датчика
+				BuferValueSensors.Allow[VALUE_2] = true;						// и разрешаем его обработку
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
@@ -81,12 +85,13 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 			_BufferValue = Value(NumberSensor, TEMP_AIR_VALUE);
 			if(-40 <= _BufferValue && _BufferValue <= 105){					// Если температура воздуха в пределе -40-105*С (точность измерения 0.3%)
 				Sensors.Error_Value[NumberSensor][VALUE_1] = 0;
-				Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
+				//Sensors.PresentValue[NumberSensor][VALUE_1] = _BufferValue;
+				BuferValueSensors.Value[VALUE_1] = _BufferValue;					// Записываем временное показание датчика
+				BuferValueSensors.Allow[VALUE_1] = true;							// и разрешаем его обработку
 				if (OUTPUT_LEVEL_UART_SENSOR){
 					Serial.println(F("...done"));
 				}
 			}
-			//eeprom_update_float()
 			else{
 				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_1]);	// Обработка ошибок чтения показаний
 			}
@@ -100,14 +105,17 @@ void CalculateHTU21D(byte NumberSensor, byte TypeDataSensor){
 					Serial.println(F("...done"));
 				}
 				Sensors.Error_Value[NumberSensor][VALUE_2] = 0;
-				Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
+				//Sensors.PresentValue[NumberSensor][VALUE_2] = _BufferValue;
+				BuferValueSensors.Value[VALUE_2] = _BufferValue;				// Записываем временное показание датчика
+				BuferValueSensors.Allow[VALUE_2] = true;						// и разрешаем его обработку
 			}
 			else{
 				React_to_Error_Calculate_Value(NumberSensor, TypeDataSensor, Sensors.PresentValue[NumberSensor][VALUE_2]);	// Обработка ошибок чтения показаний
 			}
 			break;
 	}
-	ControllPort(NumberSensor, 0);											// Выключаем управление Controll портом
+	Recording_Sensor_Readings(NumberSensor);			// Запускаем обработку показаний			
+	ControllPort(NumberSensor, 0);						// Выключаем управление Controll портом
 }
 
 

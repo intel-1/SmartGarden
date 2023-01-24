@@ -16,19 +16,13 @@
 
 
  
-//float CfCalcDC = 0;										// Поправочные коэфициенты для вычисления VCC
 float VCC = 0.0;										// Текущее напряжение питания
 float Ti = 0;											// Температура встроенного температурного датчика (LM75A)
-//int RealValueADC[QUANTITY_SENSORS + 1];					// Текущие значения аналоговых портов
-//float RealValueSensors[QUANTITY_SENSORS + 1][3];		// Текущие значения датчиков (Для удобства счет идет с единицы, а не с нуля, для этого увеличили размер массива)
-//float OldValueSensors[QUANTITY_SENSORS + 1][3];			// Старые значения датчиков (нужны для запуска мониторинга групп, сравнивается с текущими и если различаются, запускается мониторинг)
-//byte SensorsError[QUANTITY_SENSORS + 1][3];				// Ошибки датчиков
 int LoopTimeRunCalculateSensor[QUANTITY_SENSORS + 1];	// Временные интервалы измерения сенсоров
 
-//float Bufer_Value_Sensors[QUANTITY_SENSORS + 1][3];
-//float Reading_Measurement_Counter[QUANTITY_SENSORS + 1][3];
-
 struct StructSensors Sensors;
+
+struct StructBuferValueSensors BuferValueSensors;
 
 
 byte ViewMaxLongValue(byte NameSensor, int Value){
@@ -43,6 +37,61 @@ byte ViewMaxLongValue(byte NameSensor, int Value){
 		return NumberValue + 1;
 	}
 	else return NumberValue;
+}
+
+
+void Recording_Sensor_Readings(byte NumberSensor){												// Актуализация измеренных показаний в зависимости от количества измерений
+	byte QuantityReadSensors;
+	bool Error_Setting_The_Number_Of_Measurements = false;										// Ошибка параметра счетчика измерений показаний датчика
+	bool MeasurementCounter = false;
+	
+	if(ControllerSetup){QuantityReadSensors = 1; }												// Если контроллер в режиме загрузки, то измеряется только одно текущее показание датчика 
+	else QuantityReadSensors = EEPROM.read(E_QuantityReadSensors + NumberSensor);
+	
+	if(QuantityReadSensors < 1){																// Если настроено кол-во измерений меньше единицы (ошибка параметра)
+		Error_Setting_The_Number_Of_Measurements = true;
+		if (OUTPUT_LEVEL_UART_SENSOR){
+			Serial.println(F("\t\t\t...Error setting the number of measurements"));
+			Serial.println(F("\t\t\t...Displays are not updated"));
+		}
+	}
+	
+	if(!Error_Setting_The_Number_Of_Measurements){
+		for(byte i = 0; i <= 2; i++){
+			if(BuferValueSensors.Allow[i]){														// Если висит флаг что показание можно обрабатывать
+				if(Sensors.MeasurementCounter[NumberSensor] < QuantityReadSensors){				// Если счетчик показаний меньше преднастроенного количества
+					if(Sensors.MeasurementCounter[NumberSensor] == 1){Sensors.BufferSumValue[NumberSensor][i] = BuferValueSensors.Value[i];}
+					Sensors.BufferSumValue[NumberSensor][i] += BuferValueSensors.Value[i];		// Суммируем показания и складываеим в буферном массиве
+					if(!MeasurementCounter){
+						if (OUTPUT_LEVEL_UART_SENSOR){
+							Serial.print(F("\t\t\t...measurement counter ")); Serial.print(Sensors.MeasurementCounter[NumberSensor]); Serial.print(F("/")); Serial.println(QuantityReadSensors);
+							Serial.println(F("\t\t\t...increase the measurement counter "));
+						}													// Чтобы счетчик сработал только один раз если суммируются нестолько Value
+						Sensors.MeasurementCounter[NumberSensor] ++;
+						MeasurementCounter = true;
+					}
+				}
+				else{																			// Иначе сохраняем значение датчика в массив с рабочими данными
+					if(QuantityReadSensors == 1){Sensors.BufferSumValue[NumberSensor][i] = BuferValueSensors.Value[i];}
+					Sensors.PresentValue[NumberSensor][i] = Sensors.BufferSumValue[NumberSensor][i] / Sensors.MeasurementCounter[NumberSensor];
+					
+					if(!MeasurementCounter){
+						if (OUTPUT_LEVEL_UART_SENSOR){
+							Serial.print(F("\t\t\t...measurement counter ")); Serial.print(Sensors.MeasurementCounter[NumberSensor]); Serial.print(F("/")); Serial.println(QuantityReadSensors);
+							Serial.println(F("\t\t\t...updating readings"));
+						}
+					}
+					Sensors.MeasurementCounter[NumberSensor] = 1;
+					Sensors.BufferSumValue[NumberSensor][i] = 0;
+				}
+			}
+		}
+	}
+	
+	for(byte i = 0; i <= 2; i++){
+		BuferValueSensors.Allow[i] = 0;
+		BuferValueSensors.Value[i] = 0;
+	}
 }
 
 
@@ -238,13 +287,13 @@ void ViewValueAllSensors(){									// Вывод в консоль измере
 void  ReadValueAnalogPort(byte NumberSensor, byte NumberADC){
 	switch(EEPROM.read(E_ConfigSensor_A + NumberSensor)){
 		case 0:
-			Sensors.PresentValue[NumberSensor][0] = map(Sensors.RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
+			Sensors.PresentValue[NumberSensor][0] = map(Sensors.PresentValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
 			break;
 		case 1:
-			Sensors.PresentValue[NumberSensor][0] = Sensors.RealValueADC[NumberADC];
+			Sensors.PresentValue[NumberSensor][0] = Sensors.PresentValueADC[NumberADC];
 			break;
 		default:
-			Sensors.PresentValue[NumberSensor][0] = map(Sensors.RealValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
+			Sensors.PresentValue[NumberSensor][0] = map(Sensors.PresentValueADC[NumberADC], EEPROM_int_read(E_ConfigSensor_B + NumberSensor*2), EEPROM_int_read(E_ConfigSensor_C + NumberSensor*2), 0, 100);
 			break;
 	}	
 }

@@ -120,22 +120,24 @@ void CalculateDS18B20(byte NumberSensor){
 				}
 				EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 0);
 				break;
-			default:																	// Все хорошо, показания датчика валидны
-				if(-55 <= RealValue && RealValue <= 125){								// Диапазон измеряемых температур: -55…+125°C
-				
-				
-					Sensors.PresentValue[NumberSensor][VALUE_1] = RealValue;
-					Sensors.Error_Value[NumberSensor][VALUE_1] = 0;						// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
+			default:																// Все хорошо, показания датчика валидны
+				if(-55 <= RealValue && RealValue <= 125){							// Диапазон измеряемых температур: -55…+125°C
+					Sensors.Error_Value[NumberSensor][VALUE_1] = 0;					// Снимаем ошибки чтения датчиком тем самым помечаем что данные валидны
 			
-					if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){			// Если настроено на отправку СМС при ошибках датчиков
-						if(EEPROM.read(E_ReadSensorOK_SMS + NumberSensor) == 0){		// Если не отправлялось СМС
+					if(EEPROM.read(E_ReactToMistakes_Ext + NumberSensor) == 1){		// Если настроено на отправку СМС при ошибках датчиков
+						if(EEPROM.read(E_ReadSensorOK_SMS + NumberSensor) == 0){	// Если не отправлялось СМС
 							EEPROM.write(E_ReadSensorOK_SMS + NumberSensor, 1);
 						}
 					}
 					if (OUTPUT_LEVEL_UART_SENSOR){
 						Serial.println(F("...done"));
 					}
-					switch(Config_Sensor_B){											// Отдаем команды измерять температуру
+					
+					BuferValueSensors.Value[VALUE_1] = RealValue;					// Записываем временное показание датчика
+					BuferValueSensors.Allow[VALUE_1] = true;						// и разрешаем его обработку
+					Recording_Sensor_Readings(NumberSensor);						// Запускаем обработку показаний			
+					
+					switch(Config_Sensor_B){										// Отдаем команды измерять температуру
 						case CONFIG_SENSOR_B_INPUT_GPIO_P1:
 							sensors1.requestTemperatures();					
 							break;
