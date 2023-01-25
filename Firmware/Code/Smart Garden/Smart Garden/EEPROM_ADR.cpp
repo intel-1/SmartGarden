@@ -4,16 +4,35 @@
 #include <HardwareSerial.h>
 #include <stdint.h>
 
+#include "lib\I2C_eeprom.h"
+
+#include "Configuration.h"
 #include "EEPROM_ADR.h"
+#include "Sensors.h"
 
 
-// void EEPROM_int_write(int addr, int val){ // запись в EEPROM
-// // 	uint8_t  *x = (uint8_t *)&val;
-// // 	for(uint8_t i = 0; i < 4; i++){
-// // 		EEPROM.write(i+addr, x[i]);
-// // 	}
-// 	EEPROM.put(addr, val);
-// }
+I2C_eeprom EXT_EEPROM(0x50, I2C_DEVICESIZE_24LC64);
+
+
+
+
+void Write_String_To_EEPROM(int EEPROM_address, String Data){
+	EXT_EEPROM.writeByte(EEPROM_address, Data.length());
+	for(byte Symbol = 1; Symbol <= Data.length(); Symbol ++){
+		EXT_EEPROM.writeByte(EEPROM_address + Symbol, Data[Symbol-1]);
+	}
+}
+
+
+String Read_String_From_EEPROM(int EEPROM_address){
+	String Out_Link;
+	for(byte Symbol = 1; Symbol <= EXT_EEPROM.readByte(EEPROM_address); Symbol ++){
+		Out_Link += char(EXT_EEPROM.readByte(EEPROM_address + Symbol));
+	}
+	return Out_Link;
+}
+
+
 int EEPROM_int_read(int addr){ // чтение из EEPROM
 	uint8_t  x[4];
 	for(uint8_t i = 0; i < 4; i++){

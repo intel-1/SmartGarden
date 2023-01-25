@@ -1,5 +1,4 @@
-﻿// Привет добрый друг
-#include <Arduino.h>
+﻿#include <Arduino.h>
 #include <avr/pgmspace.h>
 #include <avr/sleep.h>
 #include <avr/wdt.h>
@@ -20,6 +19,8 @@
 #include "ExecModules.h"
 #include "DigitalPorts.h"
 #include "ConfigSensors.h"
+
+
 
 
 
@@ -244,7 +245,6 @@ void Init_Termostat_Interrupt_LM75A(){
 
 
 
-
 void setup() {
 	// ============================ Настройка внутренней начинки ============================
 	Config_All_Ports_To_Input();			// Настройка всех портов в INPUT	
@@ -275,14 +275,42 @@ void setup() {
 	WriteToLCD(String(F("=Setup Controller=")), LCD_LINE_1, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	
 	// ====================================================================================
-	Link_LogWebServer		= F("http://net.uniscan.biz/LogsController.php/?Type=1");
-	Link_LogDataWebServer	= F("http://net.uniscan.biz/ValueSensors.php/?Type=1");
+				
+// 	Write_String_To_EEPROM(E_EXT_LINK_LOG_WEB_SERVER, F("http://net.uniscan.biz/LogsController.php/?Type=1"));
+// 	Write_String_To_EEPROM(E_EXT_LINK_LOG_DATA_WEB_SERVER, F("http://net.uniscan.biz/ValueSensors.php/?Type=1"));
+// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_NAME, F("internet.beeline.ru"));
+// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_USER, F("beeline"));
+// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_PASSWORD, F("beeline"));
+// 	Write_String_To_EEPROM(E_EXT_GSM_CODE_BALANCE, F("#102#"));
+
+
+	Link_LogWebServer		= Read_String_From_EEPROM(E_EXT_LINK_LOG_WEB_SERVER);
+	Link_LogDataWebServer	= Read_String_From_EEPROM(E_EXT_LINK_LOG_DATA_WEB_SERVER);
+	GPRS_APN_NAME			= Read_String_From_EEPROM(E_EXT_GPRS_APN_NAME);
+	GPRS_APN_USER			= Read_String_From_EEPROM(E_EXT_GPRS_APN_USER);
+	GPRS_APN_PASSWORD		= Read_String_From_EEPROM(E_EXT_GPRS_APN_PASSWORD);
+	GSM_CODE_BALANCE		= Read_String_From_EEPROM(E_EXT_GSM_CODE_BALANCE);
+
+	Serial.print(F("LogWebServer: "));		Serial.println(Link_LogWebServer);
+	Serial.print(F("LogDataWebServer: "));	Serial.println(Link_LogDataWebServer);
+	Serial.print(F("GPRS_APN_NAME: "));		Serial.println(GPRS_APN_NAME);
+	Serial.print(F("GPRS_APN_USER: "));		Serial.println(GPRS_APN_USER);
+	Serial.print(F("GPRS_APN_PASSWORD: ")); Serial.println(GPRS_APN_PASSWORD);
+	Serial.print(F("GSM_CODE_BALANCE: "));	Serial.println(GSM_CODE_BALANCE);
 	
-	GPRS_APN_NAME			= F("internet.beeline.ru");
-	GPRS_APN_USER			= F("beeline");
-	GPRS_APN_PASSWORD		= F("beeline");
+	Serial.println();
 	
-	GSM_CODE_BALANCE		= F("#102#");	
+	
+
+
+// 	Link_LogWebServer		= F("http://net.uniscan.biz/LogsController.php/?Type=1");
+// 	Link_LogDataWebServer	= F("http://net.uniscan.biz/ValueSensors.php/?Type=1");
+// 	
+// 	GPRS_APN_NAME			= F("internet.beeline.ru");
+// 	GPRS_APN_USER			= F("beeline");
+// 	GPRS_APN_PASSWORD		= F("beeline");
+// 	
+// 	GSM_CODE_BALANCE		= F("#102#");	
 	
 	AllowPhone[0] = F("79139045925");
 	AllowPhone[1] = F("79137517075");
@@ -341,6 +369,9 @@ void setup() {
 	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){					// Напряжение питания выше минимального
 		WriteToLCD(String(F("...OK")), LCD_LINE_2, LCD_START_SYMBOL_10, LCD_SCREEN_REFRESH_DELAY);
 		Serial.println(F("...OK"));
+		
+		
+		
 		if(EEPROM.read(E_ControllVCC) == true){							// Если включено контролирование VCC
 			Low_Input_VCC = false;
 		}
