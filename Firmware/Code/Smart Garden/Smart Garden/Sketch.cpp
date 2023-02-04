@@ -19,6 +19,7 @@
 #include "ExecModules.h"
 #include "DigitalPorts.h"
 #include "ConfigSensors.h"
+#include "RecievedUART\Write_to_ext_UART.h"
 
 
 
@@ -230,6 +231,22 @@ void Start_Init_GSM(){
 			Initializing_GSM(LCD_ALLOW_OTPUT_ON_SCREEN);								// то инициализация GSM
 			Connecting_GPRS(LCD_ALLOW_OTPUT_ON_SCREEN);									// Подключение к GPRS и проверка подключения
 		}
+		
+		Link_LogWebServer		= Read_String_From_EEPROM(E_EXT_LINK_LOG_WEB_SERVER);
+		Link_LogDataWebServer	= Read_String_From_EEPROM(E_EXT_LINK_LOG_DATA_WEB_SERVER);
+		GPRS_APN_NAME			= Read_String_From_EEPROM(E_EXT_GPRS_APN_NAME);
+		GPRS_APN_USER			= Read_String_From_EEPROM(E_EXT_GPRS_APN_USER);
+		GPRS_APN_PASSWORD		= Read_String_From_EEPROM(E_EXT_GPRS_APN_PASSWORD);
+		GSM_CODE_BALANCE		= Read_String_From_EEPROM(E_EXT_GSM_CODE_BALANCE);
+
+		Serial.print(F("LogWebServer: "));		Serial.println(Link_LogWebServer);
+		Serial.print(F("LogDataWebServer: "));	Serial.println(Link_LogDataWebServer);
+		Serial.print(F("GPRS_APN_NAME: "));		Serial.println(GPRS_APN_NAME);
+		Serial.print(F("GPRS_APN_USER: "));		Serial.println(GPRS_APN_USER);
+		Serial.print(F("GPRS_APN_PASSWORD: ")); Serial.println(GPRS_APN_PASSWORD);
+		Serial.print(F("GSM_CODE_BALANCE: "));	Serial.println(GSM_CODE_BALANCE);
+		
+		Serial.println();
 	}
 
 	Send_GET_request(String(F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("============================")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
@@ -275,33 +292,6 @@ void setup() {
 	WriteToLCD(String(F("=Setup Controller=")), LCD_LINE_1, LCD_START_SYMBOL_1, LCD_NO_SCREEN_REFRESH_DELAY);
 	
 	// ====================================================================================
-				
-// 	Write_String_To_EEPROM(E_EXT_LINK_LOG_WEB_SERVER, F("http://net.uniscan.biz/LogsController.php/?Type=1"));
-// 	Write_String_To_EEPROM(E_EXT_LINK_LOG_DATA_WEB_SERVER, F("http://net.uniscan.biz/ValueSensors.php/?Type=1"));
-// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_NAME, F("internet.beeline.ru"));
-// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_USER, F("beeline"));
-// 	Write_String_To_EEPROM(E_EXT_GPRS_APN_PASSWORD, F("beeline"));
-// 	Write_String_To_EEPROM(E_EXT_GSM_CODE_BALANCE, F("#102#"));
-
-
-	Link_LogWebServer		= Read_String_From_EEPROM(E_EXT_LINK_LOG_WEB_SERVER);
-	Link_LogDataWebServer	= Read_String_From_EEPROM(E_EXT_LINK_LOG_DATA_WEB_SERVER);
-	GPRS_APN_NAME			= Read_String_From_EEPROM(E_EXT_GPRS_APN_NAME);
-	GPRS_APN_USER			= Read_String_From_EEPROM(E_EXT_GPRS_APN_USER);
-	GPRS_APN_PASSWORD		= Read_String_From_EEPROM(E_EXT_GPRS_APN_PASSWORD);
-	GSM_CODE_BALANCE		= Read_String_From_EEPROM(E_EXT_GSM_CODE_BALANCE);
-
-	Serial.print(F("LogWebServer: "));		Serial.println(Link_LogWebServer);
-	Serial.print(F("LogDataWebServer: "));	Serial.println(Link_LogDataWebServer);
-	Serial.print(F("GPRS_APN_NAME: "));		Serial.println(GPRS_APN_NAME);
-	Serial.print(F("GPRS_APN_USER: "));		Serial.println(GPRS_APN_USER);
-	Serial.print(F("GPRS_APN_PASSWORD: ")); Serial.println(GPRS_APN_PASSWORD);
-	Serial.print(F("GSM_CODE_BALANCE: "));	Serial.println(GSM_CODE_BALANCE);
-	
-	Serial.println();
-	
-	
-
 
 // 	Link_LogWebServer		= F("http://net.uniscan.biz/LogsController.php/?Type=1");
 // 	Link_LogDataWebServer	= F("http://net.uniscan.biz/ValueSensors.php/?Type=1");
@@ -369,9 +359,6 @@ void setup() {
 	if(VCC >= float(EEPROM.read(E_MinInputVCC)) / 10){					// Напряжение питания выше минимального
 		WriteToLCD(String(F("...OK")), LCD_LINE_2, LCD_START_SYMBOL_10, LCD_SCREEN_REFRESH_DELAY);
 		Serial.println(F("...OK"));
-		
-		
-		
 		if(EEPROM.read(E_ControllVCC) == true){							// Если включено контролирование VCC
 			Low_Input_VCC = false;
 		}
@@ -578,23 +565,13 @@ void setup() {
 	
 	// ===================================================================================================================================
 	// ================================================ Сигнализация о запуске контролера ================================================
-	// ===================================================================================================================================
-	Serial.println();
-	Serial.println(F("====================================================================="));
-	Serial.print(F("============== Controller started,  ")); Serial.print(VersionFirmware); Serial.println(F("  =============="));
-	Serial.println(F("====================================================================="));
+	// ===================================================================================================================================	
+	StatusLED(LED_START_CONTROLLER);						// Световая сигнализация
 	
+	// ==========================================================================================
 	lcd.clear();
 	WriteToLCD(String(F("Controller Run")), LCD_LINE_2, LCD_START_SYMBOL_4, LCD_NO_SCREEN_REFRESH_DELAY);
 	WriteToLCD(Short_VersionFirmware, LCD_LINE_3, LCD_START_SYMBOL_6, LCD_SCREEN_REFRESH_DELAY);
-	
-	Send_GET_request(String (F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("--- Controller started, ver. ")) + String(VersionFirmware) + (F(" ---")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
-	
-	StatusLED(LED_START_CONTROLLER);						// Световая сигнализация
-	
-	// ================================== Выключение LCD экрана ==================================
-	lcd.noBacklight();
-	lcd.noDisplay();
 	
 	// =================================== Настройка прерываний ==================================
 	Timer5_init();											// Настройка пятого таймера
@@ -603,12 +580,33 @@ void setup() {
 	wdt_enable(WDTO_8S);									// Включаем watchdog
 	set_sleep_mode(SLEEP_MODE_IDLE);						// Настраиваем режим сна
 	sleep_mode();											// Усыпляем контроллер
+	// ==========================================================================================
+	
+	Send_GET_request(String (F("AT+HTTPPARA=\"URL\",\"")) + Link_LogWebServer + (F("&Log=")) + (F("--- Controller started, ver. ")) + String(VersionFirmware) + (F(" ---")) + (F("\"")), GSM_WAITING_ANSWER, GSM_OUTPUT_TO_SERIAL, GET_LOG_REQUEST);
+
+	lcd.noBacklight();
+	lcd.noDisplay();
+	
+	Serial.println();
+	Serial.println(F("====================================================================="));
+	Serial.print(F("================ Controller started,  ")); Serial.print(VersionFirmware); Serial.println(F("  ==============="));
+	Serial.println(F("====================================================================="));
+	
+	Write_To_Ext_UART();
 }
+// ===================================================================================================================================
+// ===================================================================================================================================
+// ===================================================================================================================================
 
 
-// ===================================================================================================================================
-// ===================================================================================================================================
-// ===================================================================================================================================
+
+
+
+
+
+
+
+
 
 
 void loop() {	

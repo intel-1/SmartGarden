@@ -559,6 +559,12 @@
     <Compile Include="RecievedUART\RegisterSensors.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="RecievedUART\Write_to_ext_UART.cpp">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="RecievedUART\Write_to_ext_UART.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Sensors.cpp">
       <SubType>compile</SubType>
     </Compile>

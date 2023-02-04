@@ -3,6 +3,7 @@
 #include <Print.h>
 #include <HardwareSerial.h>
 #include <stdint.h>
+#include <avr/wdt.h>
 
 #include "lib\I2C_eeprom.h"
 
@@ -17,8 +18,14 @@ I2C_eeprom EXT_EEPROM(0x50, I2C_DEVICESIZE_24LC64);
 
 
 void Write_String_To_EEPROM(int EEPROM_address, String Data){
-	EXT_EEPROM.writeByte(EEPROM_address, Data.length());
-	for(byte Symbol = 1; Symbol <= Data.length(); Symbol ++){
+	//Serial.println("1");
+	byte len = Data.length();
+	//Serial.println("1.1");
+	//Serial.println("2");
+	EXT_EEPROM.writeByte(EEPROM_address, len);
+	Serial.println("3");
+	for(byte Symbol = 1; Symbol <= len; Symbol ++){
+		//Serial.println(Symbol++);
 		EXT_EEPROM.writeByte(EEPROM_address + Symbol, Data[Symbol-1]);
 	}
 }

@@ -19,6 +19,7 @@ void CleaningDuplicatedPorts(int Value);
 
 extern int InputFromSerial0[50];
 
+extern boolean recievedFlag_write_extern_UART;
 extern boolean recievedFlag_date;
 extern boolean transmitFlag_date;
 extern boolean recievedFlag_intervals;

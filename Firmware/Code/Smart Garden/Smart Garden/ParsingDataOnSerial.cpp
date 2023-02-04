@@ -13,6 +13,7 @@
 
 int InputFromSerial0[50];					// Массив с полученными по UART0 данными
 
+boolean recievedFlag_write_extern_UART;
 boolean recievedFlag_date;
 boolean transmitFlag_date;
 boolean recievedFlag_config_controller;
@@ -99,6 +100,9 @@ boolean TestCMD() {
 				case 'p':						// Включение\Выключение режима конфигурирования
 					typeData = 11;
 					return true;
+				case 'e':						// Запись во внешний EEPROM строк
+					typeData = 12;
+					return true;
 			}
 		}
 	}
@@ -136,6 +140,9 @@ boolean SetFlags() {
 			break;
 		case 11:
 			recievedFlag_ModeConfigurationController = true;
+			break;
+		case 12:
+			recievedFlag_write_extern_UART = true;
 			break;
 		default:
 			return false;
@@ -246,6 +253,10 @@ void ProcessingDataFromSerial(){
 	if (cmdERR) {
 		cmdERR = false;
 		Serial.println(F("ERR"));
+	}
+	// =================================== Запись во внешний UART ===========================================
+	if(recievedFlag_write_extern_UART){
+		Write_To_Ext_UART();
 	}
 	// ================================= Служебный байт Windows APP ========================================= 
 	if(recievedFlag_WindowsAPP){
