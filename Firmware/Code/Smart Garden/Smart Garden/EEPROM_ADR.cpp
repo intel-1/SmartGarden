@@ -23,7 +23,7 @@ void Write_String_To_EEPROM(int EEPROM_address, String Data){
 	//Serial.println("1.1");
 	//Serial.println("2");
 	EXT_EEPROM.writeByte(EEPROM_address, len);
-	Serial.println("3");
+	//Serial.println("3");
 	for(byte Symbol = 1; Symbol <= len; Symbol ++){
 		//Serial.println(Symbol++);
 		EXT_EEPROM.writeByte(EEPROM_address + Symbol, Data[Symbol-1]);

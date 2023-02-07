@@ -215,7 +215,13 @@ void serialISR() {
 			}
 		}
 	}
+	
 	if(RecievedDataFromUART){				// Если пришли данные из UART
+		//Serial.print(string_convert);
+// 		for(byte i = 0; i <= 14; i ++){
+// 			Serial.print(InputFromSerial0[i]); Serial.print(" ");
+// 		}
+		
 		ProcessingDataFromSerial();			// Разбираем данные полученные из Serial
 	}
 }
